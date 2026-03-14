@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -20,7 +14,7 @@ model Session {
   isOnline      Boolean   @default(false)
   scope         String?
   expires       DateTime?
-  accessToken   String
+  accessToken   String?
   userId        BigInt?
   firstName     String?
   lastName      String?
@@ -29,6 +23,210 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
-  refreshToken        String?
-  refreshTokenExpires DateTime?
+}
+
+model ImportRun {
+  id          String   @id @default(cuid())
+  filename    String
+  importedAt  DateTime @default(now())
+  rowCount    Int
+  status      String   // pending | processing | success | error
+  errorLog    String?  @db.Text
+  clients     Client[]
+}
+
+model Client {
+  accountNumber       String   @id
+  sfdcAccountId       String?
+  customerName        String
+
+  currentModel        String?
+  currentPcn          String?
+  currentDescription  String?
+  leaseNumber         String?
+  serialNumber        String?
+  installDate         DateTime?
+  leaseExpiryDate     DateTime?
+  leaseAgeing         String?
+  eolPhase            String?
+  currentMonthlyPayment Float?
+  currentEquipmentPayment Float?
+  billingFrequency    String?
+  connectionType      String?
+
+  installAddress1     String?
+  installStreet       String?
+  installCity         String?
+  installPostcode     String?
+  installPhone        String?
+  installEmail        String?
+
+  billingCustomerName String?
+  billingAddress1     String?
+  billingStreet       String?
+  billingCity         String?
+  billingPostcode     String?
+  billingPhone        String?
+  billingEmail        String?
+
+  bestEmail           String?
+  contactFirstName    String?
+  contactLastName     String?
+  contactPosition     String?
+
+  siret               String?
+  vatNumber           String?
+
+  ownerName           String?
+  ownerEmail          String?
+  ownerTeam           String?
+  ownerTerritoryCode  String?
+
+  badPayerFlag        Boolean  @default(false)
+  regulated           Boolean  @default(false)
+
+  offerExpirationDate String?
+
+  pieceCountLast12m   Int?
+  resetValueLast12m   Int?
+
+  shopifyCustomerId   String?
+
+  importRunId         String?
+  importRun           ImportRun?    @relation(fields: [importRunId], references: [id])
+  offers              Offer[]
+  acceptance          Acceptance?
+  accessToken         AccessToken?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Offer {
+  id                    String   @id @default(cuid())
+  clientAccountNumber   String
+  client                Client   @relation(fields: [clientAccountNumber], references: [accountNumber], onDelete: Cascade)
+
+  offerPosition         Int
+  offerCode             String?
+  template              String?
+  recommended           Boolean  @default(false)
+  contractTerm          String?
+
+  headline              String?  @db.Text
+  modelName             String?
+  modelPcn              String?
+  modelDescription      String?  @db.Text
+  imageUrl              String?
+  brochureUrl           String?
+
+  pcn2                  String?
+  description2          String?
+  pcn3                  String?
+  description3          String?
+  pcn4                  String?
+  description4          String?
+
+  valueProp1            String?  @db.Text
+  valueProp2            String?  @db.Text
+  valueProp3            String?  @db.Text
+  marketingMessage      String?  @db.Text
+  benefit1              String?  @db.Text
+  benefit2              String?  @db.Text
+  benefit3              String?  @db.Text
+
+  monthly60             Float?
+  billing60             Float?
+  billingTax60          Float?
+  billingTotal60        Float?
+  monthly48             Float?
+  billing48             Float?
+  billingTax48          Float?
+  billingTotal48        Float?
+  monthly36             Float?
+  billing36             Float?
+  billingTax36          Float?
+  billingTotal36        Float?
+  monthly24             Float?
+  billing24             Float?
+  billingTax24          Float?
+  billingTotal24        Float?
+
+  billingFrequency      String?
+  paymentMessage        String?  @db.Text
+
+  autoInk               Boolean  @default(false)
+  autoInkPcn            String?
+  autoInkDescription    String?
+  installAvailable      Boolean  @default(false)
+  installPcn            String?
+  installDescription    String?  @db.Text
+  starterKit            Boolean  @default(false)
+  starterKitPcn         String?
+  starterKitDescription String?
+
+  confirmationWhatsNext String?  @db.Text
+
+  emailSubjectLine      String?
+  emailBodyMessage      String?  @db.Text
+
+  createdAt             DateTime @default(now())
+
+  @@unique([clientAccountNumber, offerPosition])
+}
+
+model Acceptance {
+  id                    String   @id @default(cuid())
+  clientAccountNumber   String   @unique
+  client                Client   @relation(fields: [clientAccountNumber], references: [accountNumber])
+
+  offerPosition         Int
+  termSelected          String?
+
+  installOptionSelected String?
+  autoInkSelected       Boolean  @default(false)
+
+  signatoryFirstName    String
+  signatoryLastName     String
+  signatoryEmail        String
+  signatoryFunction     String?
+  signatoryPhone        String?
+
+  overrideEmail         String?
+  overridePhone         String?
+  overrideAddress       String?  @db.Text
+  notes                 String?  @db.Text
+
+  ipAddress             String?
+  userAgent             String?  @db.Text
+
+  adobeSignAgreementId  String?
+  adobeSignStatus       String?
+  signedPdfUrl          String?
+
+  shopifyCustomerId     String?
+  shopifyDraftOrderId   String?
+
+  acceptedAt            DateTime @default(now())
+  signedAt              DateTime?
+  emailSentAt           DateTime?
+  shopifySyncedAt       DateTime?
+}
+
+model AccessToken {
+  token                 String   @id @default(uuid())
+  clientAccountNumber   String   @unique
+  client                Client   @relation(fields: [clientAccountNumber], references: [accountNumber], onDelete: Cascade)
+  expiresAt             DateTime
+  usedAt                DateTime?
+  createdAt             DateTime @default(now())
+}
+
+model ShopifyAuth {
+  id                    String   @id @default(cuid())
+  shop                  String   @unique
+  accessToken           String
+  scope                 String
+  installedAt           DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
