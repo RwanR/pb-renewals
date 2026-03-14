@@ -3,7 +3,7 @@
 client_id = "269f4404033da1ccd0efa04cfea3fa78"
 name = "pb-renewals"
 application_url = "https://pb-renewals-production.up.railway.app"
-embedded = false
+embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
