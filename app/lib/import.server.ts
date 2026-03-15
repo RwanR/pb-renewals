@@ -305,3 +305,37 @@ export async function importExcel(
 
   return { rowCount, errors, clientsWithEmail, clientsWithoutEmail };
 }
+
+// Store import status in memory (good enough for single instance)
+const importJobs = new Map<string, {
+  status: "processing" | "success" | "error";
+  result?: ImportResult;
+}>();
+
+export function getImportStatus(jobId: string) {
+  return importJobs.get(jobId);
+}
+
+export function startImportJob(buffer: ArrayBuffer, filename: string): string {
+  const jobId = crypto.randomUUID();
+  importJobs.set(jobId, { status: "processing" });
+
+  // Fire and forget
+  importExcel(buffer, filename)
+    .then((result) => {
+      importJobs.set(jobId, { status: "success", result });
+    })
+    .catch((err) => {
+      importJobs.set(jobId, {
+        status: "error",
+        result: {
+          rowCount: 0,
+          errors: [err instanceof Error ? err.message : String(err)],
+          clientsWithEmail: 0,
+          clientsWithoutEmail: 0,
+        },
+      });
+    });
+
+  return jobId;
+}
