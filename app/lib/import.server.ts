@@ -64,6 +64,7 @@ export async function importExcel(
   const importRun = await prisma.importRun.create({
     data: { filename, rowCount: 0, status: "processing" },
   });
+  console.log(`[IMPORT] Started: ${filename}, importRunId: ${importRun.id}`);
 
   const errors: string[] = [];
   let rowCount = 0;
@@ -84,10 +85,13 @@ export async function importExcel(
       rows.push(row);
     }
   }
+  console.log(`[IMPORT] ${rows.length} rows to process in ${Math.ceil(rows.length / BATCH_SIZE)} batches`);
 
   // Process in batches
   for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
     const batch = rows.slice(batchStart, batchStart + BATCH_SIZE);
+    const batchEnd = Math.min(batchStart + BATCH_SIZE, rows.length);
+    console.log(`[IMPORT] Processing batch ${batchStart}-${batchEnd}...`);
 
     try {
       await prisma.$transaction(async (tx) => {
@@ -289,7 +293,7 @@ export async function importExcel(
         }
       }, { timeout: 60000 });
     } catch (err) {
-      const batchEnd = Math.min(batchStart + BATCH_SIZE, rows.length);
+      console.error(`[IMPORT] Batch ${batchStart}-${batchEnd} FAILED:`, err);
       errors.push(`Batch ${batchStart}-${batchEnd}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
@@ -303,10 +307,12 @@ export async function importExcel(
     },
   });
 
+  console.log(`[IMPORT] Done: ${rowCount} rows, ${errors.length} errors, ${clientsWithEmail} with email, ${clientsWithoutEmail} without`);
+
   return { rowCount, errors, clientsWithEmail, clientsWithoutEmail };
 }
 
-// Store import status in memory (good enough for single instance)
+// In-memory job tracking
 const importJobs = new Map<string, {
   status: "processing" | "success" | "error";
   result?: ImportResult;
@@ -319,13 +325,15 @@ export function getImportStatus(jobId: string) {
 export function startImportJob(buffer: ArrayBuffer, filename: string): string {
   const jobId = crypto.randomUUID();
   importJobs.set(jobId, { status: "processing" });
+  console.log(`[IMPORT] Job ${jobId} started for ${filename}`);
 
-  // Fire and forget
   importExcel(buffer, filename)
     .then((result) => {
+      console.log(`[IMPORT] Job ${jobId} completed`);
       importJobs.set(jobId, { status: "success", result });
     })
     .catch((err) => {
+      console.error(`[IMPORT] Job ${jobId} failed:`, err);
       importJobs.set(jobId, {
         status: "error",
         result: {
