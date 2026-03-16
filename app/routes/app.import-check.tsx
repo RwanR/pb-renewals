@@ -10,6 +10,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     modelDistribution,
     emailStats,
     sampleClient,
+    lastErrorRun,
   ] = await Promise.all([
     prisma.client.count(),
     prisma.offer.count(),
@@ -33,6 +34,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
       where: { accountNumber: "30240367" },
       include: { offers: true },
     }),
+    prisma.importRun.findFirst({
+      where: { status: "error" },
+      orderBy: { importedAt: "desc" },
+    }),
   ]);
 
   const clientsWithoutEmail = await prisma.client.count({
@@ -51,6 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     emailStats,
     clientsWithoutEmail,
     sampleClient,
+    lastErrorRun,
   };
 }
 
@@ -123,6 +129,17 @@ export default function ImportCheck() {
           </tbody>
         </table>
       </div>
+
+      {data.lastErrorRun?.errorLog && (
+        <div>
+          <h2 className="font-semibold mb-2">
+            Dernières erreurs (run du {new Date(data.lastErrorRun.importedAt).toLocaleString("fr-FR")})
+          </h2>
+          <pre className="bg-red-50 p-4 rounded text-xs overflow-auto max-h-96 text-red-800">
+            {data.lastErrorRun.errorLog}
+          </pre>
+        </div>
+      )}
 
       <div>
         <h2 className="font-semibold mb-2">Client exemple — 30240367</h2>
