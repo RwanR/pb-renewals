@@ -42,9 +42,10 @@ export interface ImportResult {
   clientsWithoutEmail: number;
 }
 
-export async function importExcel(
+async function importExcelWithProgress(
   buffer: ArrayBuffer,
-  filename: string
+  filename: string,
+  jobId: string
 ): Promise<ImportResult> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as any);
@@ -59,10 +60,26 @@ export async function importExcel(
     if (val) headers[val] = colNumber;
   });
 
+  // Count valid rows first
+  const validRows: number[] = [];
+  for (let i = 2; i <= sheet.rowCount; i++) {
+    const row = sheet.getRow(i);
+    const idx = headers["INSTALLACCOUNTNUMBER"];
+    if (!idx) continue;
+    const val = row.getCell(idx).value;
+    if (val !== null && val !== undefined && String(val).trim() !== "" && String(val).trim() !== "None") {
+      validRows.push(i);
+    }
+  }
+
+  // Update total
+  const job = importJobs.get(jobId);
+  if (job) job.total = validRows.length;
+  console.log(`[IMPORT] ${validRows.length} rows to process`);
+
   const importRun = await prisma.importRun.create({
     data: { filename, rowCount: 0, status: "processing" },
   });
-  console.log(`[IMPORT] Started: ${filename}, id: ${importRun.id}`);
 
   const errors: string[] = [];
   let rowCount = 0;
@@ -75,10 +92,9 @@ export async function importExcel(
     return row.getCell(idx).value;
   }
 
-  for (let i = 2; i <= sheet.rowCount; i++) {
+  for (const i of validRows) {
     const row = sheet.getRow(i);
-    const accountNumber = clean(get(row, "INSTALLACCOUNTNUMBER"));
-    if (!accountNumber) continue;
+    const accountNumber = clean(get(row, "INSTALLACCOUNTNUMBER"))!;
 
     try {
       const billingEmail = clean(get(row, "BILLINGEMAIL"));
@@ -274,8 +290,16 @@ export async function importExcel(
 
       rowCount++;
 
-      if (rowCount % 500 === 0) {
-        console.log(`[IMPORT] Progress: ${rowCount} / ${sheet.rowCount - 1}`);
+      // Update progress every 50 rows
+      if (rowCount % 50 === 0) {
+        const job = importJobs.get(jobId);
+        if (job) {
+          job.progress = rowCount;
+          job.clientsWithEmail = clientsWithEmail;
+          job.clientsWithoutEmail = clientsWithoutEmail;
+          job.errorCount = errors.length;
+        }
+        console.log(`[IMPORT] Progress: ${rowCount} / ${validRows.length}`);
       }
     } catch (err) {
       errors.push(`Row ${i} (${accountNumber}): ${err instanceof Error ? err.message : String(err)}`);
@@ -297,10 +321,17 @@ export async function importExcel(
 }
 
 // In-memory job tracking
-const importJobs = new Map<string, {
+export interface ImportJobStatus {
   status: "processing" | "success" | "error";
+  progress: number;      // rows processed
+  total: number;         // total rows
+  clientsWithEmail: number;
+  clientsWithoutEmail: number;
+  errorCount: number;
   result?: ImportResult;
-}>();
+}
+
+const importJobs = new Map<string, ImportJobStatus>();
 
 export function getImportStatus(jobId: string) {
   return importJobs.get(jobId);
@@ -308,18 +339,39 @@ export function getImportStatus(jobId: string) {
 
 export function startImportJob(buffer: ArrayBuffer, filename: string): string {
   const jobId = crypto.randomUUID();
-  importJobs.set(jobId, { status: "processing" });
+  importJobs.set(jobId, {
+    status: "processing",
+    progress: 0,
+    total: 0,
+    clientsWithEmail: 0,
+    clientsWithoutEmail: 0,
+    errorCount: 0,
+  });
   console.log(`[IMPORT] Job ${jobId} started`);
 
-  importExcel(buffer, filename)
+  importExcelWithProgress(buffer, filename, jobId)
     .then((result) => {
       console.log(`[IMPORT] Job ${jobId} completed`);
-      importJobs.set(jobId, { status: "success", result });
+      importJobs.set(jobId, {
+        status: result.errors.length > 0 ? "error" : "success",
+        progress: result.rowCount,
+        total: result.rowCount,
+        clientsWithEmail: result.clientsWithEmail,
+        clientsWithoutEmail: result.clientsWithoutEmail,
+        errorCount: result.errors.length,
+        result,
+      });
     })
     .catch((err) => {
       console.error(`[IMPORT] Job ${jobId} failed:`, err);
+      const current = importJobs.get(jobId);
       importJobs.set(jobId, {
         status: "error",
+        progress: current?.progress ?? 0,
+        total: current?.total ?? 0,
+        clientsWithEmail: current?.clientsWithEmail ?? 0,
+        clientsWithoutEmail: current?.clientsWithoutEmail ?? 0,
+        errorCount: 1,
         result: {
           rowCount: 0,
           errors: [err instanceof Error ? err.message : String(err)],
