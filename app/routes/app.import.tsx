@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { useActionData, useLoaderData, useNavigation, Form } from "react-router";
+import { useActionData, useLoaderData, useNavigation, Form, useFetcher } from "react-router";
 import { startImportJob } from "~/lib/import.server";
 import type { ImportJobStatus } from "~/lib/import.server";
 import { Button } from "~/components/ui/button";
@@ -87,13 +87,14 @@ export default function AdminImport() {
     stats: { clientCount: number; offerCount: number };
   }>();
   const navigation = useNavigation();
+  const fetcher = useFetcher<{ job: ImportJobStatus | null }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [hasFile, setHasFile] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [job, setJob] = useState<ImportJobStatus | null>(null);
 
   const isUploading = navigation.state === "submitting";
+  const job = fetcher.data?.job ?? null;
   const isProcessing = job?.status === "parsing" || job?.status === "importing";
   const isDone = job?.status === "success" || job?.status === "error";
   const isBusy = isUploading || isProcessing;
@@ -102,36 +103,25 @@ export default function AdminImport() {
   useEffect(() => {
     if (actionData?.jobId && actionData.jobId !== jobId) {
       setJobId(actionData.jobId);
-      setJob(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setHasFile(false);
     }
   }, [actionData]);
 
-  // Poll job status via fetch
-  const pollStatus = useCallback(async () => {
-    if (!jobId) return;
-    try {
-      const res = await fetch(`/app/import-status?jobId=${jobId}`);
-      const data = await res.json();
-      if (data.job) {
-        setJob(data.job);
-      }
-    } catch (e) {
-      console.error("Poll error:", e);
-    }
-  }, [jobId]);
-
+  // Poll job status via fetcher
   useEffect(() => {
     if (!jobId) return;
     if (isDone) return;
 
     // Poll immediately
-    pollStatus();
+    fetcher.load(`/app/import-status?jobId=${jobId}`);
 
-    const interval = setInterval(pollStatus, 1000);
+    const interval = setInterval(() => {
+      fetcher.load(`/app/import-status?jobId=${jobId}`);
+    }, 1000);
+
     return () => clearInterval(interval);
-  }, [jobId, isDone, pollStatus]);
+  }, [jobId, isDone]);
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
