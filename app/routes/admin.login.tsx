@@ -1,9 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, redirect, useActionData } from "react-router";
 import { sessionStorage } from "~/lib/admin-auth.server";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -36,30 +33,20 @@ export default function AdminLogin() {
   const actionData = useActionData<{ error?: string }>();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm p-6">
-        <h1 className="text-xl font-bold mb-6 text-center">PB Renewals — Admin</h1>
-        <Form method="post" className="space-y-4">
+    <div className="admin-login-wrap">
+      <div className="admin-card admin-login-card">
+        <div className="admin-login-title">PB Renewals — Admin</div>
+        <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Mot de passe
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoFocus
-              required
-            />
+            <label htmlFor="password" className="admin-label">Mot de passe</label>
+            <input id="password" name="password" type="password" autoFocus required className="admin-input" />
           </div>
-          {actionData?.error && (
-            <p className="text-red-600 text-sm">{actionData.error}</p>
-          )}
-          <Button type="submit" className="w-full">
+          {actionData?.error && <p className="admin-error-text">{actionData.error}</p>}
+          <button type="submit" className="admin-btn" style={{ width: "100%", justifyContent: "center" }}>
             Connexion
-          </Button>
+          </button>
         </Form>
-      </Card>
+      </div>
     </div>
   );
 }
