@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { useActionData, useLoaderData, useNavigation, Form, useFetcher } from "react-router";
+import { useActionData, useLoaderData, useNavigation, Form, useFetcher, useRevalidator } from "react-router";
 import { requireAdmin } from "~/lib/admin-auth.server";
 import { startImportJob } from "~/lib/import.server";
 import type { ImportJobStatus } from "~/lib/import.server";
@@ -40,6 +40,7 @@ export default function AdminImport() {
   const { importRuns, stats } = useLoaderData<{ importRuns: any[]; stats: { clientCount: number; offerCount: number } }>();
   const navigation = useNavigation();
   const fetcher = useFetcher<{ job: ImportJobStatus | null }>();
+  const revalidator = useRevalidator();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [hasFile, setHasFile] = useState(false);
@@ -67,6 +68,13 @@ export default function AdminImport() {
     }, 1000);
     return () => clearInterval(interval);
   }, [jobId, isDone]);
+
+  // Refresh stats when done
+  useEffect(() => {
+    if (isDone) {
+      revalidator.revalidate();
+    }
+  }, [isDone]);
 
   return (
     <div className="admin-space">
@@ -146,15 +154,31 @@ export default function AdminImport() {
             <div style={{ fontWeight: 500 }}>{job.message}</div>
           </div>
 
+          {/* Clients progress */}
           <div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>Clients</div>
             <div className="admin-progress-wrap">
               <div className="admin-progress-bar" style={{ width: `${job.total > 0 ? Math.round((job.progress / job.total) * 100) : 0}%` }} />
             </div>
             <div className="admin-progress-text">
-              <span>{job.progress.toLocaleString("fr-FR")} / {job.total.toLocaleString("fr-FR")} clients</span>
+              <span>{job.progress.toLocaleString("fr-FR")} / {job.total.toLocaleString("fr-FR")}</span>
               <span style={{ fontWeight: 600 }}>{job.total > 0 ? Math.round((job.progress / job.total) * 100) : 0}%</span>
             </div>
           </div>
+
+          {/* Offers progress */}
+          {job.offersTotal > 0 && (
+            <div>
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>Offres</div>
+              <div className="admin-progress-wrap">
+                <div className="admin-progress-bar" style={{ width: `${Math.round((job.offersProgress / job.offersTotal) * 100)}%`, background: "#7c3aed" }} />
+              </div>
+              <div className="admin-progress-text">
+                <span>{job.offersProgress.toLocaleString("fr-FR")} / {job.offersTotal.toLocaleString("fr-FR")}</span>
+                <span style={{ fontWeight: 600 }}>{Math.round((job.offersProgress / job.offersTotal) * 100)}%</span>
+              </div>
+            </div>
+          )}
 
           <div className="admin-grid-3">
             <div className="admin-stat-box blue">

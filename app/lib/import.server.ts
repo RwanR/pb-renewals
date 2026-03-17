@@ -47,6 +47,8 @@ export interface ImportJobStatus {
   message: string;
   progress: number;
   total: number;
+  offersProgress: number;
+  offersTotal: number;
   clientsWithEmail: number;
   clientsWithoutEmail: number;
   errorCount: number;
@@ -71,25 +73,51 @@ export function startImportJob(buffer: ArrayBuffer, filename: string): string {
     message: "Lecture du fichier Excel...",
     progress: 0,
     total: 0,
+    offersProgress: 0,
+    offersTotal: 0,
     clientsWithEmail: 0,
     clientsWithoutEmail: 0,
     errorCount: 0,
   });
   console.log(`[IMPORT] Job ${jobId} started`);
 
-  runImport(buffer, filename, jobId).catch((err) => {
-    console.error(`[IMPORT] Job ${jobId} failed:`, err);
-    updateJob(jobId, {
-      status: "error",
-      message: "Erreur fatale",
-      result: {
-        rowCount: 0,
-        errors: [err instanceof Error ? err.message : String(err)],
-        clientsWithEmail: 0,
-        clientsWithoutEmail: 0,
-      },
+  runImport(buffer, filename, jobId)
+    .then((result) => {
+      console.log(`[IMPORT] Job ${jobId} completed`);
+      importJobs.set(jobId, {
+        status: result.errors.length > 0 ? "error" : "success",
+        message: result.errors.length > 0 ? "Import terminé avec erreurs" : "Import terminé",
+        progress: result.rowCount,
+        total: result.rowCount,
+        offersProgress: 0,
+        offersTotal: 0,
+        clientsWithEmail: result.clientsWithEmail,
+        clientsWithoutEmail: result.clientsWithoutEmail,
+        errorCount: result.errors.length,
+        result,
+      });
+    })
+    .catch((err) => {
+      console.error(`[IMPORT] Job ${jobId} failed:`, err);
+      const current = importJobs.get(jobId);
+      importJobs.set(jobId, {
+        status: "error",
+        message: "Erreur fatale",
+        progress: current?.progress ?? 0,
+        total: current?.total ?? 0,
+        offersProgress: current?.offersProgress ?? 0,
+        offersTotal: current?.offersTotal ?? 0,
+        clientsWithEmail: current?.clientsWithEmail ?? 0,
+        clientsWithoutEmail: current?.clientsWithoutEmail ?? 0,
+        errorCount: 1,
+        result: {
+          rowCount: 0,
+          errors: [err instanceof Error ? err.message : String(err)],
+          clientsWithEmail: 0,
+          clientsWithoutEmail: 0,
+        },
+      });
     });
-  });
 
   return jobId;
 }
@@ -314,6 +342,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     status: "importing",
     message: `${clients.length} clients analysés. Écriture en base...`,
     total: clients.length,
+    offersTotal: offers.length,
     clientsWithEmail,
     clientsWithoutEmail,
   });
@@ -351,12 +380,16 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     }
 
     // Insert offers in chunks of 500
-    updateJob(jobId, { message: "Import des offres..." });
+    updateJob(jobId, { message: "Import des offres...", offersTotal: offers.length, offersProgress: 0 });
     for (let i = 0; i < offers.length; i += CHUNK) {
       const chunk = offers.slice(i, i + CHUNK);
       await prisma.offer.createMany({ data: chunk });
 
       const progress = Math.min(i + CHUNK, offers.length);
+      updateJob(jobId, {
+        offersProgress: progress,
+        message: `Import des offres... ${progress} / ${offers.length}`,
+      });
       console.log(`[IMPORT] Offers: ${progress} / ${offers.length}`);
     }
   } catch (err) {
@@ -382,13 +415,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   };
 
   console.log(`[IMPORT] Done: ${clients.length} clients, ${offers.length} offers, ${errors.length} errors`);
-
-  updateJob(jobId, {
-    status: errors.length > 0 ? "error" : "success",
-    message: errors.length > 0 ? "Import terminé avec erreurs" : "Import terminé",
-    progress: clients.length,
-    result,
-  });
 
   return result;
 }
