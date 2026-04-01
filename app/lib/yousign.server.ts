@@ -80,9 +80,9 @@ export async function createSignatureRequest(params: {
         interval_in_days: 7,
         max_occurrences: 3,
       },
-      expiration_date: new Date(
-        Date.now() + 90 * 24 * 60 * 60 * 1000
-      ).toISOString(),
+    expiration_date: new Date(
+    Date.now() + 90 * 24 * 60 * 60 * 1000
+    ).toISOString().split("T")[0],
       external_id: accountNumber,
     }),
   });
