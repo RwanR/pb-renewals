@@ -222,9 +222,14 @@ export default function AdminImport() {
           )}
 
           <div>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <button className="admin-btn admin-btn-outline" onClick={() => setJobId(null)}>
               Nouvel import
             </button>
+            <a href="/admin/export-links" className="admin-btn" download>
+              Exporter les liens CSV
+            </a>
+          </div>
           </div>
         </div>
       )}

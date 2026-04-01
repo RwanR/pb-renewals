@@ -391,11 +391,31 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         message: `Import des offres... ${progress} / ${offers.length}`,
       });
       console.log(`[IMPORT] Offers: ${progress} / ${offers.length}`);
+
+      // Generate access tokens for clients with email
+      updateJob(jobId, { message: "Génération des liens d'accès..." });
+      const tokenExpiry = new Date();
+      tokenExpiry.setDate(tokenExpiry.getDate() + 90); // 90 days
+
+      const clientsWithTokens = clients.filter(c => c.bestEmail || c.installEmail || c.billingEmail);
+      const tokenData = clientsWithTokens.map(c => ({
+        clientAccountNumber: c.accountNumber,
+        expiresAt: tokenExpiry,
+      }));
+
+      // Wipe old tokens and create new ones in chunks
+      await prisma.accessToken.deleteMany({});
+      for (let i = 0; i < tokenData.length; i += CHUNK) {
+        const chunk = tokenData.slice(i, i + CHUNK);
+        await prisma.accessToken.createMany({ data: chunk });
+      }
+      console.log(`[IMPORT] Generated ${tokenData.length} access tokens`);
     }
   } catch (err) {
     console.error(`[IMPORT] Bulk insert failed:`, err);
     errors.push(err instanceof Error ? err.message : String(err));
   }
+  
 
   // === PHASE 4: Finalize ===
   await prisma.importRun.update({
