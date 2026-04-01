@@ -125,10 +125,6 @@ export async function createSignatureRequest(params: {
     },
     signature_level: "electronic_signature",
     signature_authentication_mode: "no_otp",
-    redirect_urls: {
-      success: `${APP_URL}/offre/${accountNumber}/merci`,
-      error: `${APP_URL}/offre/${accountNumber}/confirmer?error=signature`,
-    },
     fields: [
       {
         document_id: documentId,
@@ -164,8 +160,11 @@ export async function createSignatureRequest(params: {
 
   console.log(`[YOUSIGN] Activated signature request`);
 
-  // The signer URL is in signer.signature_link
-  const signerUrl = signer.signature_link;
+  // 5. Fetch signer to get the signature_link (available only after activation)
+  const activatedSigner = await yousignFetch(
+    `/signature_requests/${signatureRequestId}/signers/${signer.id}`
+  );
+  const signerUrl = activatedSigner.signature_link;
   console.log(`[YOUSIGN] Signer URL: ${signerUrl}`);
 
   return {

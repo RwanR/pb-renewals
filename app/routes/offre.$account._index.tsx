@@ -52,7 +52,7 @@ export default function OffreClient() {
   const offer2 = client.offers.find((o: any) => o.offerPosition === 2);
 
   // Already signed?
-  if (client.acceptance) {
+if (client.acceptance?.adobeSignStatus === "signed") {
     return (
       <div className="pb-space">
         <div className="pb-card" style={{ textAlign: "center", padding: "48px 24px" }}>
