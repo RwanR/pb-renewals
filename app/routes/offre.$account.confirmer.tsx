@@ -1,6 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useActionData, useNavigation, Form, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
+import { generateContractPDF } from "~/lib/contract-pdf.server";
+import { createSignatureRequest } from "~/lib/yousign.server";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -9,11 +11,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
+  const signatureError = url.searchParams.get("error") === "signature";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
     include: {
       offers: { where: { offerPosition } },
+      acceptance: true,
     },
   });
 
@@ -21,7 +25,15 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Offre non trouvée", { status: 404 });
   }
 
-  return { client, offer: client.offers[0], offerPosition };
+  // Already signed → redirect to merci
+  if (client.acceptance?.adobeSignStatus === "signed") {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `/offre/${accountNumber}/merci` },
+    });
+  }
+
+  return { client, offer: client.offers[0], offerPosition, signatureError };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -38,6 +50,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const overrideEmail = (formData.get("overrideEmail") as string)?.trim();
   const overridePhone = (formData.get("overridePhone") as string)?.trim();
   const offerPosition = parseInt(formData.get("offerPosition") as string || "1");
+  const installOption = (formData.get("installOption") as string)?.trim();
+  const autoInk = formData.get("autoInk") === "true";
 
   // Validation
   const errors: Record<string, string> = {};
@@ -50,11 +64,26 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return { errors, values: Object.fromEntries(formData) };
   }
 
-  // Create acceptance
-  await prisma.acceptance.create({
-    data: {
+  // Load client + offer
+  const client = await prisma.client.findUnique({
+    where: { accountNumber },
+    include: { offers: { where: { offerPosition } } },
+  });
+
+  if (!client || client.offers.length === 0) {
+    return { errors: { _form: "Client ou offre introuvable" }, values: Object.fromEntries(formData) };
+  }
+
+  const offer = client.offers[0];
+
+  // Create or update acceptance
+  const acceptance = await prisma.acceptance.upsert({
+    where: { clientAccountNumber: accountNumber },
+    create: {
       clientAccountNumber: accountNumber,
       offerPosition,
+      installOptionSelected: installOption || null,
+      autoInkSelected: autoInk,
       signatoryFirstName,
       signatoryLastName,
       signatoryEmail,
@@ -65,14 +94,72 @@ export async function action({ request, params }: ActionFunctionArgs) {
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || null,
       userAgent: request.headers.get("user-agent") || null,
     },
+    update: {
+      offerPosition,
+      installOptionSelected: installOption || null,
+      autoInkSelected: autoInk,
+      signatoryFirstName,
+      signatoryLastName,
+      signatoryEmail,
+      signatoryFunction: signatoryFunction || null,
+      signatoryPhone: signatoryPhone || null,
+      overrideEmail: overrideEmail || null,
+      overridePhone: overridePhone || null,
+      ipAddress: request.headers.get("x-forwarded-for") || null,
+      userAgent: request.headers.get("user-agent") || null,
+    },
   });
 
-  // TODO: redirect to Adobe Sign
-  // For now, redirect to merci page
-  return new Response(null, {
-    status: 302,
-    headers: { Location: `/offre/${accountNumber}/merci` },
-  });
+  console.log(`[SIGN] Acceptance created for ${accountNumber}, generating PDF...`);
+
+  // Generate contract PDF
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await generateContractPDF({ client, offer, acceptance });
+    console.log(`[SIGN] PDF generated (${pdfBuffer.length} bytes)`);
+  } catch (err) {
+    console.error(`[SIGN] PDF generation failed:`, err);
+    return {
+      errors: { _form: "Erreur lors de la génération du contrat. Veuillez réessayer." },
+      values: Object.fromEntries(formData),
+    };
+  }
+
+  // Create Yousign signature request
+  try {
+    const { signatureRequestId, signerUrl } = await createSignatureRequest({
+      pdfBuffer,
+      pdfFilename: `contrat-pb-${accountNumber}.pdf`,
+      signerFirstName: signatoryFirstName,
+      signerLastName: signatoryLastName,
+      signerEmail: signatoryEmail,
+      signerPhone: signatoryPhone || undefined,
+      accountNumber,
+    });
+
+    // Store Yousign signature request ID
+    await prisma.acceptance.update({
+      where: { id: acceptance.id },
+      data: {
+        adobeSignAgreementId: signatureRequestId, // reusing the field for Yousign
+        adobeSignStatus: "sent",
+      },
+    });
+
+    console.log(`[SIGN] Redirecting to Yousign: ${signerUrl}`);
+
+    // Redirect to Yousign signing page
+    return new Response(null, {
+      status: 302,
+      headers: { Location: signerUrl },
+    });
+  } catch (err) {
+    console.error(`[SIGN] Yousign API failed:`, err);
+    return {
+      errors: { _form: "Erreur lors de la création de la signature. Veuillez réessayer." },
+      values: Object.fromEntries(formData),
+    };
+  }
 }
 
 function formatCurrency(amount: number | null): string {
@@ -81,7 +168,7 @@ function formatCurrency(amount: number | null): string {
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -94,12 +181,21 @@ export default function OffreConfirmer() {
 
   return (
     <div className="pb-space-lg">
-      {/* Back */}
       <Link to={`/offre/${client.accountNumber}`} className="pb-link" style={{ fontSize: "14px" }}>
         ← Retour aux offres
       </Link>
 
       <h1 className="pb-title">Confirmation de votre choix</h1>
+
+      {signatureError && (
+        <div className="pb-error">
+          La signature a échoué. Veuillez réessayer.
+        </div>
+      )}
+
+      {actionData?.errors?._form && (
+        <div className="pb-error">{actionData.errors._form}</div>
+      )}
 
       {/* Recap */}
       <div className="pb-card pb-space-sm">
@@ -225,7 +321,7 @@ export default function OffreConfirmer() {
                 type="email"
                 required
                 defaultValue={actionData?.values?.signatoryEmail ?? ""}
-                placeholder="C'est ici qu'Adobe Sign enverra le contrat"
+                placeholder="C'est ici que Yousign enverra le contrat"
                 className="pb-input"
                 style={actionData?.errors?.signatoryEmail ? { borderColor: "#DC2626" } : {}}
               />
@@ -283,7 +379,7 @@ export default function OffreConfirmer() {
             style={{ padding: "14px 28px", fontSize: "16px" }}
           >
             {isSubmitting ? (
-              <><span className="pb-spinner" /> Validation en cours...</>
+              <><span className="pb-spinner" /> Préparation du contrat...</>
             ) : (
               "Signer mon contrat"
             )}
