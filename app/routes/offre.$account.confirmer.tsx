@@ -148,10 +148,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
     console.log(`[SIGN] Redirecting to Yousign: ${signerUrl}`);
 
-    // Redirect to Yousign signing page
+
+  // Redirect to our embedded signing page
     return new Response(null, {
       status: 302,
-      headers: { Location: signerUrl },
+      headers: { Location: `/offre/${accountNumber}/signer` },
     });
   } catch (err) {
     console.error(`[SIGN] Yousign API failed:`, err);
