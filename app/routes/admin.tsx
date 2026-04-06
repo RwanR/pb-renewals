@@ -25,8 +25,9 @@ export default function AdminLayout() {
         <header className="admin-header">
           <span className="admin-logo">PB Renewals — Admin</span>
           <nav className="admin-nav">
+            <Link to="/admin" className="admin-nav-link">Dashboard</Link>
             <Link to="/admin/import" className="admin-nav-link">Import</Link>
-            <Link to="/admin/export-links" className="admin-nav-link">Export liens</Link>
+            <Link to="/admin/export-links" className="admin-nav-link" reloadDocument>Export liens</Link>
             <a href="/admin/login?logout=1" className="admin-nav-link admin-logout">Déconnexion</a>
           </nav>
         </header>
