@@ -82,6 +82,14 @@ export default function OffreMerci() {
         </div>
       </div>
 
+      <a href={`/offre/${client.accountNumber}/contrat-signe`}
+        className="pb-btn pb-btn-primary pb-btn-full"
+        style={{ padding: "14px 28px", fontSize: "16px", textAlign: "center", display: "block", textDecoration: "none" }}
+        download
+      >
+        📄 Télécharger mon contrat signé
+      </a>
+
       {/* What's next */}
       {whatsNext.length > 0 && (
         <div className="pb-card pb-space-sm">

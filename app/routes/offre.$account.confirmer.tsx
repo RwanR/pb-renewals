@@ -12,6 +12,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const signatureError = url.searchParams.get("error") === "signature";
+  const autoInk = url.searchParams.get("autoInk") === "true";
+  const installOption = url.searchParams.get("installOption") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -33,7 +35,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  return { client, offer: client.offers[0], offerPosition, signatureError };
+  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -169,7 +171,7 @@ function formatCurrency(amount: number | null): string {
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError, autoInk, installOption } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -224,6 +226,8 @@ export default function OffreConfirmer() {
       {/* Form */}
       <Form method="post">
         <input type="hidden" name="offerPosition" value={offerPosition} />
+        <input type="hidden" name="autoInk" value={autoInk ? "true" : "false"} />
+        <input type="hidden" name="installOption" value={installOption} />
 
         <div className="pb-space">
           {/* Client info */}

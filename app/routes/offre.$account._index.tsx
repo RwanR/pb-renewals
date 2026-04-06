@@ -273,7 +273,7 @@ function OfferCard({ offer, recommended = false }: { offer: any; recommended?: b
 
       {/* CTA */}
       <Link
-        to={`/offre/${offer.clientAccountNumber}/confirmer?offre=${offer.offerPosition}`}
+        to={`/offre/${offer.clientAccountNumber}/options?offre=${offer.offerPosition}`}
         className={`pb-btn pb-btn-full ${recommended ? "pb-btn-primary" : "pb-btn-secondary"}`}
       >
         {recommended ? "Choisir cette offre" : "Reconduire mon contrat"}

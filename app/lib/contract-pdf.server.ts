@@ -83,6 +83,21 @@ function generateContractHTML(data: ContractData): string {
     });
   }
 
+  if (acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto") {
+    const installLabels: Record<string, { desc: string; price: string }> = {
+      phone: { desc: "Installation assistée en ligne", price: "63,00 €" },
+      onsite: { desc: "Installation sur site par un technicien", price: "155,00 €" },
+    };
+    const install = installLabels[acceptance.installOptionSelected];
+    if (install) {
+      equipmentLines.push({
+        code: "INSTALL",
+        description: install.desc,
+        monthly: install.price,
+      });
+    }
+  }
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
