@@ -47,10 +47,11 @@ export async function validateAccountNumber(accountNumber: string): Promise<bool
 /**
  * Create a session for an authenticated client
  */
-export async function createClientSession(accountNumber: string, redirectTo: string) {
+export async function createClientSession(accountNumber: string, redirectTo: string, customerName?: string) {
   const session = await clientSessionStorage.getSession();
   session.set("accountNumber", accountNumber);
   session.set("authenticatedAt", new Date().toISOString());
+  if (customerName) session.set("customerName", customerName);
 
   return redirect(redirectTo, {
     headers: {
@@ -67,6 +68,16 @@ export async function getClientAccountNumber(request: Request): Promise<string |
     request.headers.get("Cookie")
   );
   return session.get("accountNumber") || null;
+}
+
+/**
+ * Get the authenticated client's name from session
+ */
+export async function getClientName(request: Request): Promise<string | null> {
+  const session = await clientSessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  return session.get("customerName") || null;
 }
 
 /**

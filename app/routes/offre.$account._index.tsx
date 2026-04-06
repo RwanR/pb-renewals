@@ -4,10 +4,10 @@ import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const accountNumber = params.account!;
+  var accountNumber = params.account!;
   await requireClientAccess(request, accountNumber);
 
-  const client = await prisma.client.findUnique({
+  var client = await prisma.client.findUnique({
     where: { accountNumber },
     include: {
       offers: { orderBy: { offerPosition: "asc" } },
@@ -30,253 +30,284 @@ function formatCurrency(amount: number | null): string {
   });
 }
 
-function formatMonthly(annual: number | null): string {
-  if (annual === null || annual === undefined) return "—";
-  return formatCurrency(annual / 12);
-}
-
-function parseInstallOptions(description: string | null) {
-  if (!description) return [];
-  return description.split("|").map((s) => {
-    const trimmed = s.trim();
-    const match = trimmed.match(/^(.+?):\s*(.+)$/);
-    if (match) return { label: match[1].trim(), detail: match[2].trim() };
-    return { label: trimmed, detail: "" };
-  });
+function getMachineImage(model: string | null): string | null {
+  if (!model) return null;
+  var images: Record<string, string> = {
+    "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
+    "DM220": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
+    "DM50/55": "https://www.pitneybowes.com/content/dam/pitneybowes/Support/dm55_s1.jpg",
+    "DM400": "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/legacy/images/international/common/products/gms/digital-franking-machines/dm400c/dm400-box-left--proddetail_large.jpg",
+  };
+  for (var key of Object.keys(images)) {
+    if (model.includes(key)) return images[key];
+  }
+  return null;
 }
 
 export default function OffreClient() {
-  const { client } = useLoaderData<typeof loader>();
+  var { client } = useLoaderData<typeof loader>();
+  var offer1 = client.offers.find(function(o: any) { return o.offerPosition === 1; });
+  var offer2 = client.offers.find(function(o: any) { return o.offerPosition === 2; });
 
-  const offer1 = client.offers.find((o: any) => o.offerPosition === 1);
-  const offer2 = client.offers.find((o: any) => o.offerPosition === 2);
-
-  // Already signed?
-if (client.acceptance?.adobeSignStatus === "signed") {
+  if (client.acceptance?.adobeSignStatus === "signed") {
     return (
-      <div className="pb-space">
-        <div className="pb-card" style={{ textAlign: "center", padding: "48px 24px" }}>
+      <div style={{ textAlign: "center", padding: "48px 24px" }}>
+        <div className="pb-card" style={{ maxWidth: "500px", margin: "0 auto", textAlign: "center", padding: "48px 32px" }}>
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>✓</div>
-          <h1 className="pb-title" style={{ marginBottom: "12px" }}>
-            Contrat déjà signé
-          </h1>
-          <p className="pb-text" style={{ color: "var(--pb-text-light)" }}>
-            Vous avez déjà signé votre contrat de renouvellement.
-            Un email de confirmation vous a été envoyé.
+          <h1 className="pb-heading" style={{ marginBottom: "12px" }}>Contrat déjà signé</h1>
+          <p className="pb-text-sm" style={{ color: "var(--pb-text-muted)" }}>
+            Vous avez déjà signé votre contrat de renouvellement. Un email de confirmation vous a été envoyé.
           </p>
+          <Link to={"/offre/" + client.accountNumber + "/merci"} className="pb-btn pb-btn-primary" style={{ marginTop: "24px" }}>
+            Voir la confirmation
+          </Link>
         </div>
       </div>
     );
   }
 
+  var currentImage = getMachineImage(client.currentModel);
+
   return (
-    <div className="pb-space-lg">
-      {/* Greeting */}
-      <div>
-        <p className="pb-greeting">
-          Bonjour, <strong>{client.customerName}</strong>
-        </p>
-        <h1 className="pb-title">Votre offre de renouvellement</h1>
+    <div>
+      {/* Banner */}
+      <div className="pb-banner">
+        Bénéficiez de <strong>25%</strong> à <strong>50%</strong> de réduction sur votre premier loyer annuel
       </div>
 
-      {/* Current situation */}
-      <div className="pb-card pb-space-sm">
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <span className="pb-badge pb-badge-current">Votre situation actuelle</span>
-        </div>
-        <div className="pb-situation">
-          <div className="pb-situation-item">
-            <div className="pb-situation-label">Machine actuelle</div>
-            <div className="pb-situation-value">{client.currentModel || "—"}</div>
-          </div>
-          <div className="pb-situation-item">
-            <div className="pb-situation-label">N° de contrat</div>
-            <div className="pb-situation-value">{client.leaseNumber || "—"}</div>
-          </div>
-          <div className="pb-situation-item">
-            <div className="pb-situation-label">Loyer actuel</div>
-            <div className="pb-situation-value">
-              {client.currentEquipmentPayment
-                ? `${formatCurrency(client.currentEquipmentPayment)} € HT/an`
-                : "—"}
+      <div className="pb-main">
+        {/* Situation actuelle */}
+        <div className="pb-card" style={{ display: "flex", alignItems: "center", gap: "24px", maxWidth: "596px", margin: "0 auto 32px", padding: "24px" }}>
+          {currentImage ? (
+            <div style={{ width: "262px", height: "120px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <img
+                src={currentImage}
+                alt={client.currentModel || "Machine"}
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            </div>
+          ) : null}
+          <div style={{ flex: 1, width: "254px" }}>
+            <p style={{ fontSize: "18px", fontWeight: 600, lineHeight: "27px", color: "var(--pb-text)", marginBottom: "16px" }}>Situation actuelle</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", lineHeight: "20px" }}>
+                <div>
+                  <p className="pb-situation-label">Machine</p>
+                  <p className="pb-situation-label">Loyer annuel HT</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <p className="pb-situation-value">{client.currentModel || "—"}</p>
+                  <p className="pb-situation-value">{client.currentEquipmentPayment ? formatCurrency(client.currentEquipmentPayment) + " €" : "—"}</p>
+                </div>
+              </div>
+              <div style={{ height: "1px", background: "#e5e5e5" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", lineHeight: "20px" }}>
+                <div>
+                  <p className="pb-situation-label">N° de contrat</p>
+                  <p className="pb-situation-label">Fin de contrat</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <p className="pb-situation-value">{client.leaseNumber || "—"}</p>
+                  <p className="pb-situation-value">{client.leaseExpiryDate ? new Date(client.leaseExpiryDate).toLocaleDateString("fr-FR") : "—"}</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="pb-situation-item">
-            <div className="pb-situation-label">Fin de contrat</div>
-            <div className="pb-situation-value">
-              {client.leaseExpiryDate
-                ? new Date(client.leaseExpiryDate).toLocaleDateString("fr-FR")
-                : "—"}
+        </div>
+
+        {/* Stepper */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", padding: "48px 0", marginBottom: "0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <div className="pb-step pb-step-active">1</div>
+            <div className="pb-step-line" />
+            <div className="pb-step pb-step-inactive">2</div>
+            <div className="pb-step-line" />
+            <div className="pb-step pb-step-inactive">3</div>
+            <div className="pb-step-line" />
+            <div className="pb-step pb-step-inactive">4</div>
+          </div>
+          <p className="pb-heading" style={{ textAlign: "center" }}>
+            Choisissez une des offres ci dessous
+          </p>
+        </div>
+
+        {/* Offers */}
+        <div className="pb-offers-grid" style={{ marginBottom: "48px" }}>
+          {offer1 ? <OfferCard offer={offer1} isRecommended={true} /> : null}
+          {offer2 ? <OfferCard offer={offer2} isRecommended={false} /> : null}
+        </div>
+
+        {/* Pas intéressé */}
+        <div style={{ maxWidth: "493px", marginBottom: "48px" }}>
+          <p className="pb-heading" style={{ marginBottom: "16px" }}>Pas intéressé?</p>
+          <div style={{
+            background: "var(--pb-muted-bg)",
+            border: "1px solid var(--pb-border)",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            padding: "16px",
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+              <circle cx="10" cy="10" r="8" stroke="#737373" strokeWidth="1.5" fill="none"/>
+              <text x="10" y="14" textAnchor="middle" fontSize="11" fill="#737373">?</text>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-foreground)" }}>Aucune offre ne vous convient ?</p>
+              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-text-muted)" }}>Pouvez-vous nous en exprimer les raison ?</p>
             </div>
+            <Link
+              to={"/offre/" + client.accountNumber + "/refus"}
+              className="pb-btn-outline"
+              style={{
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "var(--pb-foreground)",
+                background: "rgba(255,255,255,0.1)",
+                border: "1px solid var(--pb-border-dark)",
+                boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+                textDecoration: "none",
+                flexShrink: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: "32px",
+                cursor: "pointer",
+              }}
+            >
+              Continuer
+            </Link>
           </div>
         </div>
-      </div>
-
-      {/* Offers */}
-      <div className="pb-offers-grid">
-        {/* Offer 1 — Recommended */}
-        {offer1 && (
-          <div className="pb-offer-main">
-            <OfferCard offer={offer1} recommended />
-          </div>
-        )}
-
-        {/* Offer 2 — Alternative */}
-        {offer2 && (
-          <div className="pb-offer-alt">
-            <OfferCard offer={offer2} />
-          </div>
-        )}
-      </div>
-
-      {/* Not interested */}
-      <div style={{ textAlign: "center", paddingTop: "8px" }}>
-        <Link
-          to={`/offre/${client.accountNumber}/refus`}
-          className="pb-link"
-          style={{ fontSize: "14px" }}
-        >
-          Aucune offre ne me convient →
-        </Link>
       </div>
     </div>
   );
 }
 
-function OfferCard({ offer, recommended = false }: { offer: any; recommended?: boolean }) {
-  // Determine which pricing is available
-  const has60 = offer.billing60 !== null;
-  const has36 = offer.billing36 !== null;
+function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolean }) {
+  var has60 = offer.billing60 !== null;
+  var has36 = offer.billing36 !== null;
+  var primaryBilling = has60 ? offer.billing60 : offer.billing36;
+  var primaryTerm = has60 ? "60 mois" : "36 mois";
+  var discount = isRecommended ? 0.5 : 0.25;
+  var firstYearPrice = primaryBilling ? primaryBilling * (1 - discount) : null;
+  var optionsUrl = "/offre/" + offer.clientAccountNumber + "/options?offre=" + offer.offerPosition;
 
-  // Primary price (the main one to display)
-  const primaryBilling = has60 ? offer.billing60 : offer.billing36;
-  const primaryTerm = has60 ? "60 mois" : "36 mois";
-  const primaryTotal = has60 ? offer.billingTotal60 : offer.billingTotal36;
-
-  const isUpgrade = offer.template === "1";
-  const installOptions = isUpgrade ? parseInstallOptions(offer.installDescription) : [];
+  var cardStyle: React.CSSProperties = isRecommended
+    ? { border: "2px solid #404040", borderRadius: "16px", padding: "32px", background: "white", display: "flex", flexDirection: "column", gap: "20px" }
+    : { border: "1px solid #e5e5e5", borderRadius: "16px", padding: "32px", background: "white", display: "flex", flexDirection: "column", gap: "20px" };
 
   return (
-    <div className={`pb-card pb-space-sm ${recommended ? "pb-card-highlight" : "pb-card-secondary"}`}>
+    <div style={cardStyle}>
       {/* Badge */}
-      {recommended && (
-        <span className="pb-badge pb-badge-recommended">★ Recommandé pour vous</span>
+      {isRecommended ? (
+        <span className="pb-badge pb-badge-recommended">Recommandé pour vous</span>
+      ) : (
+        <span className="pb-badge pb-badge-current">Machine actuelle</span>
       )}
 
-      {/* Headline */}
-      <h2 className="pb-subtitle" style={{ marginTop: recommended ? "12px" : "0" }}>
-        {offer.headline || offer.modelName}
-      </h2>
+      {/* Name */}
+      <p className="pb-heading">{offer.modelName || "—"}</p>
 
-      {/* Machine info */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        {offer.imageUrl && (
+      {/* Headline */}
+      {offer.headline ? (
+        <p className="pb-text-sm">{offer.headline}</p>
+      ) : null}
+
+      {/* Price + duration */}
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px" }}>
+          <span className="pb-price">{formatCurrency(primaryBilling)}</span>
+          <span className="pb-price-unit">€ HT / an</span>
+        </div>
+        <select className="pb-select" defaultValue={has60 ? "60" : "36"}>
+          {has60 ? <option value="60">60 mois</option> : null}
+          {has36 ? <option value="36">36 mois</option> : null}
+        </select>
+      </div>
+
+      {/* Machine image */}
+      {offer.imageUrl ? (
+        <div style={{ position: "relative", height: "140px", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <img
             src={offer.imageUrl}
             alt={offer.modelName}
-            className="pb-machine-img"
-            style={{ maxWidth: "120px" }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+            onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }}
           />
-        )}
-        <div>
-          <p className="pb-text" style={{ fontWeight: 500 }}>{offer.modelDescription}</p>
-          <p className="pb-text-sm">{offer.contractTerm}</p>
+          {offer.brochureUrl ? (
+            <a href={offer.brochureUrl} target="_blank" rel="noopener" style={{
+              position: "absolute", bottom: 0, right: 0,
+              padding: "3px 8px",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid #d4d4d4",
+              borderRadius: "8px",
+              fontSize: "12px", fontWeight: 500,
+              color: "var(--pb-foreground)",
+              textDecoration: "none",
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
+              minHeight: "24px",
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v6M3 6l3 3 3-3M2 10h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              PDF
+            </a>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
-      {/* Promo */}
-      {offer.marketingMessage && (
-        <div className="pb-promo">
-          <span>🎁</span>
-          <span>{offer.marketingMessage}</span>
-        </div>
-      )}
-
-      {/* Price */}
-      <div>
-        <div className="pb-price">
-          {formatCurrency(primaryBilling)} €
-          <span className="pb-price-period"> HT / an</span>
-        </div>
-        <div className="pb-price-monthly">
-          soit {formatMonthly(primaryBilling)} € HT / mois · {primaryTerm}
-        </div>
-        {primaryTotal && (
-          <div className="pb-text-xs" style={{ marginTop: "4px" }}>
-            TTC : {formatCurrency(primaryTotal)} € / an
-          </div>
-        )}
-      </div>
-
-      {/* Payment message */}
-      {offer.paymentMessage && (
-        <p className="pb-text-sm" style={{ fontStyle: "italic", color: "var(--pb-success)" }}>
-          {offer.paymentMessage}
-        </p>
-      )}
-
-      {/* Value props */}
-      {(offer.valueProp1 || offer.valueProp2 || offer.valueProp3) && (
+      {/* Value props (recommended only) */}
+      {isRecommended && (offer.valueProp1 || offer.valueProp2 || offer.valueProp3) ? (
         <div className="pb-props">
-          {offer.valueProp1 && (
+          {offer.valueProp1 ? (
             <div className="pb-prop">
-              <span className="pb-prop-icon">✓</span>
+              <svg className="pb-check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#005cb1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <span>{offer.valueProp1}</span>
             </div>
-          )}
-          {offer.valueProp2 && (
+          ) : null}
+          {offer.valueProp2 ? (
             <div className="pb-prop">
-              <span className="pb-prop-icon">✓</span>
+              <svg className="pb-check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#005cb1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <span>{offer.valueProp2}</span>
             </div>
-          )}
-          {offer.valueProp3 && (
+          ) : null}
+          {offer.valueProp3 ? (
             <div className="pb-prop">
-              <span className="pb-prop-icon">✓</span>
+              <svg className="pb-check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#005cb1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <span>{offer.valueProp3}</span>
             </div>
-          )}
+          ) : null}
+          {offer.starterKit && offer.starterKitDescription ? (
+            <div className="pb-prop">
+              <svg className="pb-check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#005cb1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span>{offer.starterKitDescription}</span>
+            </div>
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* Included equipment */}
-      {(offer.description2 || offer.description3 || offer.description4) && (
-        <div>
-          <div className="pb-text-xs" style={{ fontWeight: 600, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Inclus
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {offer.description2 && <div className="pb-text-sm">• {offer.description2}</div>}
-            {offer.description3 && <div className="pb-text-sm">• {offer.description3}</div>}
-            {offer.description4 && <div className="pb-text-sm">• {offer.description4}</div>}
-          </div>
-        </div>
-      )}
-
-      {/* AutoInk */}
-      {offer.autoInk && offer.autoInkDescription && (
-        <div style={{ padding: "10px 14px", background: "#F0F9FF", borderRadius: "8px", fontSize: "13px" }}>
-          <strong>🖋 {offer.autoInkDescription}</strong>
-          <span style={{ color: "var(--pb-text-light)" }}> — Ne tombez jamais à court d'encre</span>
-        </div>
-      )}
-
-      {/* Brochure */}
-      {offer.brochureUrl && (
-        <a href={offer.brochureUrl} target="_blank" rel="noopener" className="pb-link" style={{ fontSize: "13px" }}>
-          📄 Télécharger la brochure PDF
-        </a>
-      )}
-
-      <div className="pb-divider" />
+      {/* Promo block */}
+      <div className={isRecommended ? "pb-promo pb-promo-recommended" : "pb-promo pb-promo-default"}>
+        <p className="pb-promo-title">
+          {"Contrat de " + primaryTerm + ". Paiement annuel."}
+        </p>
+        <p className="pb-promo-sub">
+          {firstYearPrice !== null
+            ? formatCurrency(firstYearPrice) + " € HT la première année, " + formatCurrency(primaryBilling) + " € HT les suivantes"
+            : (isRecommended ? "-50%" : "-25%") + " sur le premier loyer annuel"
+          }
+        </p>
+      </div>
 
       {/* CTA */}
       <Link
-        to={`/offre/${offer.clientAccountNumber}/options?offre=${offer.offerPosition}`}
-        className={`pb-btn pb-btn-full ${recommended ? "pb-btn-primary" : "pb-btn-secondary"}`}
+        to={optionsUrl}
+        className={isRecommended ? "pb-btn pb-btn-full pb-btn-primary" : "pb-btn pb-btn-full pb-btn-secondary"}
       >
-        {recommended ? "Choisir cette offre" : "Reconduire mon contrat"}
+        {isRecommended ? "Choisir cette offre" : "Reconduire cette offre"}
       </Link>
     </div>
   );
