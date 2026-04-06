@@ -98,6 +98,7 @@ model Client {
   importRun           ImportRun?    @relation(fields: [importRunId], references: [id])
   offers              Offer[]
   acceptance          Acceptance?
+  refusal             Refusal?
   accessToken         AccessToken?
 
   createdAt           DateTime @default(now())
@@ -213,6 +214,15 @@ model Acceptance {
   signedAt              DateTime?
   emailSentAt           DateTime?
   shopifySyncedAt       DateTime?
+}
+
+model Refusal {
+  id                    String   @id @default(cuid())
+  clientAccountNumber   String   @unique
+  client                Client   @relation(fields: [clientAccountNumber], references: [accountNumber])
+  reason                String?  // "too_expensive" | "no_need" | "contact_me" | "other"
+  comment               String?  @db.Text
+  createdAt             DateTime @default(now())
 }
 
 model AccessToken {

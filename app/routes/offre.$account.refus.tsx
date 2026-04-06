@@ -30,10 +30,53 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return { error: "Veuillez sélectionner une raison." };
   }
 
-  // Store refusal as a special acceptance with offerPosition = 0
-  // Or we could create a separate Refusal model — for now, log it
-  // TODO: create a Refusal model or store in Acceptance with a flag
+  const client = await prisma.client.findUnique({
+    where: { accountNumber },
+    select: { customerName: true, ownerName: true, ownerEmail: true },
+  });
+
+  // Store in DB
+  await prisma.refusal.upsert({
+    where: { clientAccountNumber: accountNumber },
+    create: { clientAccountNumber: accountNumber, reason, comment: comment || null },
+    update: { reason, comment: comment || null },
+  });
+
   console.log(`[REFUS] Client ${accountNumber}: reason=${reason}, comment=${comment}`);
+
+  // Email commercial PB
+  if (client?.ownerEmail) {
+    try {
+      const reasonLabels: Record<string, string> = {
+        trop_cher: "Tarif trop élevé",
+        plus_besoin: "Plus besoin de machine à affranchir",
+        concurrent: "Choix d'un autre prestataire",
+        contact: "Souhaite être contacté",
+        autre: "Autre raison",
+      };
+
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
+        to: client.ownerEmail,
+        subject: `[PB Renewals] Refus – ${client.customerName} (${accountNumber})`,
+        html: `
+          <h2>Refus de renouvellement</h2>
+          <p><strong>Client :</strong> ${client.customerName} (${accountNumber})</p>
+          <p><strong>Raison :</strong> ${reasonLabels[reason] || reason}</p>
+          ${comment ? `<p><strong>Commentaire :</strong> ${comment}</p>` : ""}
+          <p style="color:#666;font-size:13px">Email envoyé automatiquement par la plateforme PB Renewals.</p>
+        `,
+      });
+
+      console.log(`[REFUS] Email sent to ${client.ownerEmail}`);
+    } catch (err) {
+      console.error(`[REFUS] Email failed:`, err);
+      // Don't block — the refusal is already saved
+    }
+  }
 
   return { success: true };
 }
