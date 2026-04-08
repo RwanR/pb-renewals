@@ -1,15 +1,15 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useActionData, Form, useNavigation } from "react-router";
-import { requireAdminAuth } from "~/lib/admin-auth.server";
+import { requireAdmin } from "~/lib/admin-auth.server";
 import { createMetafieldDefinitions } from "~/lib/shopify-admin.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await requireAdminAuth(request);
+  await requireAdmin(request);
   return {};
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  await requireAdminAuth(request);
+  await requireAdmin(request);
   const result = await createMetafieldDefinitions();
   return { result };
 }
