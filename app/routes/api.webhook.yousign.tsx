@@ -39,18 +39,18 @@ export async function action({ request }: ActionFunctionArgs) {
 
       console.log(`[YOUSIGN WEBHOOK] Acceptance ${acceptance.id} marked as signed`);
 
-      // Download signed PDF
-      downloadSignedDocuments(event.signatureRequestId)
-        .then(async (pdfBuffer) => {
-          console.log(`[YOUSIGN WEBHOOK] Downloaded signed PDF (${pdfBuffer.length} bytes)`);
-          await prisma.acceptance.update({
-            where: { id: acceptance.id },
-            data: { signedPdfUrl: `yousign://${event.signatureRequestId}` },
-          });
-        })
-        .catch((err) => {
-          console.error(`[YOUSIGN WEBHOOK] Failed to download signed PDF:`, err);
+      // Download signed PDF, then send emails with attachment
+      let signedPdfBuffer: Buffer | null = null;
+      try {
+        signedPdfBuffer = await downloadSignedDocuments(event.signatureRequestId);
+        console.log(`[YOUSIGN WEBHOOK] Downloaded signed PDF (${signedPdfBuffer.length} bytes)`);
+        await prisma.acceptance.update({
+          where: { id: acceptance.id },
+          data: { signedPdfUrl: `yousign://${event.signatureRequestId}` },
         });
+      } catch (err) {
+        console.error(`[YOUSIGN WEBHOOK] Failed to download signed PDF:`, err);
+      }
 
       // Send confirmation emails via Resend
       const client = acceptance.client;
@@ -60,6 +60,11 @@ export async function action({ request }: ActionFunctionArgs) {
       const term = offer?.billing60 ? "60 mois" : "48 mois";
       const recipientEmail = acceptance.signatoryEmail;
       const accountNumber = acceptance.clientAccountNumber;
+      const pdfFilename = `contrat-signe-${accountNumber}.pdf`;
+
+      const attachments = signedPdfBuffer
+        ? [{ filename: pdfFilename, content: signedPdfBuffer }]
+        : [];
 
       try {
         const { Resend } = await import("resend");
@@ -72,6 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
             from: fromEmail,
             to: recipientEmail,
             subject: `Confirmation de signature – Contrat ${accountNumber}`,
+            attachments,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #404040;">
                 <div style="padding: 24px 0; text-align: center; border-bottom: 3px solid; border-image: linear-gradient(90deg, #1D2C6B, #00A3E0, #7B2D8E, #E91E8C) 1;">
@@ -88,7 +94,7 @@ export async function action({ request }: ActionFunctionArgs) {
                     <tr><td style="padding: 8px 0; color: #737373;">Durée</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${term}</td></tr>
                     <tr><td style="padding: 8px 0; color: #737373;">Loyer mensuel HT</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${monthly ? monthly.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " €" : "—"}</td></tr>
                   </table>
-                  <p>Vous recevrez une copie du contrat signé par email séparément.</p>
+                  <p>Vous trouverez votre contrat signé en pièce jointe de cet email.</p>
                   ${offer?.template === "1" ? "<p><strong>Prochaine étape :</strong> votre nouvel équipement sera expédié à l'activation de votre nouveau contrat.</p>" : "<p>Votre équipement est déjà en place. Continuez à l'utiliser comme auparavant.</p>"}
                   <p style="margin-top: 24px; font-size: 13px; color: #737373;">Pour toute question, contactez-nous à <a href="mailto:fr-elease@pb.com" style="color: #005cb1;">fr-elease@pb.com</a></p>
                 </div>
@@ -113,6 +119,7 @@ export async function action({ request }: ActionFunctionArgs) {
             from: fromEmail,
             to: client.ownerEmail,
             subject: `[PB Renewals] Contrat signé – ${client.customerName} (${accountNumber})`,
+            attachments,
             html: `
               <h2>Contrat signé</h2>
               <p><strong>Client :</strong> ${client.customerName} (${accountNumber})</p>
