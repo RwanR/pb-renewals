@@ -395,3 +395,203 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
     return null;
   }
 }
+
+// ─── METAFIELD DEFINITIONS ────────────────────────────────────────
+
+const METAFIELD_DEFINITION_CREATE = `
+  mutation metafieldDefinitionCreate($definition: MetafieldDefinitionInput!) {
+    metafieldDefinitionCreate(definition: $definition) {
+      createdDefinition { id name namespace key }
+      userErrors { field message }
+    }
+  }
+`;
+
+const METAFIELD_DEFINITIONS = [
+  { name: "N° de compte", namespace: "pb_renewals", key: "account_number", type: "single_line_text_field" },
+  { name: "N° de contrat", namespace: "pb_renewals", key: "lease_number", type: "single_line_text_field" },
+  { name: "Machine actuelle", namespace: "pb_renewals", key: "current_model", type: "single_line_text_field" },
+  { name: "Loyer annuel HT", namespace: "pb_renewals", key: "current_payment", type: "number_decimal" },
+  { name: "Statut", namespace: "pb_renewals", key: "status", type: "single_line_text_field" },
+  { name: "Offre choisie", namespace: "pb_renewals", key: "offer_selected", type: "single_line_text_field" },
+  { name: "Durée", namespace: "pb_renewals", key: "term_selected", type: "single_line_text_field" },
+  { name: "Installation", namespace: "pb_renewals", key: "install_option", type: "single_line_text_field" },
+  { name: "Signataire", namespace: "pb_renewals", key: "signatory_name", type: "single_line_text_field" },
+  { name: "Date signature", namespace: "pb_renewals", key: "signed_at", type: "single_line_text_field" },
+];
+
+/**
+ * Create all PB Renewals metafield definitions on the Customer resource (one-time setup)
+ */
+export async function createMetafieldDefinitions(): Promise<{ created: number; errors: string[] }> {
+  let created = 0;
+  const errors: string[] = [];
+
+  for (const def of METAFIELD_DEFINITIONS) {
+    try {
+      const result = await shopifyGraphQL(METAFIELD_DEFINITION_CREATE, {
+        definition: {
+          name: def.name,
+          namespace: def.namespace,
+          key: def.key,
+          type: def.type,
+          ownerType: "CUSTOMER",
+          pin: true,
+        },
+      });
+
+      if (result.metafieldDefinitionCreate?.userErrors?.length) {
+        const errMsg = result.metafieldDefinitionCreate.userErrors.map((e: any) => e.message).join(", ");
+        if (errMsg.includes("already exists")) {
+          console.log(`[SHOPIFY] Metafield definition ${def.namespace}.${def.key} already exists`);
+        } else {
+          errors.push(`${def.key}: ${errMsg}`);
+          console.error(`[SHOPIFY] Metafield definition error for ${def.key}:`, errMsg);
+        }
+      } else {
+        created++;
+        console.log(`[SHOPIFY] Created metafield definition: ${def.namespace}.${def.key}`);
+      }
+    } catch (err) {
+      errors.push(`${def.key}: ${err}`);
+    }
+  }
+
+  console.log(`[SHOPIFY] Metafield definitions: ${created} created, ${errors.length} errors`);
+  return { created, errors };
+}
+
+// ─── CUSTOMER UPDATE (after signature) ─────────────────────────────
+
+const CUSTOMER_UPDATE_METAFIELDS = `
+  mutation customerUpdate($input: CustomerInput!) {
+    customerUpdate(input: $input) {
+      customer { id }
+      userErrors { field message }
+    }
+  }
+`;
+
+/**
+ * Update Customer metafields after contract signature
+ */
+export async function updateCustomerAfterSignature(params: {
+  shopifyCustomerId: string;
+  accountNumber: string;
+  offerSelected: string;
+  termSelected: string;
+  installOption: string;
+  signatoryName: string;
+  signedAt: Date;
+}): Promise<void> {
+  const { shopifyCustomerId, accountNumber, offerSelected, termSelected, installOption, signatoryName, signedAt } = params;
+
+  try {
+    const result = await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, {
+      input: {
+        id: shopifyCustomerId,
+        metafields: [
+          { namespace: "pb_renewals", key: "status", value: "signed", type: "single_line_text_field" },
+          { namespace: "pb_renewals", key: "offer_selected", value: offerSelected, type: "single_line_text_field" },
+          { namespace: "pb_renewals", key: "term_selected", value: termSelected, type: "single_line_text_field" },
+          { namespace: "pb_renewals", key: "install_option", value: installOption || "aucune", type: "single_line_text_field" },
+          { namespace: "pb_renewals", key: "signatory_name", value: signatoryName, type: "single_line_text_field" },
+          { namespace: "pb_renewals", key: "signed_at", value: signedAt.toISOString(), type: "single_line_text_field" },
+        ],
+      },
+    });
+
+    if (result.customerUpdate?.userErrors?.length) {
+      console.error(`[SHOPIFY] Customer metafield update errors for ${accountNumber}:`, result.customerUpdate.userErrors);
+    } else {
+      console.log(`[SHOPIFY] Updated customer metafields for ${accountNumber} (status=signed)`);
+    }
+  } catch (err) {
+    console.error(`[SHOPIFY] Failed to update customer metafields for ${accountNumber}:`, err);
+  }
+}
+
+/**
+ * Update Customer info when client modifies email/phone/address
+ */
+export async function updateCustomerInfo(params: {
+  shopifyCustomerId: string;
+  email?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  zip?: string;
+}): Promise<void> {
+  const { shopifyCustomerId, email, phone, address1, address2, city, zip } = params;
+
+  try {
+    const input: any = { id: shopifyCustomerId };
+    if (email) input.email = email;
+    if (phone) input.phone = phone;
+    if (address1 || city) {
+      input.addresses = [{ address1: address1 || "", address2: address2 || "", city: city || "", zip: zip || "", country: "FR" }];
+    }
+
+    const result = await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, { input });
+    if (result.customerUpdate?.userErrors?.length) {
+      console.error(`[SHOPIFY] Customer info update errors:`, result.customerUpdate.userErrors);
+    } else {
+      console.log(`[SHOPIFY] Updated customer info for ${shopifyCustomerId}`);
+    }
+  } catch (err) {
+    console.error(`[SHOPIFY] Failed to update customer info:`, err);
+  }
+}
+
+// ─── CUSTOMER METAFIELDS UPDATE ────────────────────────────────────
+
+const CUSTOMER_METAFIELDS_SET_MUTATION = `
+  mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
+    metafieldsSet(metafields: $metafields) {
+      metafields { id namespace key value }
+      userErrors { field message }
+    }
+  }
+`;
+
+/**
+ * Update Customer metafields after signature
+ */
+export async function updateCustomerSignatureMetafields(params: {
+  shopifyCustomerId: string;
+  offerSelected: string;
+  termSelected: string;
+  installOption: string | null;
+  signatoryName: string;
+  signedAt: Date;
+}): Promise<boolean> {
+  const { shopifyCustomerId, offerSelected, termSelected, installOption, signatoryName, signedAt } = params;
+
+  try {
+    const metafields = [
+      { ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "status", value: "signed", type: "single_line_text_field" },
+      { ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "offer_selected", value: offerSelected, type: "single_line_text_field" },
+      { ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "term_selected", value: termSelected, type: "single_line_text_field" },
+      { ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "signatory_name", value: signatoryName, type: "single_line_text_field" },
+      { ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "signed_at", value: signedAt.toISOString(), type: "single_line_text_field" },
+    ];
+
+    if (installOption) {
+      metafields.push({ ownerId: shopifyCustomerId, namespace: "pb_renewals", key: "install_option", value: installOption, type: "single_line_text_field" });
+    }
+
+    const result = await shopifyGraphQL(CUSTOMER_METAFIELDS_SET_MUTATION, { metafields });
+
+    if (result.metafieldsSet?.userErrors?.length) {
+      console.error(`[SHOPIFY] Metafields update errors:`, result.metafieldsSet.userErrors);
+      return false;
+    }
+
+    console.log(`[SHOPIFY] Updated signature metafields for ${shopifyCustomerId}`);
+    return true;
+  } catch (err) {
+    console.error(`[SHOPIFY] Failed to update metafields:`, err);
+    return false;
+  }
+}

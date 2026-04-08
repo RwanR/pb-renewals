@@ -131,6 +131,33 @@ export async function action({ request }: ActionFunctionArgs) {
         console.log(`[YOUSIGN WEBHOOK] No Shopify Customer ID for ${accountNumber} — skipping draft order`);
       }
 
+      // Update Customer metafields with signature data
+      if (client.shopifyCustomerId) {
+        try {
+          const { updateCustomerAfterSignature, updateCustomerInfo } = await import("~/lib/shopify-admin.server");
+          await updateCustomerAfterSignature({
+            shopifyCustomerId: client.shopifyCustomerId,
+            accountNumber,
+            offerSelected: offer?.modelName || "—",
+            termSelected: offer?.billing60 ? "60 mois" : "48 mois",
+            installOption: acceptance.installOptionSelected || "",
+            signatoryName: `${acceptance.signatoryFirstName} ${acceptance.signatoryLastName}`,
+            signedAt: new Date(),
+          });
+
+          // Sync modified contact info to Shopify
+          if (acceptance.overrideEmail || acceptance.overridePhone) {
+            await updateCustomerInfo({
+              shopifyCustomerId: client.shopifyCustomerId,
+              email: acceptance.overrideEmail || undefined,
+              phone: acceptance.overridePhone || undefined,
+            });
+          }
+        } catch (err) {
+          console.error(`[YOUSIGN WEBHOOK] Metafields update failed:`, err);
+        }
+      }
+
       break;
     }
 
