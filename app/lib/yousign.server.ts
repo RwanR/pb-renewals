@@ -73,7 +73,7 @@ export async function createSignatureRequest(params: {
     method: "POST",
     body: JSON.stringify({
       name: `Contrat PB Renewals - ${accountNumber}`,
-      delivery_mode: "none",
+      delivery_mode: "email",
       timezone: "Europe/Paris",
       ordered_signers: false,
       reminder_settings: {
@@ -152,19 +152,25 @@ export async function createSignatureRequest(params: {
 
   console.log(`[YOUSIGN] Added signer: ${signer.id}`);
 
-  // 4. Activate the Signature Request
-  await yousignFetch(
+  // 4. Activate the Signature Request — response contains signers with signature_link
+  const activationResponse = await yousignFetch(
     `/signature_requests/${signatureRequestId}/activate`,
     { method: "POST" }
   );
 
   console.log(`[YOUSIGN] Activated signature request`);
 
-  // 5. Fetch signer to get the signature_link (available only after activation)
-  const activatedSigner = await yousignFetch(
-    `/signature_requests/${signatureRequestId}/signers/${signer.id}`
-  );
-  const signerUrl = activatedSigner.signature_link;
+  // 5. Get signature_link from activation response first, then fallback to signer fetch
+  let signerUrl = activationResponse.signers?.[0]?.signature_link;
+
+  if (!signerUrl) {
+    console.log(`[YOUSIGN] No signature_link in activation response, fetching signer directly`);
+    const activatedSigner = await yousignFetch(
+      `/signature_requests/${signatureRequestId}/signers/${signer.id}`
+    );
+    signerUrl = activatedSigner.signature_link;
+  }
+
   console.log(`[YOUSIGN] Signer URL: ${signerUrl}`);
 
   return {
