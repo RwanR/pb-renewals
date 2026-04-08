@@ -12,30 +12,19 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const signatureError = url.searchParams.get("error") === "signature";
-  const autoInk = url.searchParams.get("autoInk") === "true";
+  const autoInk = false; // AutoInk supprimé par PB
   const installOption = url.searchParams.get("installOption") || "";
-
-  // Info from step 3
   const overrideEmail = url.searchParams.get("email") || "";
   const overridePhone = url.searchParams.get("phone") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
-    include: {
-      offers: { where: { offerPosition } },
-      acceptance: true,
-    },
+    include: { offers: { where: { offerPosition } }, acceptance: true },
   });
 
-  if (!client || client.offers.length === 0) {
-    throw new Response("Offre non trouvée", { status: 404 });
-  }
-
+  if (!client || client.offers.length === 0) throw new Response("Offre non trouvée", { status: 404 });
   if (client.acceptance?.adobeSignStatus === "signed") {
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `/offre/${accountNumber}/merci` },
-    });
+    return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/merci` } });
   }
 
   return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone };
@@ -46,7 +35,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
   await requireClientAccess(request, accountNumber);
 
   const formData = await request.formData();
-
   const signatoryFirstName = (formData.get("signatoryFirstName") as string)?.trim();
   const signatoryLastName = (formData.get("signatoryLastName") as string)?.trim();
   const signatoryEmail = (formData.get("signatoryEmail") as string)?.trim();
@@ -57,58 +45,39 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const orderRef = (formData.get("orderRef") as string)?.trim();
   const offerPosition = parseInt(formData.get("offerPosition") as string || "1");
   const installOption = (formData.get("installOption") as string)?.trim();
-  const autoInk = formData.get("autoInk") === "true";
+  const autoInk = false; // AutoInk supprimé par PB
 
   const errors: Record<string, string> = {};
   if (!signatoryFirstName) errors.signatoryFirstName = "Obligatoire";
   if (!signatoryLastName) errors.signatoryLastName = "Obligatoire";
   if (!signatoryEmail) errors.signatoryEmail = "Obligatoire";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signatoryEmail)) errors.signatoryEmail = "Email invalide";
-
-  if (Object.keys(errors).length > 0) {
-    return { errors, values: Object.fromEntries(formData) };
-  }
+  if (Object.keys(errors).length > 0) return { errors, values: Object.fromEntries(formData) };
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
     include: { offers: { where: { offerPosition } } },
   });
-
-  if (!client || client.offers.length === 0) {
-    return { errors: { _form: "Client ou offre introuvable" }, values: Object.fromEntries(formData) };
-  }
+  if (!client || client.offers.length === 0) return { errors: { _form: "Client ou offre introuvable" }, values: Object.fromEntries(formData) };
 
   const offer = client.offers[0];
-
   const acceptance = await prisma.acceptance.upsert({
     where: { clientAccountNumber: accountNumber },
     create: {
-      clientAccountNumber: accountNumber,
-      offerPosition,
-      installOptionSelected: installOption || null,
-      autoInkSelected: autoInk,
-      signatoryFirstName,
-      signatoryLastName,
-      signatoryEmail,
-      signatoryFunction: signatoryFunction || null,
-      signatoryPhone: signatoryPhone || null,
-      overrideEmail: overrideEmail || null,
-      overridePhone: overridePhone || null,
+      clientAccountNumber: accountNumber, offerPosition,
+      installOptionSelected: installOption || null, autoInkSelected: autoInk,
+      signatoryFirstName, signatoryLastName, signatoryEmail,
+      signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
+      overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
       notes: orderRef ? `Réf commande: ${orderRef}` : null,
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || null,
       userAgent: request.headers.get("user-agent") || null,
     },
     update: {
-      offerPosition,
-      installOptionSelected: installOption || null,
-      autoInkSelected: autoInk,
-      signatoryFirstName,
-      signatoryLastName,
-      signatoryEmail,
-      signatoryFunction: signatoryFunction || null,
-      signatoryPhone: signatoryPhone || null,
-      overrideEmail: overrideEmail || null,
-      overridePhone: overridePhone || null,
+      offerPosition, installOptionSelected: installOption || null, autoInkSelected: autoInk,
+      signatoryFirstName, signatoryLastName, signatoryEmail,
+      signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
+      overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
       notes: orderRef ? `Réf commande: ${orderRef}` : null,
       ipAddress: request.headers.get("x-forwarded-for") || null,
       userAgent: request.headers.get("user-agent") || null,
@@ -116,7 +85,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
   });
 
   console.log(`[SIGN] Acceptance created for ${accountNumber}, generating PDF...`);
-
   let pdfBuffer: Buffer;
   try {
     pdfBuffer = await generateContractPDF({ client, offer, acceptance });
@@ -127,27 +95,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    const { signatureRequestId, signerUrl } = await createSignatureRequest({
-      pdfBuffer,
-      pdfFilename: `contrat-pb-${accountNumber}.pdf`,
-      signerFirstName: signatoryFirstName,
-      signerLastName: signatoryLastName,
-      signerEmail: signatoryEmail,
-      signerPhone: signatoryPhone || undefined,
-      accountNumber,
+    const { signatureRequestId } = await createSignatureRequest({
+      pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
+      signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
+      signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
     });
-
     await prisma.acceptance.update({
       where: { id: acceptance.id },
       data: { adobeSignAgreementId: signatureRequestId, adobeSignStatus: "sent" },
     });
-
     console.log(`[SIGN] Redirecting to Yousign signer page`);
-
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `/offre/${accountNumber}/signer` },
-    });
+    return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/signer` } });
   } catch (err) {
     console.error(`[SIGN] Yousign API failed:`, err);
     return { errors: { _form: "Erreur lors de la création de la signature. Veuillez réessayer." }, values: Object.fromEntries(formData) };
@@ -169,21 +127,13 @@ function getMachineImage(model: string | null): string | null {
     "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
     "DM220": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
   };
-  for (const key of Object.keys(images)) {
-    if (model.includes(key)) return images[key];
-  }
+  for (const key of Object.keys(images)) { if (model.includes(key)) return images[key]; }
   return null;
 }
 
-const UserIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#737373" strokeWidth="1.2"/><path d="M3 14C3 11.5 5 10 8 10s5 1.5 5 4" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>
-);
-const MailIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M1 4.5L8 9L15 4.5" stroke="#737373" strokeWidth="1.2"/></svg>
-);
-const DocIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M6 5H10M6 8H10M6 11H8" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>
-);
+const UserIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#737373" strokeWidth="1.2"/><path d="M3 14C3 11.5 5 10 8 10s5 1.5 5 4" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+const MailIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M1 4.5L8 9L15 4.5" stroke="#737373" strokeWidth="1.2"/></svg>;
+const DocIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M6 5H10M6 8H10M6 11H8" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>;
 
 function FieldWithIcon({ label, name, defaultValue, icon, type = "text", required = false, error, placeholder }: {
   label: string; name: string; defaultValue: string; icon: React.ReactNode; type?: string; required?: boolean; error?: string; placeholder?: string;
@@ -198,8 +148,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
       }}>
         <div style={{ flexShrink: 0, width: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>{icon}</div>
         <input name={name} type={type} defaultValue={defaultValue} required={required} placeholder={placeholder}
-          style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)" }}
-        />
+          style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)" }} />
       </div>
       {error && <span style={{ color: "#DC2626", fontSize: "12px" }}>{error}</span>}
     </div>
@@ -213,114 +162,73 @@ export default function OffreConfirmer() {
   const isSubmitting = navigation.state === "submitting";
 
   const billing = offer.billing60 ?? offer.billing36;
+  const monthly = billing ? billing / 12 : null;
   const billingTax = offer.billingTax60 ?? offer.billingTax36;
   const billingTotal = offer.billingTotal60 ?? offer.billingTotal36;
-  const term = offer.billing60 ? "60 mois" : "36 mois";
+  const term = offer.billing60 ? "60 mois" : "48 mois";
   const machineImg = getMachineImage(offer.modelName);
-
-  const installPrices: Record<string, number> = { auto: 0, phone: 63, onsite: 155 };
-  const installPrice = installPrices[installOption] ?? 0;
-
+  const installPrices: Record<string, string> = { auto: "0,00 €", phone: "63,00 €", onsite: "155,00 €" };
   const email = overrideEmail || client.bestEmail || client.installEmail || client.billingEmail || "";
 
   return (
     <div className="pb-main">
-      {/* Stepper */}
+      {/* Stepper — completed steps are clickable */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", padding: "32px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <div className="pb-step" style={{ background: "#00b44a", color: "white" }}>✓</div>
+          <Link to={`/offre/${client.accountNumber}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
           <div className="pb-step-line" />
-          <div className="pb-step" style={{ background: "#00b44a", color: "white" }}>✓</div>
+          <Link to={`/offre/${client.accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
           <div className="pb-step-line" />
-          <div className="pb-step" style={{ background: "#00b44a", color: "white" }}>✓</div>
+          <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
           <div className="pb-step-line" />
           <div className="pb-step pb-step-active">4</div>
         </div>
-        <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--pb-text)", textAlign: "center" }}>
-          Signer le contrat
-        </p>
+        <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--pb-text)", textAlign: "center" }}>Signer le contrat</p>
       </div>
 
-      {signatureError && (
-        <div className="pb-error" style={{ maxWidth: "596px", margin: "0 auto 24px" }}>
-          Erreur lors de la signature. Veuillez réessayer.
-        </div>
-      )}
-      {actionData?.errors?._form && (
-        <div className="pb-error" style={{ maxWidth: "596px", margin: "0 auto 24px" }}>
-          {actionData.errors._form}
-        </div>
-      )}
+      {signatureError && <div className="pb-error" style={{ maxWidth: "596px", margin: "0 auto 24px" }}>Erreur lors de la signature. Veuillez réessayer.</div>}
+      {actionData?.errors?._form && <div className="pb-error" style={{ maxWidth: "596px", margin: "0 auto 24px" }}>{actionData.errors._form}</div>}
 
       <div style={{ maxWidth: "596px", margin: "0 auto" }}>
         {/* Recap card */}
-        <div style={{
-          border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px",
-          display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px",
-        }}>
-          <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
-            {/* Machine image + PDF */}
-            <div style={{ position: "relative", width: "180px", flexShrink: 0 }}>
-              {machineImg && (
-                <img src={machineImg} alt={offer.modelName || ""} style={{ width: "100%", objectFit: "contain" }}
-                  onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }} />
-              )}
-              <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&autoInk=${autoInk}&installOption=${installOption}`}
-                target="_blank" rel="noopener"
-                style={{
-                position: "absolute", bottom: 0, left: 0,
-                padding: "3px 8px", background: "white", border: "1px solid var(--pb-border-dark)",
-                borderRadius: "8px", fontSize: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px",
-                cursor: "pointer", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", textDecoration: "none", color: "inherit",
-              }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v6M3 6l3 3 3-3M2 10h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                PDF
-              </a>
+        <div style={{ border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px", display: "flex", gap: "24px", alignItems: "flex-start", marginBottom: "40px" }}>
+          <div style={{ position: "relative", width: "180px", flexShrink: 0 }}>
+            {machineImg && <img src={machineImg} alt={offer.modelName || ""} style={{ width: "100%", objectFit: "contain" }}
+              onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }} />}
+            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}`}
+              target="_blank" rel="noopener" style={{
+              position: "absolute", bottom: 0, left: 0, padding: "3px 8px", background: "white",
+              border: "1px solid var(--pb-border-dark)", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
+              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer",
+              boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", textDecoration: "none", color: "inherit",
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v6M3 6l3 3 3-3M2 10h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              PDF
+            </a>
+          </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+            <p style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)" }}>{offer.modelName}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Durée</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{term}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel HT</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(monthly)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax ? billingTax / 12 : null)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTotal ? billingTotal / 12 : null)} €</span></div>
             </div>
-            {/* Details */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-              <p style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)" }}>{offer.modelName}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>Durée</span>
-                  <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{term}</span>
+            {installOption && (
+              <>
+                <div style={{ height: "1px", background: "var(--pb-border)", margin: "4px 0" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <span style={{ color: "var(--pb-text-muted)" }}>Installation HT</span>
+                  <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{installPrices[installOption] || "—"}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>Loyer annuel HT</span>
-                  <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billing)} €</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span>
-                  <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>Loyer annuel TTC</span>
-                  <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTotal)} €</span>
-                </div>
-              </div>
-              <div style={{ height: "1px", background: "var(--pb-border)", margin: "4px 0" }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
-                {autoInk && (
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--pb-text-muted)" }}>Option</span>
-                    <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>AutoInk</span>
-                  </div>
-                )}
-                {installOption && (
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--pb-text-muted)" }}>Installation HT</span>
-                    <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(installPrice)} €</span>
-                  </div>
-                )}
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Signatory form */}
         <Form method="post">
           <input type="hidden" name="offerPosition" value={offerPosition} />
-          <input type="hidden" name="autoInk" value={autoInk ? "true" : "false"} />
           <input type="hidden" name="installOption" value={installOption} />
           <input type="hidden" name="overrideEmail" value={overrideEmail} />
           <input type="hidden" name="overridePhone" value={overridePhone} />
@@ -329,26 +237,19 @@ export default function OffreConfirmer() {
             <FieldWithIcon label="Prénom" name="signatoryFirstName" icon={<UserIcon />} required
               defaultValue={actionData?.values?.signatoryFirstName ?? client.contactFirstName ?? ""}
               error={actionData?.errors?.signatoryFirstName} />
-
             <FieldWithIcon label="Nom" name="signatoryLastName" icon={<UserIcon />} required
               defaultValue={actionData?.values?.signatoryLastName ?? client.contactLastName ?? ""}
               error={actionData?.errors?.signatoryLastName} />
-
             <FieldWithIcon label="Email" name="signatoryEmail" icon={<MailIcon />} type="email" required
               defaultValue={actionData?.values?.signatoryEmail ?? email}
               error={actionData?.errors?.signatoryEmail} />
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>Titre</label>
+                <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>Fonction</label>
                 <select name="signatoryFunction"
                   defaultValue={actionData?.values?.signatoryFunction ?? client.contactPosition ?? ""}
-                  style={{
-                    width: "100%", minHeight: "40px", padding: "9.5px 16px",
-                    border: "1px solid var(--pb-border)", borderRadius: "8px",
-                    fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)",
-                    background: "white", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", cursor: "pointer",
-                  }}>
+                  style={{ width: "100%", minHeight: "40px", padding: "9.5px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)", background: "white", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", cursor: "pointer" }}>
                   <option value="">Sélectionner</option>
                   <option value="Directeur">Directeur</option>
                   <option value="Directeur des achats">Directeur des achats</option>
@@ -360,53 +261,42 @@ export default function OffreConfirmer() {
                 </select>
               </div>
               <FieldWithIcon label="Votre référence de commande" name="orderRef" icon={<DocIcon />}
-                defaultValue={actionData?.values?.orderRef ?? ""} />
+                defaultValue={actionData?.values?.orderRef ?? ""} placeholder="Optionnel" />
             </div>
           </div>
 
           {/* Conditions */}
           <div style={{ marginTop: "40px", display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
-              Conditions générale de location
-            </p>
-            <label style={{
-              display: "flex", gap: "12px", alignItems: "center", cursor: "pointer",
-              padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px",
-            }}>
-              <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px" }} />
-              <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>
-                En cochant cette case, j'accepte les <a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>conditions générales de location</a>
+            <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>Conditions générales de location</p>
+
+            {/* CGV + habilitation */}
+            <label style={{ display: "flex", gap: "12px", alignItems: "flex-start", cursor: "pointer", padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px" }}>
+              <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px", marginTop: "2px", flexShrink: 0 }} />
+              <span style={{ fontSize: "14px", color: "var(--pb-text)", lineHeight: "20px" }}>
+                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version CC - 01.25 / LSF038 AP 01-25) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
               </span>
             </label>
-            <label style={{
-              display: "flex", gap: "12px", alignItems: "center", cursor: "pointer",
-              padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px",
-            }}>
-              <input type="checkbox" name="acceptRGPD" required style={{ accentColor: "#171717", width: "16px", height: "16px" }} />
-              <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>
-                Consentement <a href="https://www.pitneybowes.com/fr/legal/politique-de-confidentialite.html" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>RGPD</a>
-              </span>
-            </label>
+
+            {/* RGPD — informational text, no checkbox */}
+            <div style={{ padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px", fontSize: "13px", lineHeight: "18px", color: "var(--pb-text-muted)" }}>
+              Les données renseignées dans ce formulaire sont traitées par Pitney Bowes France SAS aux fins d'exécution de votre contrat de location (base légale : article 6.1.b du RGPD). Elles sont conservées pendant la durée du contrat augmentée des délais légaux applicables. Pour exercer vos droits (accès, rectification, opposition), vous pouvez contacter notre DPO : <a href="mailto:dpofrance@pb.com" style={{ color: "var(--pb-cta)", textDecoration: "underline" }}>dpofrance@pb.com</a>.{" "}
+              <a href="https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html" target="_blank" rel="noopener" style={{ color: "var(--pb-cta)", textDecoration: "underline" }}>Politique de protection des données</a>.
+            </div>
           </div>
 
           {/* CTAs */}
-          <div style={{ display: "flex", gap: "16px", marginTop: "40px", paddingBottom: "40px" }}>
-            <a
-              href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&autoInk=${autoInk}&installOption=${installOption}`}
-              className="pb-btn pb-btn-secondary"
-              style={{ flex: 1, padding: "12px 24px", fontSize: "16px", textDecoration: "none" }}
-              target="_blank"
-              rel="noopener"
-            >
+          <div style={{ display: "flex", gap: "16px", marginTop: "40px", paddingBottom: "40px", alignItems: "center" }}>
+            <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </Link>
+            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}`}
+              className="pb-btn pb-btn-secondary" target="_blank" rel="noopener"
+              style={{ flex: 1, padding: "12px 24px", fontSize: "16px", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginRight: "8px" }}><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Récapitulatif en PDF
             </a>
             <button type="submit" disabled={isSubmitting} className="pb-btn pb-btn-primary" style={{ flex: 1, padding: "12px 24px", fontSize: "16px" }}>
-              {isSubmitting ? (
-                <><span className="pb-spinner" /> Préparation...</>
-              ) : (
-                "Signer mon contrat"
-              )}
+              {isSubmitting ? <><span className="pb-spinner" /> Préparation...</> : "Signer mon contrat"}
             </button>
           </div>
         </Form>

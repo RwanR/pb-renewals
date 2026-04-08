@@ -9,7 +9,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
-  const autoInk = url.searchParams.get("autoInk") === "true";
+  const autoInk = false; // AutoInk supprimé par PB
   const installOption = url.searchParams.get("installOption") || "";
 
   const client = await prisma.client.findUnique({
@@ -63,7 +63,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   console.log(`[PDF] Recap PDF generated (${pdfBuffer.length} bytes)`);
 
-  return new Response(pdfBuffer, {
+  return new Response(new Uint8Array(pdfBuffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

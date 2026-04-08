@@ -37,6 +37,7 @@ export default function OffreLayout() {
       <div className="pb-page">
         <header className="pb-header">
           <div className="pb-header-inner">
+            <div className="pb-header-spacer" />
             <div className="pb-logo">
               <img src="/images/pb-logo.png" alt="Pitney Bowes" height="40" />
             </div>
@@ -49,10 +50,22 @@ export default function OffreLayout() {
                 </svg>
                 <span>{clientName}</span>
               </div>
-            ) : null}
+            ) : (
+              <div className="pb-header-spacer" />
+            )}
           </div>
           <div className="pb-header-gradient" />
         </header>
+        {clientName ? (
+          <div className="pb-header-client-mobile">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="6" r="2.5" stroke="#737373" strokeWidth="1.2" fill="none"/>
+              <path d="M3 13.5C3 11 5 9.5 8 9.5s5 1.5 5 4" stroke="#737373" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+              <circle cx="8" cy="8" r="7" stroke="#737373" strokeWidth="1.2" fill="none"/>
+            </svg>
+            <span>{clientName}</span>
+          </div>
+        ) : null}
         <main>
           <Outlet />
         </main>
@@ -62,9 +75,11 @@ export default function OffreLayout() {
             <p className="pb-footer-links">
               <a href="https://www.pitneybowes.com/fr/legal.html" target="_blank" rel="noopener">Mentions légales</a>
               {"  "}
-              <a href="https://www.pitneybowes.com/fr/legal/politique-de-confidentialite.html" target="_blank" rel="noopener">Protection des données</a>
+              <a href="https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html" target="_blank" rel="noopener">Protection des données</a>
               {"  "}
-              <span>ISO9001 ISO27001</span>
+              <a href="https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-9001-certificate-europe-en.pdf" target="_blank" rel="noopener">ISO9001</a>
+              {"  "}
+              <a href="https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-27001-certificate-france.pdf" target="_blank" rel="noopener">ISO27001</a>
               {"  "}
               <a href="#" onClick={function(e) { e.preventDefault(); }}>Cookies</a>
             </p>
@@ -103,11 +118,13 @@ body {\
 }\
 .pb-page { min-height: 100vh; display: flex; flex-direction: column; }\
 .pb-header { background: white; border-bottom: 1px solid var(--pb-border); position: sticky; top: 0; z-index: 50; }\
-.pb-header-inner { max-width: 1280px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: center; position: relative; height: 80px; }\
+.pb-header-inner { max-width: 1280px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; height: 80px; }\
 .pb-header-gradient { height: 3px; background: linear-gradient(90deg, #1D2C6B 0%, #00A3E0 40%, #7B2D8E 70%, #E91E8C 100%); }\
 .pb-logo img { height: 40px; width: auto; }\
-.pb-header-client { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--pb-text); position: absolute; right: 32px; top: 50%; transform: translateY(-50%); }\
+.pb-header-spacer { flex: 1; }\
+.pb-header-client { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 14px; color: var(--pb-text); }\
 .pb-header-client-icon { width: 16px; height: 16px; color: var(--pb-text-muted); }\
+.pb-header-client-mobile { display: none; align-items: center; justify-content: center; gap: 8px; padding: 10px 32px; font-size: 14px; color: var(--pb-text); background: white; border-bottom: 1px solid var(--pb-border); }\
 .pb-banner { background: var(--pb-muted-bg); border-bottom: 1px solid var(--pb-border); text-align: center; padding: 16px 32px; font-size: 14px; color: var(--pb-text); height: 64px; display: flex; align-items: center; justify-content: center; }\
 .pb-banner strong { font-weight: 600; }\
 .pb-main { flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; padding: 32px 32px 64px; }\
@@ -147,7 +164,7 @@ body {\
 .pb-check-icon { color: var(--pb-cta); font-size: 18px; flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }\
 .pb-prop { display: flex; gap: 8px; align-items: center; font-size: 14px; line-height: 20px; color: var(--pb-text); }\
 .pb-props { display: flex; flex-direction: column; }\
-.pb-step { width: 24px; height: 24px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; }\
+.pb-step { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; }\
 .pb-step-active { background: var(--pb-step-active); color: white; }\
 .pb-step-inactive { background: var(--pb-step-inactive); color: var(--pb-text-muted); }\
 .pb-step-line { width: 16px; height: 1px; background: var(--pb-step-inactive); }\
@@ -173,7 +190,15 @@ body {\
   .pb-heading { font-size: 20px; }\
   .pb-price { font-size: 24px; }\
   .pb-card { padding: 20px; }\
-  .pb-header-inner { padding: 16px; height: 60px; }\
+  .pb-header-inner { padding: 16px; height: 60px; justify-content: center; }\
+  .pb-header-client { display: none !important; }\
+  .pb-header-spacer { display: none !important; }\
+  .pb-header-client-mobile { display: flex !important; }\
+  .pb-logo img { height: 32px; }\
   .pb-offers-grid { gap: 16px; }\
+  .pb-banner { font-size: 13px; height: auto; padding: 12px 16px; }\
+  .pb-situation-card { flex-direction: column !important; }\
+  .pb-situation-card .pb-situation-img { display: none !important; }\
+  .pb-situation-card .pb-situation-info { width: 100% !important; }\
 }\
 ";

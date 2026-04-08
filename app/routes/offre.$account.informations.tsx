@@ -9,8 +9,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
-  const autoInk = url.searchParams.get("autoInk") || "true";
-  const installOption = url.searchParams.get("installOption") || "auto";
+  const installOption = url.searchParams.get("installOption") || "phone";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -31,7 +30,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  return { client, offer: client.offers[0], offerPosition, autoInk, installOption, accountNumber };
+  return { client, offer: client.offers[0], offerPosition, installOption, accountNumber };
 }
 
 function formatCurrency(amount: number | null): string {
@@ -131,7 +130,7 @@ const BuildingIcon = () => (
 );
 
 export default function OffreInformations() {
-  const { client, offer, offerPosition, autoInk, installOption, accountNumber } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, installOption, accountNumber } = useLoaderData<typeof loader>();
 
   const billing = offer.billing60 ?? offer.billing36;
   const term = offer.billing60 ? "60 mois" : "36 mois";
@@ -173,9 +172,9 @@ export default function OffreInformations() {
         {/* Stepper */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", padding: "32px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div className="pb-step" style={{ background: "#00b44a", color: "white" }}>✓</div>
+            <Link to={`/offre/${accountNumber}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
             <div className="pb-step-line" />
-            <div className="pb-step" style={{ background: "#00b44a", color: "white" }}>✓</div>
+            <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
             <div className="pb-step-line" />
             <div className="pb-step pb-step-active">3</div>
             <div className="pb-step-line" />
@@ -188,7 +187,6 @@ export default function OffreInformations() {
 
         <Form method="get" action={`/offre/${accountNumber}/confirmer`}>
           <input type="hidden" name="offre" value={offerPosition} />
-          <input type="hidden" name="autoInk" value={autoInk} />
           <input type="hidden" name="installOption" value={installOption} />
 
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
