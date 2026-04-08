@@ -36,6 +36,7 @@ function toDate(val: unknown): Date | null {
 }
 
 export interface ImportResult {
+  importRunId: string;
   rowCount: number;
   errors: string[];
   clientsWithEmail: number;
@@ -96,6 +97,21 @@ export function startImportJob(buffer: ArrayBuffer, filename: string): string {
         errorCount: result.errors.length,
         result,
       });
+
+      // Trigger Shopify Customer sync (async, non-blocking)
+      if (result.clientsWithEmail > 0) {
+        import("~/lib/shopify-admin.server")
+          .then(({ syncAllCustomersToShopify }) => {
+            console.log(`[SHOPIFY] Starting customer sync for import ${result.importRunId}`);
+            return syncAllCustomersToShopify(result.importRunId);
+          })
+          .then((syncResult) => {
+            console.log(`[SHOPIFY] Customer sync done: ${syncResult.synced} synced, ${syncResult.skipped} skipped, ${syncResult.errors} errors`);
+          })
+          .catch((err) => {
+            console.error(`[SHOPIFY] Customer sync failed:`, err);
+          });
+      }
     })
     .catch((err) => {
       console.error(`[IMPORT] Job ${jobId} failed:`, err);
@@ -426,6 +442,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   });
 
   const result: ImportResult = {
+    importRunId: importRun.id,
     rowCount: clients.length,
     errors,
     clientsWithEmail,

@@ -95,7 +95,40 @@ export async function action({ request }: ActionFunctionArgs) {
         }
       } catch (err) {
         console.error(`[YOUSIGN WEBHOOK] Email sending failed:`, err);
-        // Don't block — the signature is already recorded
+      }
+
+      // Create Shopify Draft Order (async, non-blocking)
+      if (client.shopifyCustomerId) {
+        try {
+          const { createDraftOrder } = await import("~/lib/shopify-admin.server");
+          const installPrices: Record<string, number> = { auto: 0, phone: 63, onsite: 155 };
+          const draftOrderId = await createDraftOrder({
+            accountNumber,
+            shopifyCustomerId: client.shopifyCustomerId,
+            modelName: offer?.modelName || "Unknown",
+            term: offer?.billing60 ? "60" : "48",
+            billingAnnualHT: billing || 0,
+            installOption: acceptance.installOptionSelected,
+            installPrice: installPrices[acceptance.installOptionSelected || ""] || 0,
+            signatoryName: `${acceptance.signatoryFirstName} ${acceptance.signatoryLastName}`,
+          });
+
+          if (draftOrderId) {
+            await prisma.acceptance.update({
+              where: { id: acceptance.id },
+              data: {
+                shopifyDraftOrderId: draftOrderId,
+                shopifyCustomerId: client.shopifyCustomerId,
+                shopifySyncedAt: new Date(),
+              },
+            });
+            console.log(`[YOUSIGN WEBHOOK] Draft order created: ${draftOrderId}`);
+          }
+        } catch (err) {
+          console.error(`[YOUSIGN WEBHOOK] Draft order creation failed:`, err);
+        }
+      } else {
+        console.log(`[YOUSIGN WEBHOOK] No Shopify Customer ID for ${accountNumber} — skipping draft order`);
       }
 
       break;

@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "269f4404033da1ccd0efa04cfea3fa78"
+client_id = "a48c140c6dbc56186e8dc52458d39e81"
 name = "pb-renewals"
 application_url = "https://pb-renewals-production.up.railway.app"
 embedded = true
