@@ -95,14 +95,18 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    const { signatureRequestId } = await createSignatureRequest({
+    const { signatureRequestId, signerUrl } = await createSignatureRequest({
       pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
       signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
       signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
     });
     await prisma.acceptance.update({
       where: { id: acceptance.id },
-      data: { adobeSignAgreementId: signatureRequestId, adobeSignStatus: "sent" },
+      data: {
+        adobeSignAgreementId: signatureRequestId,
+        adobeSignStatus: "sent",
+        signedPdfUrl: signerUrl || null, // Temporary: store signer URL here until signing is done
+      },
     });
     console.log(`[SIGN] Redirecting to Yousign signer page`);
     return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/signer` } });
