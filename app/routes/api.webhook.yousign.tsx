@@ -52,50 +52,14 @@ export async function action({ request }: ActionFunctionArgs) {
         console.error(`[YOUSIGN WEBHOOK] Failed to download signed PDF:`, err);
       }
 
-      // Send confirmation emails via Resend
+      // Variables needed by Shopify below
       const client = acceptance.client;
       const offer = client.offers.find((o) => o.offerPosition === acceptance.offerPosition);
       const billing = offer ? (offer.billing60 ?? offer.billing36) : null;
-      const monthly = billing ? (billing / 12) : null;
-      const term = offer?.billing60 ? "60 mois" : "48 mois";
       const accountNumber = acceptance.clientAccountNumber;
-      const pdfFilename = `contrat-signe-${accountNumber}.pdf`;
 
-      const attachments = signedPdfBuffer
-        ? [{ filename: pdfFilename, content: signedPdfBuffer }]
-        : [];
-
-      try {
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        const fromEmail = process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>";
-
-        // Email au commercial PB avec PDF signé en PJ
-        if (client.ownerEmail) {
-          await resend.emails.send({
-            from: fromEmail,
-            to: client.ownerEmail,
-            subject: `[PB Renewals] Contrat signé – ${client.customerName} (${accountNumber})`,
-            attachments,
-            html: `
-              <h2>Contrat signé</h2>
-              <p><strong>Client :</strong> ${client.customerName} (${accountNumber})</p>
-              <p><strong>Machine :</strong> ${offer?.modelName || "—"}</p>
-              <p><strong>Durée :</strong> ${term}</p>
-              <p><strong>Loyer mensuel HT :</strong> ${monthly ? monthly.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " €" : "—"}</p>
-              <p><strong>Installation :</strong> ${acceptance.installOptionSelected || "non sélectionnée"}</p>
-              <p><strong>Signataire :</strong> ${acceptance.signatoryFirstName} ${acceptance.signatoryLastName} (${acceptance.signatoryEmail})</p>
-              <p><strong>Fonction :</strong> ${acceptance.signatoryFunction || "—"}</p>
-              <p><strong>Signé le :</strong> ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}</p>
-              <p style="color:#666;font-size:13px">Email envoyé automatiquement par la plateforme PB Renewals.</p>
-            `,
-          });
-
-          console.log(`[YOUSIGN WEBHOOK] Notification email sent to PB: ${client.ownerEmail}`);
-        }
-      } catch (err) {
-        console.error(`[YOUSIGN WEBHOOK] Email sending failed:`, err);
-      }
+      // TODO: Resend emails désactivés temporairement (domaine non vérifié, 403)
+      console.log(`[YOUSIGN WEBHOOK] Email notification skipped (Resend disabled)`);
 
       // Create Shopify Draft Order (async, non-blocking)
       if (client.shopifyCustomerId) {
