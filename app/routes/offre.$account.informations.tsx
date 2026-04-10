@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { useState } from "react";
 import { useLoaderData, Form, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
@@ -139,6 +140,7 @@ export default function OffreInformations() {
 
   const bestEmail = client.billingEmail || client.bestEmail || client.installEmail || "";
   const bestPhone = client.installPhone || client.billingPhone || "";
+  const [showBilling, setShowBilling] = useState(false);
 
   return (
     <div>
@@ -217,10 +219,18 @@ export default function OffreInformations() {
                 Adresse de facturation différente
               </p>
               <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-                <input type="checkbox" name="differentBilling" value="true" style={{
-                  width: "33px", height: "18px", accentColor: "#005cb1", cursor: "pointer",
+                <input type="checkbox" checked={showBilling} onChange={function(e) { setShowBilling(e.target.checked); }} style={{
+                  width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
                 }} />
               </label>
+              {showBilling ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <FieldEditable label="Adresse 1" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Adresse 2" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Code postal" name="billingPostcode" value={client.billingPostcode || ""} icon={<MailboxIcon />} />
+                  <FieldEditable label="Ville" name="billingCity" value={client.billingCity || ""} icon={<BuildingIcon />} />
+                </div>
+              ) : null}
             </div>
 
             {/* CTA */}
