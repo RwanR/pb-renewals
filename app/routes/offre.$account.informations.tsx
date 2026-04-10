@@ -246,7 +246,7 @@ export default function OffreInformations() {
 
             {/* CTA */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "48px" }}>
-              <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
+              <Link to={hasOptions ? `/offre/${accountNumber}/options?offre=${offerPosition}` : `/offre/${accountNumber}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </Link>
               <button type="submit" className="pb-btn pb-btn-primary" style={{ padding: "12px 32px", fontSize: "16px" }}>
