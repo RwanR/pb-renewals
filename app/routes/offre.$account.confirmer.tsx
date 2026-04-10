@@ -16,6 +16,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const installOption = url.searchParams.get("installOption") || "";
   const overrideEmail = url.searchParams.get("email") || "";
   const overridePhone = url.searchParams.get("phone") || "";
+  const billingAddress1 = url.searchParams.get("billingAddress1") || "";
+  const billingStreet = url.searchParams.get("billingStreet") || "";
+  const billingPostcode = url.searchParams.get("billingPostcode") || "";
+  const billingCity = url.searchParams.get("billingCity") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -27,7 +31,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/merci` } });
   }
 
-  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone };
+  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -46,6 +50,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const offerPosition = parseInt(formData.get("offerPosition") as string || "1");
   const installOption = (formData.get("installOption") as string)?.trim();
   const autoInk = false; // AutoInk supprimé par PB
+  const billingAddress1 = (formData.get("billingAddress1") as string)?.trim();
+  const billingStreet = (formData.get("billingStreet") as string)?.trim();
+  const billingPostcode = (formData.get("billingPostcode") as string)?.trim();
+  const billingCity = (formData.get("billingCity") as string)?.trim();
 
   const errors: Record<string, string> = {};
   if (!signatoryFirstName) errors.signatoryFirstName = "Obligatoire";
@@ -69,6 +77,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
       overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
+      overrideAddress: [billingAddress1, billingStreet, billingPostcode, billingCity].filter(Boolean).join(", ") || null,
       notes: orderRef ? `Réf commande: ${orderRef}` : null,
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || null,
       userAgent: request.headers.get("user-agent") || null,
@@ -78,11 +87,25 @@ export async function action({ request, params }: ActionFunctionArgs) {
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
       overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
+      overrideAddress: [billingAddress1, billingStreet, billingPostcode, billingCity].filter(Boolean).join(", ") || null,
       notes: orderRef ? `Réf commande: ${orderRef}` : null,
       ipAddress: request.headers.get("x-forwarded-for") || null,
       userAgent: request.headers.get("user-agent") || null,
     },
   });
+
+  // Update client billing address if modified
+  if (billingAddress1 || billingCity) {
+    await prisma.client.update({
+      where: { accountNumber },
+      data: {
+        billingAddress1: billingAddress1 || undefined,
+        billingStreet: billingStreet || undefined,
+        billingPostcode: billingPostcode || undefined,
+        billingCity: billingCity || undefined,
+      },
+    });
+  }
 
   console.log(`[SIGN] Acceptance created for ${accountNumber}, generating PDF...`);
   let pdfBuffer: Buffer;
@@ -160,7 +183,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -236,6 +259,10 @@ export default function OffreConfirmer() {
           <input type="hidden" name="installOption" value={installOption} />
           <input type="hidden" name="overrideEmail" value={overrideEmail} />
           <input type="hidden" name="overridePhone" value={overridePhone} />
+          <input type="hidden" name="billingAddress1" value={billingAddress1} />
+          <input type="hidden" name="billingStreet" value={billingStreet} />
+          <input type="hidden" name="billingPostcode" value={billingPostcode} />
+          <input type="hidden" name="billingCity" value={billingCity} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <FieldWithIcon label="Prénom" name="signatoryFirstName" icon={<UserIcon />} required
