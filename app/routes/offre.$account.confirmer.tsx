@@ -31,7 +31,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/merci` } });
   }
 
-  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity };
+  const hasOptions = client.offers[0].installAvailable;
+
+  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -190,7 +192,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -211,11 +213,21 @@ export default function OffreConfirmer() {
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <Link to={`/offre/${client.accountNumber}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
           <div className="pb-step-line" />
-          <Link to={`/offre/${client.accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
-          <div className="pb-step-line" />
-          <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
-          <div className="pb-step-line" />
-          <div className="pb-step pb-step-active">4</div>
+          {hasOptions ? (
+            <>
+              <Link to={`/offre/${client.accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <div className="pb-step-line" />
+              <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <div className="pb-step-line" />
+              <div className="pb-step pb-step-active">4</div>
+            </>
+          ) : (
+            <>
+              <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <div className="pb-step-line" />
+              <div className="pb-step pb-step-active">3</div>
+            </>
+          )}
         </div>
         <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--pb-text)", textAlign: "center" }}>Signer le contrat</p>
       </div>

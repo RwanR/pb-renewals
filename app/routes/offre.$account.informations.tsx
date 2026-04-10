@@ -31,7 +31,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  return { client, offer: client.offers[0], offerPosition, installOption, accountNumber };
+  const hasOptions = client.offers[0].installAvailable;
+  return { client, offer: client.offers[0], offerPosition, installOption, accountNumber, hasOptions };
 }
 
 function formatCurrency(amount: number | null): string {
@@ -131,7 +132,7 @@ const BuildingIcon = () => (
 );
 
 export default function OffreInformations() {
-  const { client, offer, offerPosition, installOption, accountNumber } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, installOption, accountNumber, hasOptions } = useLoaderData<typeof loader>();
 
   const billing = offer.billing60 ?? offer.billing36;
   const term = offer.billing60 ? "60 mois" : "36 mois";
@@ -173,15 +174,25 @@ export default function OffreInformations() {
       <div className="pb-main">
         {/* Stepper */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", padding: "32px 0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <Link to={`/offre/${accountNumber}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
-            <div className="pb-step-line" />
-            <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
-            <div className="pb-step-line" />
-            <div className="pb-step pb-step-active">3</div>
-            <div className="pb-step-line" />
-            <div className="pb-step pb-step-inactive">4</div>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <Link to={`/offre/${accountNumber}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+          <div className="pb-step-line" />
+          {hasOptions ? (
+            <>
+              <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <div className="pb-step-line" />
+              <div className="pb-step pb-step-active">3</div>
+              <div className="pb-step-line" />
+              <div className="pb-step pb-step-inactive">4</div>
+            </>
+          ) : (
+            <>
+              <div className="pb-step pb-step-active">2</div>
+              <div className="pb-step-line" />
+              <div className="pb-step pb-step-inactive">3</div>
+            </>
+          )}
+        </div>
           <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--pb-text)", textAlign: "center" }}>
             Vos informations
           </p>
