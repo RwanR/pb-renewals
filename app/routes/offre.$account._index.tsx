@@ -159,11 +159,9 @@ export default function OffreClient() {
               <div style={{ display: "flex", justifyContent: "space-between", lineHeight: "20px" }}>
                 <div>
                   <p className="pb-situation-label">N° de contrat</p>
-                  <p className="pb-situation-label">Fin de contrat</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <p className="pb-situation-value">{client.leaseNumber || "—"}</p>
-                  <p className="pb-situation-value">{client.leaseExpiryDate ? new Date(client.leaseExpiryDate).toLocaleDateString("fr-FR") : "—"}</p>
                 </div>
               </div>
             </div>
