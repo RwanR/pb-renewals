@@ -107,10 +107,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
     });
   }
 
+  // Re-fetch client with updated billing address for PDF generation
+  const clientForPdf = await prisma.client.findUnique({
+    where: { accountNumber },
+    include: { offers: { where: { offerPosition } } },
+  });
+  if (!clientForPdf) return { errors: { _form: "Client introuvable" }, values: Object.fromEntries(formData) };
+
   console.log(`[SIGN] Acceptance created for ${accountNumber}, generating PDF...`);
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await generateContractPDF({ client, offer, acceptance });
+    pdfBuffer = await generateContractPDF({ client: clientForPdf, offer, acceptance });
     console.log(`[SIGN] PDF generated (${pdfBuffer.length} bytes)`);
   } catch (err) {
     console.error(`[SIGN] PDF generation failed:`, err);
