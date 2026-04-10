@@ -279,7 +279,8 @@ export default function OffreConfirmer() {
               defaultValue={actionData?.values?.signatoryLastName ?? client.contactLastName ?? ""}
               error={actionData?.errors?.signatoryLastName} />
             <FieldWithIcon label="Email" name="signatoryEmail" icon={<MailIcon />} type="email" required
-              defaultValue={actionData?.values?.signatoryEmail ?? email}
+              defaultValue={actionData?.values?.signatoryEmail ?? ""}
+              placeholder="Entrez votre email"
               error={actionData?.errors?.signatoryEmail} />
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
