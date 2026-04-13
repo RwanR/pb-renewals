@@ -68,7 +68,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   console.log(`[SIGN] Using signer URL for ${accountNumber}`);
 
-  return { client, signerUrl, accountNumber };
+  return Response.json(
+    { client, signerUrl, accountNumber },
+    { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" } }
+  );
 }
 
 export default function OffreSigner() {
@@ -131,7 +134,7 @@ export default function OffreSigner() {
       </div>
 
       <iframe
-        src={signerUrl}
+        src={`${signerUrl}${signerUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
         style={{
           flex: 1,
           width: "100%",
