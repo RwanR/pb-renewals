@@ -273,7 +273,7 @@ export default function OffreConfirmer() {
         </div>
 
         {/* Signatory form */}
-        <Form method="post">
+        <Form method="post" reloadDocument>
           <input type="hidden" name="offerPosition" value={offerPosition} />
           <input type="hidden" name="installOption" value={installOption} />
           <input type="hidden" name="overrideEmail" value={overrideEmail} />
