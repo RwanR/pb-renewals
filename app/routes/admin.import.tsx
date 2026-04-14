@@ -50,7 +50,7 @@ export default function AdminImport() {
   const isUploading = navigation.state === "submitting";
   const job = fetcher.data?.job ?? null;
   const isProcessing = job?.status === "parsing" || job?.status === "importing";
-  const isDone = job?.status === "success" || job?.status === "error";
+  const isDone = jobId && (job?.status === "success" || job?.status === "error");
   const isBusy = isUploading || isProcessing;
 
   useEffect(() => {
