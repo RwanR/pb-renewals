@@ -35,32 +35,51 @@ async function getOfflineSession(): Promise<ShopifySession> {
 /**
  * Execute a Shopify Admin GraphQL query
  */
-async function shopifyGraphQL(query: string, variables: Record<string, any> = {}): Promise<any> {
+// NOUVEAU
+async function shopifyGraphQL(query: string, variables: Record<string, any> = {}, retries = 3): Promise<any> {
   const { shop, accessToken } = await getOfflineSession();
   const url = `https://${shop}/admin/api/${API_VERSION}/graphql.json`;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Access-Token": accessToken,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": accessToken,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`[SHOPIFY] GraphQL error ${res.status}: ${text}`);
+    if (res.status === 429 || res.status === 503) {
+      const delay = Math.pow(2, attempt) * 1000;
+      console.warn(`[SHOPIFY] Rate limited (${res.status}), retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`[SHOPIFY] GraphQL error ${res.status}: ${text}`);
+    }
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const isTransient = json.errors.some((e: any) => e.extensions?.code === "UNAVAILABLE" || e.extensions?.code === "THROTTLED");
+      if (isTransient && attempt < retries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        console.warn(`[SHOPIFY] Transient error, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      console.error("[SHOPIFY] GraphQL errors:", JSON.stringify(json.errors));
+      throw new Error(`[SHOPIFY] GraphQL errors: ${json.errors.map((e: any) => e.message).join(", ")}`);
+    }
+
+    return json.data;
   }
 
-  const json = await res.json();
-
-  if (json.errors) {
-    console.error("[SHOPIFY] GraphQL errors:", JSON.stringify(json.errors));
-    throw new Error(`[SHOPIFY] GraphQL errors: ${json.errors.map((e: any) => e.message).join(", ")}`);
-  }
-
-  return json.data;
+  throw new Error("[SHOPIFY] Max retries exceeded");
 }
 
 // ─── CUSTOMER CREATION ─────────────────────────────────────────────
@@ -236,7 +255,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
   let synced = 0;
   let skipped = 0;
   let errors = 0;
-  const CHUNK_SIZE = 10; // Process in batches to respect rate limits
+  const CHUNK_SIZE = 3;
 
   for (let i = 0; i < clients.length; i += CHUNK_SIZE) {
     const chunk = clients.slice(i, i + CHUNK_SIZE);
@@ -277,7 +296,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
 
     // Small delay between chunks for rate limiting
     if (i + CHUNK_SIZE < clients.length) {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
 
