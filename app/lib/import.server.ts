@@ -369,6 +369,7 @@ clients.push({
 
   try {
     updateJob(jobId, { message: "Suppression des anciennes données..." });
+    await prisma.refusal.deleteMany({});
     await prisma.acceptance.deleteMany({});
     await prisma.accessToken.deleteMany({});
     await prisma.offer.deleteMany({});
