@@ -183,6 +183,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
         </div>
 
         {/* Footnote */}
+        <div style={offer2 ? {} : { maxWidth: "493px", margin: "0 auto" }}>
         <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", marginBottom: "32px" }}>
           *Loyer mensuel indicatif, soumis à l'article 9 des conditions générales.
         </p>
@@ -215,6 +216,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
           {"Des questions ? Contactez-nous par e-mail à "}
           <a href="mailto:fr-elease@pb.com" style={{ color: "var(--pb-cta)", textDecoration: "underline" }}>fr-elease@pb.com</a>
         </p>
+        </div>
       </div>
     </div>
   );
