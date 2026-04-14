@@ -183,7 +183,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
         </div>
 
         {/* Footnote */}
-        <div style={offer2 ? {} : { maxWidth: "493px", margin: "0 auto" }}>
+      <div style={offer2 ? {} : { maxWidth: "493px", margin: "0 auto" }}>
         <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", marginBottom: "32px" }}>
           *Loyer mensuel indicatif, soumis à l'article 9 des conditions générales.
         </p>
