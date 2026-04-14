@@ -41,6 +41,8 @@ export interface ImportResult {
   errors: string[];
   clientsWithEmail: number;
   clientsWithoutEmail: number;
+  newClients: number;
+  updatedClients: number;
 }
 
 export interface ImportJobStatus {
@@ -131,6 +133,8 @@ export function startImportJob(buffer: ArrayBuffer, filename: string): string {
           errors: [err instanceof Error ? err.message : String(err)],
           clientsWithEmail: 0,
           clientsWithoutEmail: 0,
+          newClients: 0,
+          updatedClients: 0,
         },
       });
     });
@@ -178,7 +182,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     if (email) clientsWithEmail++;
     else clientsWithoutEmail++;
 
-clients.push({
+    clients.push({
       accountNumber,
       sfdcAccountId: null,
       customerName: clean(get(row, "INSTALLCUSTOMERNAME")) ?? "Unknown",
@@ -363,38 +367,63 @@ clients.push({
     data: { filename, rowCount: 0, status: "processing" },
   });
 
-  // === PHASE 3: Wipe and bulk insert ===
+  // === PHASE 3: Upsert clients, replace offers, preserve tokens/acceptances ===
   const errors: string[] = [];
-  const CHUNK = 500;
+  let newClients = 0;
+  let updatedClients = 0;
 
   try {
-    updateJob(jobId, { message: "Suppression des anciennes données..." });
-    await prisma.refusal.deleteMany({});
-    await prisma.acceptance.deleteMany({});
-    await prisma.accessToken.deleteMany({});
-    await prisma.offer.deleteMany({});
-    await prisma.client.deleteMany({});
-    console.log(`[IMPORT] Cleared old data`);
-
-    // Insert clients in chunks of 500
+    // --- Upsert clients one by one ---
     updateJob(jobId, { message: "Import des clients..." });
-    for (let i = 0; i < clients.length; i += CHUNK) {
-      const chunk = clients.slice(i, i + CHUNK).map((c) => ({
-        ...c,
-        importRunId: importRun.id,
-      }));
-      await prisma.client.createMany({ data: chunk });
+    for (let i = 0; i < clients.length; i++) {
+      const c = clients[i];
+      const { accountNumber, ...clientData } = c;
+      try {
+        const existing = await prisma.client.findUnique({
+          where: { accountNumber },
+          select: { accountNumber: true, shopifyCustomerId: true },
+        });
 
-      const progress = Math.min(i + CHUNK, clients.length);
-      updateJob(jobId, {
-        progress,
-        message: `Import des clients... ${progress} / ${clients.length}`,
-      });
-      console.log(`[IMPORT] Clients: ${progress} / ${clients.length}`);
+        if (existing) {
+          // Update — preserve shopifyCustomerId
+          await prisma.client.update({
+            where: { accountNumber },
+            data: { ...clientData, importRunId: importRun.id },
+          });
+          updatedClients++;
+        } else {
+          // Create
+          await prisma.client.create({
+            data: { accountNumber, ...clientData, importRunId: importRun.id },
+          });
+          newClients++;
+        }
+      } catch (err) {
+        const msg = `Client ${accountNumber}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`[IMPORT] ${msg}`);
+        errors.push(msg);
+      }
+
+      if ((i + 1) % 50 === 0 || i === clients.length - 1) {
+        updateJob(jobId, {
+          progress: i + 1,
+          message: `Import des clients... ${i + 1} / ${clients.length}`,
+        });
+        console.log(`[IMPORT] Clients: ${i + 1} / ${clients.length} (${newClients} new, ${updatedClients} updated)`);
+      }
     }
 
-    // Insert offers in chunks of 500
-    updateJob(jobId, { message: "Import des offres...", offersTotal: offers.length, offersProgress: 0 });
+    // --- Replace offers for all clients in the file ---
+    // Only delete offers for clients that are in this import (not all offers globally)
+    updateJob(jobId, { message: "Mise à jour des offres..." });
+    const accountNumbers = clients.map((c) => c.accountNumber);
+    await prisma.offer.deleteMany({
+      where: { clientAccountNumber: { in: accountNumbers } },
+    });
+    console.log(`[IMPORT] Deleted offers for ${accountNumbers.length} clients`);
+
+    // Insert new offers in chunks
+    const CHUNK = 500;
     for (let i = 0; i < offers.length; i += CHUNK) {
       const chunk = offers.slice(i, i + CHUNK);
       await prisma.offer.createMany({ data: chunk });
@@ -407,25 +436,37 @@ clients.push({
       console.log(`[IMPORT] Offers: ${progress} / ${offers.length}`);
     }
 
-    // Generate access tokens for clients with email
+    // --- Tokens: create only for clients that don't have one yet ---
     updateJob(jobId, { message: "Génération des liens d'accès..." });
     const tokenExpiry = new Date();
     tokenExpiry.setDate(tokenExpiry.getDate() + 90);
 
-    const clientsWithTokens = clients.filter(c => c.bestEmail);
-    const tokenData = clientsWithTokens.map(c => ({
-      clientAccountNumber: c.accountNumber,
-      expiresAt: tokenExpiry,
-    }));
+    const clientsNeedingTokens = clients.filter((c) => c.bestEmail);
+    const existingTokens = await prisma.accessToken.findMany({
+      where: { clientAccountNumber: { in: clientsNeedingTokens.map((c) => c.accountNumber) } },
+      select: { clientAccountNumber: true },
+    });
+    const hasToken = new Set(existingTokens.map((t) => t.clientAccountNumber));
 
-    for (let i = 0; i < tokenData.length; i += CHUNK) {
-      const chunk = tokenData.slice(i, i + CHUNK);
-      await prisma.accessToken.createMany({ data: chunk });
+    const newTokenData = clientsNeedingTokens
+      .filter((c) => !hasToken.has(c.accountNumber))
+      .map((c) => ({
+        clientAccountNumber: c.accountNumber,
+        expiresAt: tokenExpiry,
+      }));
+
+    if (newTokenData.length > 0) {
+      for (let i = 0; i < newTokenData.length; i += CHUNK) {
+        const chunk = newTokenData.slice(i, i + CHUNK);
+        await prisma.accessToken.createMany({ data: chunk });
+      }
+      console.log(`[IMPORT] Generated ${newTokenData.length} new access tokens (${hasToken.size} existing preserved)`);
+    } else {
+      console.log(`[IMPORT] All ${hasToken.size} clients already have tokens — none created`);
     }
-    console.log(`[IMPORT] Generated ${tokenData.length} access tokens`);
 
   } catch (err) {
-    console.error(`[IMPORT] Bulk insert failed:`, err);
+    console.error(`[IMPORT] Import failed:`, err);
     errors.push(err instanceof Error ? err.message : String(err));
   }
 
@@ -445,9 +486,11 @@ clients.push({
     errors,
     clientsWithEmail,
     clientsWithoutEmail,
+    newClients,
+    updatedClients,
   };
 
-  console.log(`[IMPORT] Done: ${clients.length} clients, ${offers.length} offers, ${errors.length} errors`);
+  console.log(`[IMPORT] Done: ${clients.length} clients (${newClients} new, ${updatedClients} updated), ${offers.length} offers, ${errors.length} errors`);
 
   return result;
 }
