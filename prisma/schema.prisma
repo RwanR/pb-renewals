@@ -157,6 +157,7 @@ model Offer {
 
   billingFrequency      String?
   paymentMessage        String?  @db.Text
+  discount              String?
 
   autoInk               Boolean  @default(false)
   autoInkPcn            String?

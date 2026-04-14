@@ -172,56 +172,54 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     const accountNumber = clean(get(row, "INSTALLACCOUNTNUMBER"));
     if (!accountNumber) continue;
 
-    const billingEmail = clean(get(row, "BILLINGEMAIL"));
-    const bestEmail = clean(get(row, "BESTEMAIL"));
-    const installEmail = clean(get(row, "INSTALLEMAIL"));
-    const email = billingEmail || bestEmail || installEmail;
+    const contactEmail = clean(get(row, "CONTACTEMAIL"));
+    const email = contactEmail;
 
     if (email) clientsWithEmail++;
     else clientsWithoutEmail++;
 
-    clients.push({
+clients.push({
       accountNumber,
-      sfdcAccountId: clean(get(row, "SFDCACCOUNTID")),
-      customerName: clean(get(row, "SFDCCUSTOMERNAME")) ?? "Unknown",
+      sfdcAccountId: null,
+      customerName: clean(get(row, "INSTALLCUSTOMERNAME")) ?? "Unknown",
       currentModel: clean(get(row, "CURRENTEQUIPMENTMODEL")),
       currentPcn: clean(get(row, "CURRENTEQUIPMENTPCN")),
-      currentDescription: clean(get(row, "CURRENTEQUIPMENTDESCRIPTION")),
+      currentDescription: null,
       leaseNumber: clean(get(row, "LEASENUMBER")),
       serialNumber: clean(get(row, "_SERIAL")),
       installDate: toDate(get(row, "INSTALLDATE")),
       leaseExpiryDate: toDate(get(row, "LEASEEXPIRYDATE")),
-      leaseAgeing: clean(get(row, "LEASEAGEING")),
-      eolPhase: clean(get(row, "EOL_PHASE")),
+      leaseAgeing: null,
+      eolPhase: null,
       currentMonthlyPayment: toFloat(get(row, "CURRENTMONTHLYPAYMENT")),
       currentEquipmentPayment: toFloat(get(row, "CURRENTEQUIPMENTPAYMENT")),
-      billingFrequency: clean(get(row, "BILLING_FREQUENCY")),
+      billingFrequency: null,
       connectionType: clean(get(row, "CONNECTIONTYPE")),
       installAddress1: clean(get(row, "INSTALLADDRESS1")),
       installStreet: clean(get(row, "INSTALLSTREET")),
       installCity: clean(get(row, "INSTALLCITY")),
-      installPostcode: clean(get(row, "INSTALLPOSTCODE")),
+      installPostcode: clean(get(row, "INSTALLPOSTALCODE")),
       installPhone: clean(get(row, "INSTALLPHONE")),
-      installEmail,
+      installEmail: null,
       billingCustomerName: clean(get(row, "BILLINGCUSTOMERNAME")),
       billingAddress1: clean(get(row, "BILLINGADDRESS1")),
       billingStreet: clean(get(row, "BILLINGSTREET")),
       billingCity: clean(get(row, "BILLINGCITY")),
-      billingPostcode: clean(get(row, "BILLINGPOSTCODE")),
-      billingPhone: clean(get(row, "BILLINGPHONE")),
-      billingEmail,
-      bestEmail,
+      billingPostcode: clean(get(row, "BILLINGPOSTALCODE")),
+      billingPhone: null,
+      billingEmail: null,
+      bestEmail: contactEmail,
       contactFirstName: clean(get(row, "CONTACTFIRSTNAME")),
       contactLastName: clean(get(row, "CONTACTLASTNAME")),
-      contactPosition: clean(get(row, "CONTACTPOSITION")),
-      siret: clean(get(row, "COMPANYREGISTRATIONNUMBER")),
-      vatNumber: clean(get(row, "VATREGISTRATIONNUMBER")),
+      contactPosition: null,
+      siret: clean(get(row, "INSTALLCOMPANYREGISTRATIONNUMBER")),
+      vatNumber: clean(get(row, "INSTALLVAT")),
       ownerName: clean(get(row, "OWNER_NAME__C")),
-      ownerEmail: clean(get(row, "OWNER_EMAIL")),
+      ownerEmail: clean(get(row, "OWNEREMAIL")),
       ownerTeam: clean(get(row, "OWNERTEAM")),
       ownerTerritoryCode: clean(get(row, "OWNERTERRITORYCODE")),
-      badPayerFlag: toBool(get(row, "BAD PAYER FLAG")),
-      regulated: toBool(get(row, "_REGULATED"), "True"),
+      badPayerFlag: false,
+      regulated: false,
       offerExpirationDate: clean(get(row, "OFFEREXPIRATIONDATE")),
       pieceCountLast12m: toInt(get(row, "TOTALPIECECOUNTLAST12MONTHS")),
       resetValueLast12m: toInt(get(row, "TOTALRESETVALUELAST12MONTHS")),
@@ -274,6 +272,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         billingTotal24: toFloat(get(row, "OFFER1BILLINGPAYMENTTOTAL_24")),
         billingFrequency: clean(get(row, "OFFER1BILLINGFREQUENCY")),
         paymentMessage: clean(get(row, "OFFER1NEWPAYMENTMESSAGE")),
+        discount: clean(get(row, "OFFER1DISCOUNT")),
         autoInk: toBool(get(row, "OFFER1AUTOINK")),
         autoInkPcn: clean(get(row, "OFFER1AUTOINKPCN")),
         autoInkDescription: clean(get(row, "OFFER1AUTOINKDESCRIPTION")),
@@ -284,8 +283,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitPcn: clean(get(row, "OFFER1STARTERKITPCN")),
         starterKitDescription: clean(get(row, "OFFER1STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER1CONFIRMATIONWHATSNEXT")),
-        emailSubjectLine: clean(get(row, "OFFER1EMAILSUBJECTLINE")),
-        emailBodyMessage: clean(get(row, "OFFER1EMAILBODYMESSAGE")),
       });
     }
 
@@ -336,6 +333,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         billingTotal24: toFloat(get(row, "OFFER2BILLINGPAYMENTTOTAL_24")),
         billingFrequency: clean(get(row, "OFFER2BILLINGFREQUENCY")),
         paymentMessage: clean(get(row, "OFFER2NEWPAYMENTMESSAGE")),
+        discount: clean(get(row, "OFFER2DISCOUNT")),
         autoInk: toBool(get(row, "OFFER2AUTOINK")),
         autoInkPcn: clean(get(row, "OFFER2AUTOINKPCN")),
         autoInkDescription: clean(get(row, "OFFER2AUTOINKDESCRIPTION")),
@@ -346,8 +344,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitPcn: clean(get(row, "OFFER2STARTERKITPCN")),
         starterKitDescription: clean(get(row, "OFFER2STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER2CONFIRMATIONWHATSNEXT")),
-        emailSubjectLine: clean(get(row, "OFFER2EMAILSUBJECTLINE")),
-        emailBodyMessage: clean(get(row, "OFFER2EMAILBODYMESSAGE")),
       });
     }
   }
@@ -373,6 +369,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
 
   try {
     updateJob(jobId, { message: "Suppression des anciennes données..." });
+    await prisma.acceptance.deleteMany({});
     await prisma.accessToken.deleteMany({});
     await prisma.offer.deleteMany({});
     await prisma.client.deleteMany({});
@@ -414,7 +411,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     const tokenExpiry = new Date();
     tokenExpiry.setDate(tokenExpiry.getDate() + 90);
 
-    const clientsWithTokens = clients.filter(c => c.bestEmail || c.installEmail || c.billingEmail);
+    const clientsWithTokens = clients.filter(c => c.bestEmail);
     const tokenData = clientsWithTokens.map(c => ({
       clientAccountNumber: c.accountNumber,
       expiresAt: tokenExpiry,
