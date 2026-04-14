@@ -173,11 +173,11 @@ if (client.acceptance?.adobeSignStatus === "signed") {
             <div className="pb-step-line" />
             <div className="pb-step pb-step-inactive">4</div>
           </div>
-          <p className="pb-heading" style={{ textAlign: "center" }}>Choisissez une des offres ci dessous</p>
+          <p className="pb-heading" style={{ textAlign: "center" }}>{offer2 ? "Choisissez une des offres ci dessous" : "Votre offre de renouvellement"}</p>
         </div>
 
         {/* Offers */}
-        <div className="pb-offers-grid" style={{ marginBottom: "32px" }}>
+        <div className="pb-offers-grid" style={offer2 ? { marginBottom: "32px" } : { marginBottom: "32px", gridTemplateColumns: "1fr", maxWidth: "493px", margin: "0 auto 32px" }}>
           {offer1 ? <OfferCard offer={offer1} isRecommended={true} /> : null}
           {offer2 ? <OfferCard offer={offer2} isRecommended={false} /> : null}
         </div>
