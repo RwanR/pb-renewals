@@ -85,8 +85,8 @@ function generateContractHTML(data: ContractData): string {
 
   if (acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto") {
     const installLabels: Record<string, { desc: string; price: string }> = {
-      phone: { desc: "Installation assistée en ligne", price: "63,00 €" },
-      onsite: { desc: "Installation sur site par un technicien", price: "155,00 €" },
+      phone: { desc: "Installation assistée en ligne", price: "75,00 €" },
+      onsite: { desc: "Installation sur site par un technicien", price: "198,00 €" },
     };
     const install = installLabels[acceptance.installOptionSelected];
     if (install) {

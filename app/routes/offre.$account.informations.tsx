@@ -136,7 +136,7 @@ export default function OffreInformations() {
 
   const billing = offer.billing60 ?? offer.billing36;
   const term = offer.billing60 ? "60 mois" : "36 mois";
-  const discount = offer.recommended ? 50 : 25;
+  const discount = offer.discount || "50%";
   const machineImg = getMachineImage(offer.modelName);
 
   const bestEmail = client.billingEmail || client.bestEmail || client.installEmail || "";
@@ -166,7 +166,7 @@ export default function OffreInformations() {
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
           <p style={{ fontSize: "14px", color: "var(--pb-text)", textAlign: "right" }}>
-            {discount}% de réduction la première année
+            {discount} de réduction la première année
           </p>
         </div>
       </div>

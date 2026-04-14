@@ -124,7 +124,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
     <div>
       {/* Banner */}
       <div className="pb-banner">
-        <p>Bénéficiez de <span style={{ fontWeight: 600 }}>50%</span> de réduction sur votre premier loyer annuel</p>
+        <p>Bénéficiez de <span style={{ fontWeight: 600 }}>{offer1?.discount || "50%"}</span> de réduction sur votre premier loyer annuel</p>
       </div>
 
       <div className="pb-main">
@@ -223,7 +223,8 @@ if (client.acceptance?.adobeSignStatus === "signed") {
 function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolean }) {
   var billing = offer.billing60 ?? offer.billing36;
   var monthly = billing ? billing / 12 : null;
-  var discountedMonthly = monthly ? monthly * 0.5 : null;
+  const discountPct = offer.discount ? parseFloat(offer.discount) / 100 : 0.5;
+  var discountedMonthly = monthly ? monthly * (1 - discountPct) : null;
   var term = offer.billing60 ? "60 mois" : "48 mois";
   var optionsUrl = "/offre/" + offer.clientAccountNumber + "/options?offre=" + offer.offerPosition;
 
@@ -241,9 +242,9 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
 
       <p className="pb-heading">{offer.modelName || "—"}</p>
 
-      {/* Headline — override -25% → -50% per PB */}
+      {/* Headline — override */}
       {offer.headline ? (
-        <p className="pb-text-sm">{offer.headline.replace("-25%", "-50%").replace(/\u00a0/g, " ")}</p>
+        <p className="pb-text-sm">{offer.headline.replace(/\u00a0/g, " ")}</p>
       ) : null}
 
       {/* Price — monthly with strikethrough */}
@@ -300,7 +301,7 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
       {/* Promo block */}
       <div className={isRecommended ? "pb-promo pb-promo-recommended" : "pb-promo pb-promo-default"}>
         <p className="pb-promo-title">{"Contrat de " + term + ". Paiement annuel."}</p>
-        <p className="pb-promo-sub">-50% sur le premier loyer annuel</p>
+        <p className="pb-promo-sub">-{offer.discount || "50%"} sur le premier loyer annuel</p>
       </div>
 
       <Link to={optionsUrl} className={isRecommended ? "pb-btn pb-btn-full pb-btn-primary" : "pb-btn pb-btn-full pb-btn-secondary"}>

@@ -65,7 +65,7 @@ export async function action({ request }: ActionFunctionArgs) {
       if (client.shopifyCustomerId) {
         try {
           const { createDraftOrder } = await import("~/lib/shopify-admin.server");
-          const installPrices: Record<string, number> = { auto: 0, phone: 63, onsite: 155 };
+          const installPrices: Record<string, number> = { auto: 0, phone: 75, onsite: 198 };
           const draftOrderId = await createDraftOrder({
             accountNumber,
             shopifyCustomerId: client.shopifyCustomerId,

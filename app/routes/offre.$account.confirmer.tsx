@@ -203,7 +203,7 @@ export default function OffreConfirmer() {
   const billingTotal = offer.billingTotal60 ?? offer.billingTotal36;
   const term = offer.billing60 ? "60 mois" : "48 mois";
   const machineImg = getMachineImage(offer.modelName);
-  const installPrices: Record<string, string> = { auto: "0,00 €", phone: "63,00 €", onsite: "155,00 €" };
+  const installPrices: Record<string, string> = { auto: "0,00 €", phone: "75,00 €", onsite: "198,00 €" };
   const email = overrideEmail || client.bestEmail || client.installEmail || client.billingEmail || "";
 
   return (

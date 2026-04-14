@@ -82,7 +82,7 @@ export default function OffreOptions() {
           </span>
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
-          <p style={{ fontSize: "14px", color: "var(--pb-text)", textAlign: "right" }}>50% de réduction la première année</p>
+         <p style={{ fontSize: "14px", color: "var(--pb-text)", textAlign: "right" }}>{offer.discount || "50%"} de réduction la première année</p>
         </div>
       </div>
 
@@ -133,14 +133,14 @@ export default function OffreOptions() {
                         <input type="radio" name="installOption" value="phone" defaultChecked style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation assistée en ligne</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>63 € HT</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>75 € HT</span>
                     </label>
                     <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <input type="radio" name="installOption" value="onsite" style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation sur site par un technicien</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>155 € HT</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>198 € HT</span>
                     </label>
                   </div>
                 </div>
