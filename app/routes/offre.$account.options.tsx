@@ -59,9 +59,9 @@ export default function OffreOptions() {
     return <meta httpEquiv="refresh" content={`0;url=/offre/${accountNumber}/informations?offre=${offerPosition}`} />;
   }
 
-  const billing = offer.billing60 ?? offer.billing36;
-  const monthly = billing ? billing / 12 : null;
-  const term = offer.billing60 ? "60 mois" : "48 mois";
+// NOUVEAU
+  const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
+  const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const machineImg = getMachineImage(offer.modelName);
 
   return (

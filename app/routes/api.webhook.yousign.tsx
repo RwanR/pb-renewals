@@ -55,7 +55,8 @@ export async function action({ request }: ActionFunctionArgs) {
       // Variables needed by Shopify below
       const client = acceptance.client;
       const offer = client.offers.find((o) => o.offerPosition === acceptance.offerPosition);
-      const billing = offer ? (offer.billing60 ?? offer.billing36) : null;
+      const monthly = offer ? (offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36) : null;
+      const billing = monthly ? monthly * 12 : null;
       const accountNumber = acceptance.clientAccountNumber;
 
       // TODO: Resend emails désactivés temporairement (domaine non vérifié, 403)
@@ -70,7 +71,7 @@ export async function action({ request }: ActionFunctionArgs) {
             accountNumber,
             shopifyCustomerId: client.shopifyCustomerId,
             modelName: offer?.modelName || "Unknown",
-            term: offer?.billing60 ? "60" : "48",
+            term: (offer?.monthly60 ?? offer?.billing60) ? "60" : (offer?.monthly48 ?? offer?.billing48) ? "48" : "36",
             billingAnnualHT: billing || 0,
             installOption: acceptance.installOptionSelected,
             installPrice: installPrices[acceptance.installOptionSelected || ""] || 0,
@@ -103,7 +104,7 @@ export async function action({ request }: ActionFunctionArgs) {
             shopifyCustomerId: client.shopifyCustomerId,
             accountNumber,
             offerSelected: offer?.modelName || "—",
-            termSelected: offer?.billing60 ? "60 mois" : "48 mois",
+            termSelected: (offer?.monthly60 ?? offer?.billing60) ? "60 mois" : (offer?.monthly48 ?? offer?.billing48) ? "48 mois" : "36 mois",
             installOption: acceptance.installOptionSelected || "",
             signatoryName: `${acceptance.signatoryFirstName} ${acceptance.signatoryLastName}`,
             signedAt: new Date(),

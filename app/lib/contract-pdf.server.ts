@@ -25,11 +25,15 @@ function formatDate(date: Date | string | null): string {
 function generateContractHTML(data: ContractData): string {
   const { client, offer, acceptance } = data;
   const today = formatDate(new Date());
-  const billing = offer.billing60 ?? offer.billing36;
-  const billingTax = offer.billingTax60 ?? offer.billingTax36;
-  const billingTotal = offer.billingTotal60 ?? offer.billingTotal36;
-  const term = offer.billing60 ? "60" : "36";
-  const monthly = billing ? formatCurrency(billing / 12) : "—";
+// NOUVEAU
+  const monthlyVal = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
+  const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
+  const billingTotal = offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36;
+  const term = (offer.monthly60 ?? offer.billing60) ? "60" : (offer.monthly48 ?? offer.billing48) ? "48" : "36";
+  const monthly = monthlyVal ? formatCurrency(monthlyVal) : "—";
+  const annualHT = monthlyVal ? monthlyVal * 12 : null;
+  const annualTax = billingTax ? billingTax * 12 : null;
+  const annualTTC = billingTotal ? billingTotal * 12 : null;
 
   const installAddress = [
     client.installAddress1,
@@ -226,15 +230,15 @@ function generateContractHTML(data: ContractData): string {
         .join("")}
       <tr class="total-row">
         <td colspan="2" style="text-align:right">Loyer annuel HT</td>
-        <td>${formatCurrency(billing)} €</td>
+        <td>${formatCurrency(annualHT)} €</td>
       </tr>
       <tr>
         <td colspan="2" style="text-align:right; font-size:7.5pt; color:#666">TVA 20%</td>
-        <td style="font-size:7.5pt; color:#666">${formatCurrency(billingTax)} €</td>
+        <td style="font-size:7.5pt; color:#666">${formatCurrency(annualTax)} €</td>
       </tr>
       <tr>
         <td colspan="2" style="text-align:right; font-size:7.5pt; color:#666">Loyer annuel TTC</td>
-        <td style="font-size:7.5pt; color:#666">${formatCurrency(billingTotal)} €</td>
+        <td style="font-size:7.5pt; color:#666">${formatCurrency(annualTTC)} €</td>
       </tr>
     </tbody>
   </table>

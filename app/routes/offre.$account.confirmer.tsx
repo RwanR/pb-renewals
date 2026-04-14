@@ -197,11 +197,11 @@ export default function OffreConfirmer() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const billing = offer.billing60 ?? offer.billing36;
-  const monthly = billing ? billing / 12 : null;
-  const billingTax = offer.billingTax60 ?? offer.billingTax36;
-  const billingTotal = offer.billingTotal60 ?? offer.billingTotal36;
-  const term = offer.billing60 ? "60 mois" : "48 mois";
+// NOUVEAU
+  const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
+  const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
+  const billingTotal = offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36;
+  const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const machineImg = getMachineImage(offer.modelName);
   const installPrices: Record<string, string> = { auto: "0,00 €", phone: "75,00 €", onsite: "198,00 €" };
   const email = overrideEmail || client.bestEmail || client.installEmail || client.billingEmail || "";
@@ -257,8 +257,8 @@ export default function OffreConfirmer() {
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Durée</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{term}</span></div>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel HT</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(monthly)} €</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax ? billingTax / 12 : null)} €</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTotal ? billingTotal / 12 : null)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span></div>
             </div>
             {installOption && (
               <>

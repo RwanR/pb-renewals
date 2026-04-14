@@ -48,9 +48,9 @@ export default function OffreClient() {
 
 if (client.acceptance?.adobeSignStatus === "signed") {
     var signedOffer = client.offers.find(function(o: any) { return o.offerPosition === client.acceptance?.offerPosition; });
-    var signedBilling = signedOffer?.billing60 ?? signedOffer?.billing36;
-    var signedMonthly = signedBilling ? signedBilling / 12 : null;
-    var signedTerm = signedOffer?.billing60 ? "60 mois" : "48 mois";
+// NOUVEAU
+    var signedMonthly = signedOffer?.monthly60 ?? signedOffer?.monthly48 ?? signedOffer?.monthly36 ?? signedOffer?.billing60 ?? signedOffer?.billing48 ?? signedOffer?.billing36;
+    var signedTerm = (signedOffer?.billing60 ?? signedOffer?.monthly60) ? "60 mois" : (signedOffer?.billing48 ?? signedOffer?.monthly48) ? "48 mois" : "36 mois";
 
     return (
       <div style={{ padding: "48px 24px" }}>
@@ -221,11 +221,11 @@ if (client.acceptance?.adobeSignStatus === "signed") {
 }
 
 function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolean }) {
-  var billing = offer.billing60 ?? offer.billing36;
-  var monthly = billing ? billing / 12 : null;
-  const discountPct = offer.discount ? parseFloat(offer.discount) / 100 : 0.5;
-  var discountedMonthly = monthly ? monthly * (1 - discountPct) : null;
-  var term = offer.billing60 ? "60 mois" : "48 mois";
+  // Les colonnes BILLING contiennent des montants MENSUELS dans le nouveau fichier
+  var monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
+  var discountPct = offer.discount ? parseFloat(offer.discount) / 100 : 0;
+  var discountedMonthly = monthly && discountPct ? monthly * (1 - discountPct) : null;
+  var term = (offer.billing60 ?? offer.monthly60) ? "60 mois" : (offer.billing48 ?? offer.monthly48) ? "48 mois" : "36 mois";
   var optionsUrl = "/offre/" + offer.clientAccountNumber + "/options?offre=" + offer.offerPosition;
 
   var cardStyle: React.CSSProperties = isRecommended
