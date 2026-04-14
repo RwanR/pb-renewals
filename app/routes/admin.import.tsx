@@ -45,6 +45,7 @@ export default function AdminImport() {
 
   const [hasFile, setHasFile] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
 
   const isUploading = navigation.state === "submitting";
   const job = fetcher.data?.job ?? null;
@@ -53,12 +54,12 @@ export default function AdminImport() {
   const isBusy = isUploading || isProcessing;
 
   useEffect(() => {
-    if (actionData?.jobId && actionData.jobId !== jobId) {
+    if (actionData?.jobId && actionData.jobId !== jobId && !dismissed) {
       setJobId(actionData.jobId);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setHasFile(false);
     }
-  }, [actionData]);
+  }, [actionData, dismissed]);
 
   useEffect(() => {
     if (!jobId || isDone) return;
@@ -105,7 +106,7 @@ export default function AdminImport() {
                   name="file"
                   type="file"
                   accept=".xlsx"
-                  onChange={(e) => setHasFile(!!(e.target.files && e.target.files.length > 0))}
+                  onChange={(e) => { setHasFile(!!(e.target.files && e.target.files.length > 0)); setDismissed(false); }}
                   className="admin-input-file"
                 />
               </div>
@@ -223,7 +224,7 @@ export default function AdminImport() {
 
           <div>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <button className="admin-btn admin-btn-outline" onClick={() => setJobId(null)}>
+            <button className="admin-btn admin-btn-outline" onClick={() => { setJobId(null); setDismissed(true); }}>
               Nouvel import
             </button>
             <a href="/admin/export-links" className="admin-btn" download>
