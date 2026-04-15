@@ -346,9 +346,6 @@ const VARIANT_MAP: Record<string, Record<string, string>> = {
 /**
  * Create a Draft Order in Shopify after contract signature
  */
-/**
- * Create a Draft Order in Shopify after contract signature
- */
 export async function createDraftOrder(data: DraftOrderData): Promise<string | null> {
   const { accountNumber, shopifyCustomerId, modelName, term, billingAnnualHT, installOption, installPrice, signatoryName } = data;
 
