@@ -9,7 +9,7 @@
 
 import prisma from "~/db.server";
 
-const API_VERSION = "2025-01";
+const API_VERSION = "2026-04";
 
 interface ShopifySession {
   shop: string;
@@ -222,7 +222,7 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<string 
 
 /**
  * Sync all clients with emails to Shopify (async, in chunks)
- * Called after Excel import
+ * Only syncs clients that are new or whose data changed since last sync.
  */
 export async function syncAllCustomersToShopify(importRunId: string): Promise<{ synced: number; skipped: number; errors: number }> {
   const clients = await prisma.client.findMany({
@@ -247,6 +247,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
       leaseNumber: true,
       currentEquipmentPayment: true,
       shopifyCustomerId: true,
+      shopifySyncHash: true,
     },
   });
 
@@ -263,6 +264,30 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
     await Promise.all(chunk.map(async (client) => {
       const email = client.bestEmail || client.installEmail || client.billingEmail;
       if (!email) {
+        skipped++;
+        return;
+      }
+
+      // Compute hash of Shopify-relevant fields
+      const hashSource = [
+        client.customerName,
+        email,
+        client.installPhone,
+        client.contactFirstName,
+        client.contactLastName,
+        client.installAddress1,
+        client.installStreet,
+        client.installCity,
+        client.installPostcode,
+        client.currentModel,
+        client.leaseNumber,
+        client.currentEquipmentPayment,
+      ].join("|");
+
+      const hash = Buffer.from(hashSource).toString("base64");
+
+      // Skip if already synced with same data
+      if (client.shopifyCustomerId && client.shopifySyncHash === hash) {
         skipped++;
         return;
       }
@@ -286,7 +311,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
       if (customerId) {
         await prisma.client.update({
           where: { accountNumber: client.accountNumber },
-          data: { shopifyCustomerId: customerId },
+          data: { shopifyCustomerId: customerId, shopifySyncHash: hash },
         });
         synced++;
       } else {
@@ -294,13 +319,12 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
       }
     }));
 
-    // Small delay between chunks for rate limiting
     if (i + CHUNK_SIZE < clients.length) {
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
 
-  console.log(`[SHOPIFY] Sync complete: ${synced} synced, ${skipped} skipped (no email), ${errors} errors`);
+  console.log(`[SHOPIFY] Sync complete: ${synced} synced, ${skipped} skipped (no change), ${errors} errors`);
   return { synced, skipped, errors };
 }
 
@@ -333,15 +357,6 @@ interface DraftOrderData {
   installPrice?: number;
   signatoryName: string;
 }
-
-// Variant IDs must be created manually in Shopify — map by model + term
-// These will be set after products are created in the store
-const VARIANT_MAP: Record<string, Record<string, string>> = {
-  // "SendPro C": { "60": "gid://shopify/ProductVariant/XXX", "48": "gid://shopify/ProductVariant/XXX" },
-  // "SendPro C Lite": { "60": "...", "48": "..." },
-  // "DM400": { "60": "...", "48": "..." },
-  // "DM50/55": { "60": "...", "48": "..." },
-};
 
 /**
  * Create a Draft Order in Shopify after contract signature
@@ -576,15 +591,24 @@ const CUSTOMER_METAFIELDS_SET_MUTATION = `
 // ─── PRODUCT CREATION (auto at import) ─────────────────────────────
 
 const PRODUCT_CREATE_MUTATION = `
-  mutation productCreate($input: ProductInput!) {
-    productCreate(input: $input) {
+  mutation productCreate($product: ProductCreateInput!) {
+    productCreate(product: $product) {
       product {
         id
         title
-        variants(first: 5) {
+        variants(first: 1) {
           edges { node { id title } }
         }
       }
+      userErrors { field message }
+    }
+  }
+`;
+
+const PRODUCT_VARIANT_BULK_UPDATE_MUTATION = `
+  mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+      productVariants { id title }
       userErrors { field message }
     }
   }
@@ -622,19 +646,13 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
         continue;
       }
 
-      // Create product in Shopify
+      // Create product in Shopify (API 2026-04)
       const result = await shopifyGraphQL(PRODUCT_CREATE_MUTATION, {
-        input: {
+        product: {
           title: `${modelName} — Location ${term} mois`,
           productType: "Location maintenance",
           vendor: "Pitney Bowes",
           tags: ["pb-renewals", `term-${term}m`],
-          variants: [{
-            title: `${term} mois`,
-            price: "0.00",
-            requiresShipping: false,
-            taxable: true,
-          }],
         },
       });
 
@@ -646,12 +664,20 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
       }
 
       const product = result.productCreate?.product;
-      const variantId = product?.variants?.edges?.[0]?.node?.id;
+      const defaultVariantId = product?.variants?.edges?.[0]?.node?.id;
 
-      if (!product?.id || !variantId) {
+      if (!product?.id || !defaultVariantId) {
         errors.push(`${modelName} ${term}m: no product/variant ID returned`);
         continue;
       }
+
+      // Update default variant price
+      await shopifyGraphQL(PRODUCT_VARIANT_BULK_UPDATE_MUTATION, {
+        productId: product.id,
+        variants: [{ id: defaultVariantId, price: 0 }],
+      });
+
+      const variantId = defaultVariantId;
 
       // Store in DB
       await prisma.shopifyProduct.create({

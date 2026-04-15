@@ -93,6 +93,7 @@ model Client {
   resetValueLast12m   Int?
 
   shopifyCustomerId   String?
+  shopifySyncHash     String?
 
   importRunId         String?
   importRun           ImportRun?    @relation(fields: [importRunId], references: [id])
