@@ -346,28 +346,30 @@ const VARIANT_MAP: Record<string, Record<string, string>> = {
 /**
  * Create a Draft Order in Shopify after contract signature
  */
+/**
+ * Create a Draft Order in Shopify after contract signature
+ */
 export async function createDraftOrder(data: DraftOrderData): Promise<string | null> {
   const { accountNumber, shopifyCustomerId, modelName, term, billingAnnualHT, installOption, installPrice, signatoryName } = data;
 
   try {
     const lineItems: any[] = [];
 
-    // Main line item — equipment rental
-    const variantId = VARIANT_MAP[modelName]?.[term];
+    // Main line item — equipment rental (lookup variant from DB)
+    const variantId = await getVariantId(modelName, term);
 
     if (variantId) {
-      // Use variant with price override
       lineItems.push({
         variantId,
         quantity: 1,
         appliedDiscount: {
           title: "Tarif client",
           valueType: "FIXED_AMOUNT",
-          value: 0, // Will be set properly with the variant's price vs client price
+          value: 0,
+          description: `Loyer mensuel HT: ${billingAnnualHT}€`,
         },
       });
     } else {
-      // No variant mapping — use custom line item
       lineItems.push({
         title: `${modelName} — Location ${term} mois`,
         quantity: 1,
@@ -394,7 +396,7 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
       lineItems,
       tags: ["pb-renewals", `account-${accountNumber}`, `term-${term}m`],
       note: `Contrat PB Renewals — ${accountNumber}\nSignataire: ${signatoryName}\nDurée: ${term} mois\nInstallation: ${installOption || "aucune"}`,
-      shippingAddress: undefined, // Will be filled from customer
+      shippingAddress: undefined,
     };
 
     const result = await shopifyGraphQL(DRAFT_ORDER_CREATE_MUTATION, { input });
@@ -573,6 +575,120 @@ const CUSTOMER_METAFIELDS_SET_MUTATION = `
     }
   }
 `;
+
+// ─── PRODUCT CREATION (auto at import) ─────────────────────────────
+
+const PRODUCT_CREATE_MUTATION = `
+  mutation productCreate($input: ProductInput!) {
+    productCreate(input: $input) {
+      product {
+        id
+        title
+        variants(first: 5) {
+          edges { node { id title } }
+        }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
+/**
+ * Ensure Shopify products exist for all model+term pairs found in offers.
+ * Called during import, after parsing.
+ * Creates products if missing, stores variant IDs in ShopifyProduct table.
+ */
+export async function ensureShopifyProducts(offers: Array<{ modelName: string | null; term: string }>): Promise<{ created: number; existing: number; errors: string[] }> {
+  // Collect unique model+term pairs
+  const pairs = new Map<string, { modelName: string; term: string }>();
+  for (const offer of offers) {
+    if (!offer.modelName) continue;
+    const key = `${offer.modelName}__${offer.term}`;
+    if (!pairs.has(key)) {
+      pairs.set(key, { modelName: offer.modelName, term: offer.term });
+    }
+  }
+
+  let created = 0;
+  let existing = 0;
+  const errors: string[] = [];
+
+  for (const [, { modelName, term }] of pairs) {
+    try {
+      // Check if already in DB
+      const exists = await prisma.shopifyProduct.findUnique({
+        where: { modelName_term: { modelName, term } },
+      });
+
+      if (exists) {
+        existing++;
+        continue;
+      }
+
+      // Create product in Shopify
+      const result = await shopifyGraphQL(PRODUCT_CREATE_MUTATION, {
+        input: {
+          title: `${modelName} — Location ${term} mois`,
+          productType: "Location maintenance",
+          vendor: "Pitney Bowes",
+          tags: ["pb-renewals", `term-${term}m`],
+          variants: [{
+            title: `${term} mois`,
+            price: "0.00",
+            requiresShipping: false,
+            taxable: true,
+          }],
+        },
+      });
+
+      if (result.productCreate?.userErrors?.length) {
+        const errMsg = result.productCreate.userErrors.map((e: any) => e.message).join(", ");
+        errors.push(`${modelName} ${term}m: ${errMsg}`);
+        console.error(`[SHOPIFY] Product create error for ${modelName} ${term}m:`, errMsg);
+        continue;
+      }
+
+      const product = result.productCreate?.product;
+      const variantId = product?.variants?.edges?.[0]?.node?.id;
+
+      if (!product?.id || !variantId) {
+        errors.push(`${modelName} ${term}m: no product/variant ID returned`);
+        continue;
+      }
+
+      // Store in DB
+      await prisma.shopifyProduct.create({
+        data: {
+          modelName,
+          term,
+          shopifyProductId: product.id,
+          shopifyVariantId: variantId,
+        },
+      });
+
+      created++;
+      console.log(`[SHOPIFY] Created product "${modelName} — ${term} mois": ${product.id}, variant: ${variantId}`);
+    } catch (err) {
+      const msg = `${modelName} ${term}m: ${err instanceof Error ? err.message : String(err)}`;
+      errors.push(msg);
+      console.error(`[SHOPIFY] Failed to create product:`, msg);
+    }
+  }
+
+  console.log(`[SHOPIFY] Products: ${created} created, ${existing} already existed, ${errors.length} errors`);
+  return { created, existing, errors };
+}
+
+/**
+ * Get variant ID for a model+term pair from DB
+ */
+export async function getVariantId(modelName: string, term: string): Promise<string | null> {
+  const product = await prisma.shopifyProduct.findUnique({
+    where: { modelName_term: { modelName, term } },
+    select: { shopifyVariantId: true },
+  });
+  return product?.shopifyVariantId ?? null;
+}
 
 /**
  * Update Customer metafields after signature

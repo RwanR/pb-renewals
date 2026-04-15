@@ -243,3 +243,14 @@ model ShopifyAuth {
   installedAt           DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
+
+model ShopifyProduct {
+  id                String   @id @default(cuid())
+  modelName         String
+  term              String   // "60", "48", "36"
+  shopifyProductId  String
+  shopifyVariantId  String
+  createdAt         DateTime @default(now())
+
+  @@unique([modelName, term])
+}

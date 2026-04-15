@@ -352,7 +352,22 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     }
   }
 
+// NOUVEAU
   console.log(`[IMPORT] Parsed ${clients.length} clients, ${offers.length} offers`);
+
+  // Ensure Shopify products exist for all model+term pairs
+  try {
+    const { ensureShopifyProducts } = await import("~/lib/shopify-admin.server");
+    const productPairs = offers.map((o) => ({
+      modelName: o.modelName,
+      term: (o.monthly60 ?? o.billing60) ? "60" : (o.monthly48 ?? o.billing48) ? "48" : (o.monthly36 ?? o.billing36) ? "36" : "24",
+    }));
+    const productResult = await ensureShopifyProducts(productPairs);
+    console.log(`[IMPORT] Shopify products: ${productResult.created} created, ${productResult.existing} existing, ${productResult.errors.length} errors`);
+  } catch (err) {
+    console.error(`[IMPORT] Shopify product sync failed (non-blocking):`, err);
+  }
+
   updateJob(jobId, {
     status: "importing",
     message: `${clients.length} clients analysés. Écriture en base...`,
