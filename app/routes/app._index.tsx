@@ -62,7 +62,7 @@ export default function Index() {
 
   return (
     <s-page heading="PB Renewals">
-      <s-button slot="primary-action" href={adminUrl} target="_blank">
+      <s-button slot="primary-action" onClick={() => window.open(adminUrl, '_blank')}>
         Ouvrir le dashboard
       </s-button>
 
