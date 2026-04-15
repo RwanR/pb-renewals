@@ -48,7 +48,21 @@ export default function AdminImport() {
   const [dismissed, setDismissed] = useState(false);
 
   const isUploading = navigation.state === "submitting";
-  const job = fetcher.data?.job ?? null;
+  const fetcherJob = fetcher.data?.job ?? null;
+  const [job, setJob] = useState<ImportJobStatus | null>(null);
+
+  // Reset job when jobId changes
+  useEffect(() => {
+    setJob(null);
+  }, [jobId]);
+
+  // Update job from fetcher only if it matches current polling
+  useEffect(() => {
+    if (fetcherJob) {
+      setJob(fetcherJob);
+    }
+  }, [fetcherJob]);
+
   const isProcessing = job?.status === "parsing" || job?.status === "importing";
   const isDone = jobId && (job?.status === "success" || job?.status === "error");
   const isBusy = isUploading || isProcessing;
