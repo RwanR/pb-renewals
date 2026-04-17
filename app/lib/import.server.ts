@@ -149,7 +149,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as any);
 
-  const sheet = workbook.worksheets[0];
+  const sheet = workbook.getWorksheet("FR_ELEASE_FINAL") ?? workbook.worksheets[0];
   if (!sheet) throw new Error("No worksheet found");
 
   const headers: Record<string, number> = {};
