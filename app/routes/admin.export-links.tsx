@@ -8,6 +8,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const clients = await prisma.client.findMany({
     where: {
       accessToken: { isNot: null },
+      archived: false,
     },
     select: {
       accountNumber: true,

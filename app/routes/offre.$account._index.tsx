@@ -19,6 +19,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Client non trouvé", { status: 404 });
   }
 
+  if (client.archived) {
+    throw new Response("Cette offre n'est plus disponible.", { status: 410 });
+  }
+
   return { client };
 }
 

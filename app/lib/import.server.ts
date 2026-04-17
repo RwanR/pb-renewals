@@ -114,6 +114,22 @@ export function startImportJob(buffer: ArrayBuffer, filename: string): string {
             console.error(`[SHOPIFY] Customer sync failed:`, err);
           });
       }
+
+      // Archive customers in Shopify (async, non-blocking)
+      import("~/lib/shopify-admin.server")
+        .then(async ({ archiveCustomerInShopify }) => {
+          const archivedClients = await prisma.client.findMany({
+            where: { archived: true, shopifyCustomerId: { not: null } },
+            select: { accountNumber: true, shopifyCustomerId: true },
+          });
+          for (const c of archivedClients) {
+            await archiveCustomerInShopify(c.shopifyCustomerId!, c.accountNumber);
+          }
+          if (archivedClients.length > 0) {
+            console.log(`[SHOPIFY] Archived ${archivedClients.length} customers`);
+          }
+        })
+        .catch((err) => console.error(`[SHOPIFY] Archive sync failed:`, err));
     })
     .catch((err) => {
       console.error(`[IMPORT] Job ${jobId} failed:`, err);
@@ -484,6 +500,28 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     console.error(`[IMPORT] Import failed:`, err);
     errors.push(err instanceof Error ? err.message : String(err));
   }
+
+  // --- Archive clients not in this import ---
+  updateJob(jobId, { message: "Archivage des clients obsolètes..." });
+  const archiveResult = await prisma.client.updateMany({
+    where: {
+      importRunId: { not: importRun.id },
+      archived: false,
+    },
+    data: { archived: true },
+  });
+  if (archiveResult.count > 0) {
+    console.log(`[IMPORT] Archived ${archiveResult.count} clients not in current import`);
+  }
+
+  // Unarchive clients that are back in the file
+  await prisma.client.updateMany({
+    where: {
+      importRunId: importRun.id,
+      archived: true,
+    },
+    data: { archived: false },
+  });
 
   // === PHASE 4: Finalize ===
   await prisma.importRun.update({

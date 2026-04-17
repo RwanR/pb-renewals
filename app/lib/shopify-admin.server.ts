@@ -753,3 +753,23 @@ export async function updateCustomerSignatureMetafields(params: {
     return false;
   }
 }
+
+/**
+ * Mark a Shopify Customer as archived (tag + metafield)
+ */
+export async function archiveCustomerInShopify(shopifyCustomerId: string, accountNumber: string): Promise<void> {
+  try {
+    await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, {
+      input: {
+        id: shopifyCustomerId,
+        tags: ["pb-renewals", `account-${accountNumber}`, "archived"],
+        metafields: [
+          { namespace: "pb_renewals", key: "status", value: "archived", type: "single_line_text_field" },
+        ],
+      },
+    });
+    console.log(`[SHOPIFY] Archived customer ${accountNumber}`);
+  } catch (err) {
+    console.error(`[SHOPIFY] Failed to archive customer ${accountNumber}:`, err);
+  }
+}
