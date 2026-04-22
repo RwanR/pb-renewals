@@ -88,7 +88,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
 
     return [
-      a.clientAccountNumber,
+      `="${a.clientAccountNumber}"`,
       esc(a.client.soldToCustomerName || a.client.customerName),
       a.client.soldToCompanyRegistrationNumber || a.client.siret || "",
       a.client.currentModel || "",
