@@ -145,6 +145,7 @@ export function startImportJob(buffer: ArrayBuffer, filename: string): string {
         clientsWithoutEmail: current?.clientsWithoutEmail ?? 0,
         errorCount: 1,
         result: {
+          importRunId: "",
           rowCount: 0,
           errors: [err instanceof Error ? err.message : String(err)],
           clientsWithEmail: 0,

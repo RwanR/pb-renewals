@@ -134,7 +134,7 @@ export default function OffreSigner() {
       </div>
 
       <iframe
-        src={`${signerUrl}${signerUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
+        src={`${signerUrl}${(signerUrl as string).includes('?') ? '&' : '?'}t=${Date.now()}`}
         style={{
           flex: 1,
           width: "100%",

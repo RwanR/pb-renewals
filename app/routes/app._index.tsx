@@ -104,7 +104,7 @@ export default function Index() {
       {recentAcceptances.length > 0 && (
         <s-section heading="Derniers contrats">
           {recentAcceptances.map((a: any) => (
-            <s-box key={a.clientAccountNumber} padding="base" borderWidth="base" borderRadius="base" style={{ marginBottom: "8px" }}>
+            <div key={a.clientAccountNumber} style={{ marginBottom: "8px", padding: "12px", border: "1px solid #e5e5e5", borderRadius: "8px" }}>
               <s-stack direction="inline" gap="base">
                 <span style={{ fontWeight: 600 }}>{a.client?.customerName || a.clientAccountNumber}</span>
                 <span style={{ color: "#6b7280", fontSize: "13px" }}>Compte {a.clientAccountNumber}</span>
@@ -113,7 +113,7 @@ export default function Index() {
                   {a.signedAt ? "Signé" : "En attente de signature"}
                 </span>
               </s-stack>
-            </s-box>
+            </div>
           ))}
         </s-section>
       )}
