@@ -1,4 +1,5 @@
 import type { Client, Offer, Acceptance } from "@prisma/client";
+import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos";
 
 const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "Elease - 04 26";
 
@@ -173,13 +174,17 @@ function generateContractHTML(data: ContractData): string {
 
 <div class="header">
   <div class="header-left">
-    pitney bowes
+    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:32px; margin-bottom:4px;" /><br>
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
-  <div class="header-right">
-    <div class="version">${CONTRACT_VERSION}</div>
-    Date : ${today}<br>
-    Proposition valable 90 jours
+  <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
+    <div>
+      <div class="version">${CONTRACT_VERSION}</div>
+      Date : ${today}<br>
+      Proposition valable 90 jours
+    </div>
+    <img src="${PLATEFORME_AGREEE}" alt="Plateforme Agréée" style="height:36px;" />
+    <img src="${ISO_27001}" alt="ISO 27001" style="height:36px;" />
   </div>
 </div>
 
