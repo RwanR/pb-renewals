@@ -126,58 +126,60 @@ function generateContractHTML(data: ContractData): string {
 <head>
 <meta charset="UTF-8">
 <style>
+/* NOUVEAU — remplacer TOUT le contenu <style> */
   @page { size: A4; margin: 12mm 12mm 12mm 12mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9pt; color: #1a1a1a; line-height: 1.4; }
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
 
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 3px solid #1D2C6B; }
-  .header-left { font-weight: 700; font-size: 14pt; color: #1D2C6B; }
-  .header-left small { display: block; font-size: 7pt; font-weight: 400; color: #666; margin-top: 2px; }
-  .header-right { text-align: right; font-size: 7.5pt; color: #666; }
-  .header-right .version { font-weight: 600; color: #1D2C6B; font-size: 8pt; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #009999; }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
+  .header-left small { font-size: 6.5pt; color: #666; }
+  .header-right { display: flex; align-items: flex-start; gap: 8px; text-align: right; font-size: 7pt; color: #666; }
+  .header-right .version { font-weight: 600; color: #009999; font-size: 7.5pt; }
 
-  h1 { font-size: 12pt; color: #1D2C6B; text-align: center; margin: 10px 0; }
+  h1 { font-size: 13pt; font-weight: 700; color: #1a1a1a; text-align: center; margin: 8px 0 4px; }
+  .subtitle { text-align: center; font-size: 6.5pt; color: #666; margin-bottom: 8px; }
 
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .info-box { border: 1px solid #ddd; border-radius: 4px; padding: 8px 10px; }
-  .info-box h3 { font-size: 8pt; text-transform: uppercase; color: #1D2C6B; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .info-row { display: flex; justify-content: space-between; font-size: 8pt; margin-bottom: 2px; }
-  .info-label { color: #666; }
-  .info-value { font-weight: 500; text-align: right; max-width: 60%; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .info-box { border: 1.5px solid #009999; border-radius: 3px; padding: 6px 8px; }
+  .info-box h3 { font-size: 7.5pt; font-weight: 700; color: #009999; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+  .info-row { display: flex; justify-content: space-between; font-size: 7.5pt; margin-bottom: 1.5px; }
+  .info-label { color: #555; }
+  .info-value { font-weight: 600; text-align: right; max-width: 55%; word-break: break-word; }
 
-  .conditions { background: #f8f9fc; border: 1px solid #ddd; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; }
-  .conditions h3 { font-size: 8pt; text-transform: uppercase; color: #1D2C6B; margin-bottom: 6px; }
-  .conditions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-  .condition-item .label { font-size: 7pt; color: #666; }
-  .condition-item .value { font-size: 9pt; font-weight: 600; }
+  .conditions { border: 1.5px solid #009999; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; }
+  .conditions h3 { font-size: 7.5pt; font-weight: 700; color: #009999; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+  .conditions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+  .condition-item .label { font-size: 6.5pt; color: #555; }
+  .condition-item .value { font-size: 9pt; font-weight: 700; }
 
-  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-  table th { background: #1D2C6B; color: white; font-size: 7pt; padding: 4px 6px; text-align: left; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  table th { background: #009999; color: white; font-size: 6.5pt; padding: 3px 5px; text-align: left; text-transform: uppercase; letter-spacing: 0.3px; }
   table th:last-child { text-align: right; }
-  table td { font-size: 8pt; padding: 3px 6px; border-bottom: 1px solid #eee; }
-  table td:last-child { text-align: right; font-weight: 500; }
-  .total-row td { border-top: 2px solid #1D2C6B; font-weight: 700; font-size: 9pt; }
+  table td { font-size: 7.5pt; padding: 2.5px 5px; border-bottom: 1px solid #eee; }
+  table td:last-child { text-align: right; font-weight: 600; }
+  .total-row td { border-top: 1.5px solid #009999; font-weight: 700; font-size: 8.5pt; padding-top: 4px; }
 
-  .legal { margin-top: 6px; font-size: 6pt; color: #666; line-height: 1.2; }
-  .legal p { margin-bottom: 4px; }
-  .legal a { color: #1D2C6B; }
+  .legal { margin-top: 6px; font-size: 6pt; color: #555; line-height: 1.25; }
+  .legal p { margin-bottom: 3px; }
+  .legal a { color: #009999; }
 
-  .signature-block { margin-top: 8px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; }
-  .signature-block h3 { font-size: 8pt; text-transform: uppercase; color: #1D2C6B; margin-bottom: 8px; }
-  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .sig-field { font-size: 8pt; }
-  .sig-field .label { font-size: 7pt; color: #666; }
-  .sig-field .value { font-weight: 500; }
-  .sig-area { margin-top: 10px; height: 40px; border: 1px dashed #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 7pt; }
+  .signature-block { margin-top: 6px; border: 1.5px solid #009999; border-radius: 3px; padding: 6px 8px; }
+  .signature-block h3 { font-size: 7.5pt; font-weight: 700; color: #009999; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .sig-field { font-size: 7.5pt; }
+  .sig-field .label { font-size: 6.5pt; color: #555; }
+  .sig-field .value { font-weight: 600; }
+  .sig-area { margin-top: 6px; height: 32px; border: 1px dashed #ccc; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 6.5pt; }
 
-  .footer { margin-top: 10px; padding-top: 6px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 6.5pt; color: #999; }
+  .footer { margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 6pt; color: #999; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-left">
-    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:32px; margin-bottom:4px;" /><br>
+    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:28px; margin-bottom:3px;" />
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
   <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
@@ -193,7 +195,7 @@ function generateContractHTML(data: ContractData): string {
 
 <h1>Contrat de Location Maintenance</h1>
 
-<div style="text-align:center; font-size:7pt; color:#666; margin-bottom:10px;">
+<div class="subtitle">
   Entre Pitney Bowes, SAS au capital de 11 789 424,25 €, RCS Bobigny 562 046 235, NAF 7733Z, TVA FR36562046235
 </div>
 
@@ -216,6 +218,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">Délai paiement</span><span class="info-value">${client.paymentTerms || "Prélèvement"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
+    <div class="info-row"><span class="info-label">Mode paiement</span><span class="info-value">Prélèvement</span></div>
   </div>
 </div>
 
