@@ -127,7 +127,7 @@ function generateContractHTML(data: ContractData): string {
 <meta charset="UTF-8">
 <style>
 /* NOUVEAU — remplacer TOUT le contenu <style> */
-  @page { size: A4; margin: 12mm 12mm 12mm 12mm; }
+  @page { size: A4; margin: 12mm 15mm 12mm 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
 
@@ -179,7 +179,7 @@ function generateContractHTML(data: ContractData): string {
 
 <div class="header">
   <div class="header-left">
-    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:28px; margin-bottom:3px;" />
+    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:28px; width:auto; margin-bottom:3px;" />
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
   <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
@@ -188,8 +188,8 @@ function generateContractHTML(data: ContractData): string {
       Date : ${today}<br>
       Proposition valable 90 jours
     </div>
-    <img src="${PLATEFORME_AGREEE}" alt="Plateforme Agréée" style="height:36px;" />
-    <img src="${ISO_27001}" alt="ISO 27001" style="height:36px;" />
+    <img src="${PLATEFORME_AGREEE}" alt="Plateforme Agréée" style="height:44px; width:auto;" />
+    <img src="${ISO_27001}" alt="ISO 27001" style="height:44px; width:auto;" />
   </div>
 </div>
 
