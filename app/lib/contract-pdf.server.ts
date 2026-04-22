@@ -107,14 +107,14 @@ function generateContractHTML(data: ContractData): string {
   }
 
   if (acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto") {
-    const installLabels: Record<string, { desc: string; price: string }> = {
-      phone: { desc: "Installation assistée en ligne", price: "75,00 €" },
-      onsite: { desc: "Installation sur site par un technicien", price: "198,00 €" },
+    const installLabels: Record<string, { desc: string; price: string; pcn: string }> = {
+      phone: { desc: "Installation assistée en ligne", price: "75,00 €", pcn: "INSTALL_P5" },
+      onsite: { desc: "Installation sur site par un technicien", price: "198,00 €", pcn: "INSTALL_P1" },
     };
     const install = installLabels[acceptance.installOptionSelected];
     if (install) {
       equipmentLines.push({
-        code: "INSTALL",
+        code: install.pcn,
         description: install.desc,
         monthly: install.price,
       });
