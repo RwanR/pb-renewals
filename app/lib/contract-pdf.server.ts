@@ -1,5 +1,5 @@
 import type { Client, Offer, Acceptance } from "@prisma/client";
-import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos";
+import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos.server";
 
 const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "Elease - 04 26";
 
