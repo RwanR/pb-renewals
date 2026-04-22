@@ -186,6 +186,19 @@ model Offer {
   createdAt             DateTime @default(now())
   orderReason           String?
 
+  modelService        String?
+  modelService2       String?
+  modelService3       String?
+  modelService4       String?
+  pcn5                String?
+  description5        String?
+  modelService5       String?
+  
+  billingTaxDiscount60  Float?
+  billingTaxDiscount48  Float?
+  billingTaxDiscount36  Float?
+  billingTaxDiscount24  Float?
+
   @@unique([clientAccountNumber, offerPosition])
 }
 

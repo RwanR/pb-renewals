@@ -26,10 +26,10 @@ function formatDate(date: Date | string | null): string {
 function generateContractHTML(data: ContractData): string {
   const { client, offer, acceptance } = data;
   const today = formatDate(new Date());
-// NOUVEAU
+
   const monthlyVal = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
-  const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
-  const billingTotal = offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36;
+  const billingTax = offer.billingTaxDiscount60 ?? offer.billingTaxDiscount48 ?? offer.billingTaxDiscount36 ?? offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
+  const billingTotal = monthlyVal && billingTax ? monthlyVal + billingTax : (offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36);
   const term = (offer.monthly60 ?? offer.billing60) ? "60" : (offer.monthly48 ?? offer.billing48) ? "48" : "36";
   const monthly = monthlyVal ? formatCurrency(monthlyVal) : "—";
   const annualHT = monthlyVal ? monthlyVal * 12 : null;
@@ -64,61 +64,53 @@ function generateContractHTML(data: ContractData): string {
   const contactPhone =
     acceptance.overridePhone || client.installPhone || client.billingPhone || "";
 
-  // Equipment lines
+  // Equipment lines — differ by offer type
   const equipmentLines: { code: string; description: string; monthly: string }[] = [];
-  equipmentLines.push({
-    code: offer.modelPcn || "—",
-    description: offer.modelDescription || offer.modelName || "—",
-    monthly: monthly + " €",
-  });
-  if (offer.pcn2 && offer.description2) {
-    equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
-  }
-  if (offer.pcn3 && offer.description3) {
-    equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
-  }
-  if (offer.pcn4 && offer.description4) {
-    equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
-  }
-  const existingCodes = new Set(equipmentLines.map(l => l.code));
 
-  if (offer.template === "1" && offer.discount && !existingCodes.has("REMISE_" + offer.discount.replace("%", ""))) {
-    equipmentLines.push({
-      code: "REMISE_" + offer.discount.replace("%", ""),
-      description: "Remise " + offer.discount + " les 12 premiers mois",
-      monthly: "",
-    });
-  }
+  if (offer.template === "1") {
+    // Offre 1 (upgrade) — up to 5 PCN lines + install
+    equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
+    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
+    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
+    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
+    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: offer.description5, monthly: "" });
 
-  if (!existingCodes.has("DATE_D_EFFET")) {
-    equipmentLines.push({
-      code: "DATE_D_EFFET",
-      description: "Date d'effet préétablie",
-      monthly: "",
-    });
-  }
+    const existingCodes = new Set(equipmentLines.map(l => l.code));
 
-  if (acceptance.autoInkSelected && offer.autoInkPcn) {
-    equipmentLines.push({
-      code: offer.autoInkPcn,
-      description: offer.autoInkDescription || "AutoInk",
-      monthly: "Inclus",
-    });
-  }
-
-  if (acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto") {
-    const installLabels: Record<string, { desc: string; price: string; pcn: string }> = {
-      phone: { desc: "Installation assistée en ligne", price: "75,00 €", pcn: "INSTALL_P5" },
-      onsite: { desc: "Installation sur site par un technicien", price: "198,00 €", pcn: "INSTALL_P1" },
-    };
-    const install = installLabels[acceptance.installOptionSelected];
-    if (install) {
-      equipmentLines.push({
-        code: install.pcn,
-        description: install.desc,
-        monthly: install.price,
-      });
+    if (offer.discount && !existingCodes.has("REMISE_" + offer.discount.replace("%", ""))) {
+      equipmentLines.push({ code: "REMISE_" + offer.discount.replace("%", ""), description: "Remise " + offer.discount + " les 12 premiers mois", monthly: "" });
     }
+    if (!existingCodes.has("DATE_D_EFFET")) {
+      equipmentLines.push({ code: "DATE_D_EFFET", description: "Date d'effet préétablie", monthly: "" });
+    }
+
+    if (acceptance.autoInkSelected && offer.autoInkPcn) {
+      equipmentLines.push({ code: offer.autoInkPcn, description: offer.autoInkDescription || "AutoInk", monthly: "Inclus" });
+    }
+
+    if (acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto") {
+      const installLabels: Record<string, { desc: string; price: string; pcn: string }> = {
+        phone: { desc: "Installation assistée en ligne", price: "75,00 €", pcn: "INSTALL_P5" },
+        onsite: { desc: "Installation sur site par un technicien", price: "198,00 €", pcn: "INSTALL_P1" },
+      };
+      const install = installLabels[acceptance.installOptionSelected];
+      if (install) equipmentLines.push({ code: install.pcn, description: install.desc, monthly: install.price });
+    }
+  } else {
+    // Offre 2 (reconduction) — Machine, code, Remise, Date d'effet, Indexation
+    equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
+    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
+
+    const existingCodes = new Set(equipmentLines.map(l => l.code));
+
+    if (offer.discount && !existingCodes.has("REMISE_" + offer.discount.replace("%", ""))) {
+      equipmentLines.push({ code: "REMISE_" + offer.discount.replace("%", ""), description: "Remise " + offer.discount + " les 12 premiers mois", monthly: "" });
+    }
+    if (!existingCodes.has("DATE_D_EFFET")) {
+      equipmentLines.push({ code: "DATE_D_EFFET", description: "Date d'effet préétablie", monthly: "" });
+    }
+    // Indexation line from pcn3 if present
+    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
   }
 
   return `<!DOCTYPE html>
@@ -126,7 +118,6 @@ function generateContractHTML(data: ContractData): string {
 <head>
 <meta charset="UTF-8">
 <style>
-/* NOUVEAU — remplacer TOUT le contenu <style> */
   @page { size: A4; margin: 12mm 15mm 12mm 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
@@ -179,7 +170,7 @@ function generateContractHTML(data: ContractData): string {
 
 <div class="header">
   <div class="header-left">
-    <img src="${PB_LOGO}" alt="Pitney Bowes" style="width:120px; height:41px; margin-bottom:3px;" />
+    <img src="${PB_LOGO}" alt="Pitney Bowes" style="width:160px; height:55px; display:block; margin-bottom:3px;" />
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
   <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
@@ -305,7 +296,6 @@ function generateContractHTML(data: ContractData): string {
 export async function generateContractPDF(data: ContractData): Promise<Buffer> {
   const html = generateContractHTML(data);
 
-  // Dynamic import to avoid loading Puppeteer at startup
   const puppeteer = await import("puppeteer");
   const browser = await puppeteer.default.launch({
     headless: true,
