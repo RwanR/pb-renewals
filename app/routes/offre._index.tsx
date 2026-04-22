@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return { error: "Veuillez saisir votre numéro de compte." };
   }
 
-  const cleaned = accountNumber.replace(/[\s\-]/g, "");
+  const cleaned = accountNumber.replace(/[\s\-]/g, "").padStart(10, "0");
 
   const exists = await validateAccountNumber(cleaned);
   if (!exists) {
