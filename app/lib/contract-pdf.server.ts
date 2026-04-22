@@ -198,9 +198,9 @@ function generateContractHTML(data: ContractData): string {
   <div class="info-box">
     <h3>Locataire / Installation</h3>
     <div class="info-row"><span class="info-label">Compte</span><span class="info-value">${client.accountNumber}</span></div>
-    <div class="info-row"><span class="info-label">Raison sociale</span><span class="info-value">${client.customerName}</span></div>
+    <div class="info-row"><span class="info-label">Raison sociale</span><span class="info-value">${client.soldToCustomerName || client.customerName}</span></div>
     <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${installAddress}</span></div>
-    <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
+    <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.soldToCompanyRegistrationNumber || client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
     <div class="info-row"><span class="info-label">Contact</span><span class="info-value">${contactEmail}</span></div>
     <div class="info-row"><span class="info-label">Téléphone</span><span class="info-value">${contactPhone}</span></div>
@@ -211,7 +211,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">Raison sociale</span><span class="info-value">${client.billingCustomerName || client.customerName}</span></div>
     <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${billingAddress}</span></div>
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
-    <div class="info-row"><span class="info-label">Délai paiement</span><span class="info-value">Prélèvement</span></div>
+    <div class="info-row"><span class="info-label">Délai paiement</span><span class="info-value">${client.paymentTerms || "Prélèvement"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
   </div>
 </div>
@@ -225,7 +225,7 @@ function generateContractHTML(data: ContractData): string {
     </div>
     <div class="condition-item">
       <div class="label">Date d'activation</div>
-      <div class="value">${today}</div>
+      <div class="value">${client.activationDate ? formatDate(client.activationDate) : today}</div>
     </div>
     <div class="condition-item">
       <div class="label">Fréquence facturation</div>

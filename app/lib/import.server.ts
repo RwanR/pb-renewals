@@ -241,6 +241,11 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       badPayerFlag: false,
       regulated: false,
       offerExpirationDate: clean(get(row, "OFFEREXPIRATIONDATE")),
+      soldToCustomerName: clean(get(row, "SOLDTOCUSTOMERNAME")),
+      soldToCompanyRegistrationNumber: clean(get(row, "SOLDTOCOMPANYREGISTRATIONNUMBER")),
+      contactPhone: clean(get(row, "CONTACTPHONE")),
+      activationDate: toDate(get(row, "ACTIVATIONDATE")),
+      paymentTerms: clean(get(row, "PAYMENT_TERMS")),
       pieceCountLast12m: toInt(get(row, "TOTALPIECECOUNTLAST12MONTHS")),
       resetValueLast12m: toInt(get(row, "TOTALRESETVALUELAST12MONTHS")),
     });
@@ -303,6 +308,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitPcn: clean(get(row, "OFFER1STARTERKITPCN")),
         starterKitDescription: clean(get(row, "OFFER1STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER1CONFIRMATIONWHATSNEXT")),
+        orderReason: clean(get(row, "OFFER1ORDERREASON")),
       });
     }
 
@@ -364,6 +370,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitPcn: clean(get(row, "OFFER2STARTERKITPCN")),
         starterKitDescription: clean(get(row, "OFFER2STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER2CONFIRMATIONWHATSNEXT")),
+        orderReason: clean(get(row, "OFFER2ORDERREASON")),
       });
     }
   }

@@ -104,8 +104,14 @@ model Client {
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-
   archived            Boolean  @default(false)
+
+  soldToCustomerName              String?
+  soldToCompanyRegistrationNumber String?
+  contactPhone                    String?
+  
+  activationDate                  DateTime?
+  paymentTerms                    String?
 }
 
 model Offer {
@@ -178,6 +184,7 @@ model Offer {
   emailBodyMessage      String?  @db.Text
 
   createdAt             DateTime @default(now())
+  orderReason           String?
 
   @@unique([clientAccountNumber, offerPosition])
 }
