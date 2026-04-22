@@ -117,7 +117,7 @@ export default function OffreOptions() {
                 </svg>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>Installation</p>
+                    <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>Installation (avec livraison offerte)</p>
                     <p style={{ fontSize: "14px", lineHeight: "20px", color: "var(--pb-text)" }}>
                       Besoin d'aide pour l'installation de votre équipement? Pitney Bowes vous propose les options suivantes pour vous assister:
                     </p>
@@ -126,7 +126,7 @@ export default function OffreOptions() {
                     <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "auto" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <input type="radio" name="installOption" value="auto" checked={installOption === "auto"} onChange={() => setInstallOption("auto")} style={{ accentColor: "#171717" }} />
-                        <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Auto-installation (avec livraison offerte)</span>
+                        <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Auto-installation</span>
                       </div>
                       <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>0 € HT</span>
                     </label>
