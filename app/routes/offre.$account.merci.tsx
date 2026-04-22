@@ -41,13 +41,10 @@ export default function OffreMerci() {
   const { client, acceptance, offer } = useLoaderData<typeof loader>();
 
   const isUpgrade = offer?.template === "1";
-  const billing = offer?.billing60 ?? offer?.billing36;
-  const monthly = billing ? billing / 12 : null;
-  const billingTax = offer?.billingTax60 ?? offer?.billingTax36;
-  const monthlyTax = billingTax ? billingTax / 12 : null;
-  const billingTotal = offer?.billingTotal60 ?? offer?.billingTotal36;
-  const monthlyTotal = billingTotal ? billingTotal / 12 : null;
-  const term = offer?.billing60 ? "60 mois" : "48 mois";
+  const monthly = offer?.monthly60 ?? offer?.monthly48 ?? offer?.monthly36 ?? offer?.billing60 ?? offer?.billing48 ?? offer?.billing36 ?? null;
+  const billingTax = offer?.billingTax60 ?? offer?.billingTax48 ?? offer?.billingTax36 ?? null;
+  const billingTotal = offer?.billingTotal60 ?? offer?.billingTotal48 ?? offer?.billingTotal36 ?? null;
+  const term = (offer?.monthly60 ?? offer?.billing60) ? "60 mois" : (offer?.monthly48 ?? offer?.billing48) ? "48 mois" : "36 mois";
   const machineImg = offer ? getMachineImage(offer.modelName) : null;
 
   return (
@@ -86,11 +83,11 @@ export default function OffreMerci() {
                   <div style={{ display: "flex", flexDirection: "column", textAlign: "right", fontWeight: 600, color: "var(--pb-text)", fontSize: "14px" }}>
                     <span>{term}</span>
                     <span>{formatCurrency(monthly)} €</span>
-                    <span>{formatCurrency(monthlyTax)} €</span>
-                    <span>{formatCurrency(monthlyTotal)} €</span>
+                    <span>{formatCurrency(billingTax)} €</span>
+                    <span>{formatCurrency(billingTotal)} €</span>
                   </div>
                 </div>
-                {acceptance.installOptionSelected && (
+                {acceptance.installOptionSelected && acceptance.installOptionSelected !== "auto" && (
                   <>
                     <div style={{ height: "1px", background: "var(--pb-border)" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", lineHeight: "20px" }}>

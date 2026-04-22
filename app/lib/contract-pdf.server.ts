@@ -1,6 +1,6 @@
 import type { Client, Offer, Acceptance } from "@prisma/client";
 
-const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "V1.0";
+const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "Elease - 04 26";
 
 interface ContractData {
   client: Client;
@@ -79,6 +79,21 @@ function generateContractHTML(data: ContractData): string {
   if (offer.pcn4 && offer.description4) {
     equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
   }
+  if (offer.template === "1" && offer.discount) {
+    equipmentLines.push({
+      code: "REMISE_" + offer.discount.replace("%", ""),
+      description: "Remise " + offer.discount + " les 12 premiers mois",
+      monthly: "",
+    });
+  }
+
+  // Date d'effet
+  equipmentLines.push({
+    code: "DATE_D_EFFET",
+    description: "Date d'effet préétablie",
+    monthly: "",
+  });
+
   if (acceptance.autoInkSelected && offer.autoInkPcn) {
     equipmentLines.push({
       code: offer.autoInkPcn,
@@ -229,7 +244,7 @@ function generateContractHTML(data: ContractData): string {
         )
         .join("")}
       <tr class="total-row">
-        <td colspan="2" style="text-align:right">Loyer annuel HT</td>
+        <td colspan="2" style="text-align:right">Loyer annuel HT (hors remise 1ère année)</td>
         <td>${formatCurrency(annualHT)} €</td>
       </tr>
       <tr>
@@ -245,8 +260,8 @@ function generateContractHTML(data: ContractData): string {
 </div>
 
 <div class="legal">
-  <p>Tous les montants s'entendent hors TVA légale. Le loyer initial est un loyer mensuel.</p>
-  <p>La commande du Locataire vaut demande irrévocable de location. Le Locataire accepte de subordonner l'entrée en vigueur du contrat à l'acceptation par le service Crédit de Pitney Bowes (article 2 des CGL).</p>
+  <p>Tous les montants s'entendent hors TVA légale. Le loyer initial est un loyer mensuel. En signant ce contrat, le Locataire reconnait avoir pris connaissance de l'article 9 des conditions générales. Ainsi, les factures suivantes seront établies sur la base du loyer annuel initial et de la fréquence de facturation, majorés de cet article.</p>
+  <p>La commande du Locataire vaut demande irrévocable de location. Le Locataire accepte de subordonner l'entrée en vigueur du contrat à l'acceptation par le service Crédit de Pitney Bowes (article 2 des CGL), selon le mode et délai de paiement habituels.</p>
   <p>Les Conditions Générales de Location (version ${CONTRACT_VERSION}) sont consultables à l'adresse <a href="https://pb.com/fr/cc">pb.com/fr/cc</a> et acceptées par le Locataire, y compris la clause attributive de juridiction (article 25).</p>
   <p>Contact : <a href="mailto:fr-elease@pb.com">fr-elease@pb.com</a></p>
 </div>
@@ -258,6 +273,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName}</div></div>
     <div class="sig-field"><span class="label">Email</span><div class="value">${acceptance.signatoryEmail}</div></div>
     <div class="sig-field"><span class="label">Fonction</span><div class="value">${acceptance.signatoryFunction || "—"}</div></div>
+    <div class="sig-field"><span class="label">Bon de commande interne</span><div class="value">${acceptance.notes?.replace("Réf commande: ", "") || "—"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>
 </div>
