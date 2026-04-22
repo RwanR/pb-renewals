@@ -179,7 +179,7 @@ function generateContractHTML(data: ContractData): string {
 
 <div class="header">
   <div class="header-left">
-    <img src="${PB_LOGO}" alt="Pitney Bowes" style="height:70px; width:auto; margin-bottom:3px;" />
+    <img src="${PB_LOGO}" alt="Pitney Bowes" style="width:120px; height:41px; margin-bottom:3px;" />
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
   <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
