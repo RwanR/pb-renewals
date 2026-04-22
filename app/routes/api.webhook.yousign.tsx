@@ -60,7 +60,47 @@ export async function action({ request }: ActionFunctionArgs) {
       const accountNumber = acceptance.clientAccountNumber;
 
       // TODO: Resend emails désactivés temporairement (domaine non vérifié, 403)
-      console.log(`[YOUSIGN WEBHOOK] Email notification skipped (Resend disabled)`);
+      // Email notification au commercial
+      if (client.ownerEmail) {
+        try {
+          const { Resend } = await import("resend");
+          const resend = new Resend(process.env.RESEND_API_KEY);
+
+          const term = (offer?.monthly60 ?? offer?.billing60) ? "60 mois" : (offer?.monthly48 ?? offer?.billing48) ? "48 mois" : "36 mois";
+          const monthlyStr = monthly ? monthly.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) : "—";
+          const installLabels: Record<string, string> = { auto: "Auto-installation", phone: "Assistée en ligne", onsite: "Sur site" };
+
+          const attachments = signedPdfBuffer ? [{
+            filename: `contrat-signe-${accountNumber}.pdf`,
+            content: signedPdfBuffer.toString("base64"),
+          }] : [];
+
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
+            to: "erwann.bocher@gmail.com", // TODO: remettre client.ownerEmail après recette
+            subject: `[PB Renewals] Contrat signé – ${client.customerName} (${accountNumber})`,
+            html: `
+              <h2>Contrat signé</h2>
+              <p><strong>Client :</strong> ${client.customerName} (${accountNumber})</p>
+              <p><strong>Offre :</strong> ${offer?.modelName || "—"} — ${acceptance.offerPosition === 1 ? "Upgrade" : "Reconduction"}</p>
+              <p><strong>Durée :</strong> ${term}</p>
+              <p><strong>Loyer mensuel HT :</strong> ${monthlyStr} €</p>
+              ${acceptance.installOptionSelected ? `<p><strong>Installation :</strong> ${installLabels[acceptance.installOptionSelected] || acceptance.installOptionSelected}</p>` : ""}
+              <p><strong>Signataire :</strong> ${acceptance.signatoryFirstName} ${acceptance.signatoryLastName} (${acceptance.signatoryEmail})</p>
+              ${acceptance.signatoryFunction ? `<p><strong>Fonction :</strong> ${acceptance.signatoryFunction}</p>` : ""}
+              ${signedPdfBuffer ? "<p>Le contrat signé est en pièce jointe.</p>" : ""}
+              <p style="color:#666;font-size:13px">Email envoyé automatiquement par la plateforme PB Renewals.</p>
+            `,
+            attachments,
+          });
+
+          console.log(`[YOUSIGN WEBHOOK] Email sent to commercial ${client.ownerEmail}`);
+        } catch (err) {
+          console.error(`[YOUSIGN WEBHOOK] Email to commercial failed:`, err);
+        }
+      } else {
+        console.log(`[YOUSIGN WEBHOOK] No ownerEmail for ${accountNumber} — skipping notification`);
+      }
 
       // Create Shopify Draft Order (async, non-blocking)
       if (client.shopifyCustomerId) {
