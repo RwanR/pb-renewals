@@ -21,9 +21,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     recentRefusals,
     lastImport,
   ] = await Promise.all([
-    prisma.client.count(),
-    prisma.client.count({ where: { NOT: { bestEmail: null } } }),
-    prisma.client.count({ where: { bestEmail: null, installEmail: null, billingEmail: null } }),
+    prisma.client.count({ where: { archived: false } }),
+    prisma.client.count({ where: { archived: false, NOT: { bestEmail: null } } }),
+    prisma.client.count({ where: { archived: false, bestEmail: null, installEmail: null, billingEmail: null } }),
     prisma.offer.count(),
     prisma.acceptance.count(),
     prisma.acceptance.count({ where: { adobeSignStatus: "signed" } }),
@@ -104,6 +104,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 const reasonLabels: Record<string, string> = {
+  economies: "Économies courrier",
+  simplifier: "Simplifier envois",
+  temps: "Gagner du temps",
+  facturation: "Facturation électronique",
+  digitaliser: "Digitaliser documents",
   trop_cher: "Tarif trop élevé",
   plus_besoin: "Plus besoin",
   concurrent: "Autre prestataire",
