@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, Form, Link } from "react-router";
+import { useState } from "react";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
 
@@ -63,6 +64,7 @@ export default function OffreOptions() {
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const machineImg = getMachineImage(offer.modelName);
+  const [installOption, setInstallOption] = useState("auto");
 
   return (
     <div>
@@ -121,28 +123,29 @@ export default function OffreOptions() {
                     </p>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "auto" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <input type="radio" name="installOption" value="auto" style={{ accentColor: "#171717" }} />
+                        <input type="radio" name="installOption" value="auto" checked={installOption === "auto"} onChange={() => setInstallOption("auto")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Auto-installation (avec livraison offerte)</span>
                       </div>
                       <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>0 € HT</span>
                     </label>
-                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "2px solid #171717", borderRadius: "10px", cursor: "pointer", background: "white" }}>
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "phone" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <input type="radio" name="installOption" value="phone" defaultChecked style={{ accentColor: "#171717" }} />
+                        <input type="radio" name="installOption" value="phone" checked={installOption === "phone"} onChange={() => setInstallOption("phone")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation assistée en ligne</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>75 € HT</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>75 € HT*</span>
                     </label>
-                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "onsite" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <input type="radio" name="installOption" value="onsite" style={{ accentColor: "#171717" }} />
+                        <input type="radio" name="installOption" value="onsite" checked={installOption === "onsite"} onChange={() => setInstallOption("onsite")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation sur site par un technicien</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>198 € HT</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>198 € HT*</span>
                     </label>
                   </div>
+                  <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>*Facturation unique et séparée</p>
                 </div>
               </div>
             )}

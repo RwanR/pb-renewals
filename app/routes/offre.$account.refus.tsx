@@ -45,11 +45,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (client?.ownerEmail) {
     try {
       const reasonLabels: Record<string, string> = {
-        trop_cher: "Tarif trop élevé",
-        plus_besoin: "Plus besoin de machine à affranchir",
-        concurrent: "Choix d'un autre prestataire",
-        contact: "Souhaite être contacté",
-        autre: "Autre raison",
+        economies: "Faire des économies sur les dépenses de courrier",
+        simplifier: "Simplifier les processus de traitement des envois",
+        temps: "Gagner du temps sur le traitement des envois",
+        facturation: "Se conformer à la facturation électronique",
+        digitaliser: "Digitaliser la gestion des documents",
       };
 
       const { Resend } = await import("resend");
@@ -125,9 +125,8 @@ export default function OffreRefus() {
 
         {/* Description */}
         <p style={{ fontSize: "14px", lineHeight: "20px", color: "var(--pb-text)" }}>
-          Si aucune des offres proposées ne correspond à vos besoins, vous pouvez remplir le formulaire ci‑dessous pour nous expliquer votre situation, vos contraintes et vos attentes. Cela nous permettra de comprendre pourquoi nos formules actuelles ne vous conviennent pas et, si possible, de vous proposer une solution plus adaptée.
+          Si vous souhaitez procéder différemment pour gérer vos envois de courrier, veuillez remplir le formulaire ci-dessous afin de nous faire part de vos attentes et de vos objectifs.
         </p>
-
         {/* Form */}
         <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
@@ -157,23 +156,23 @@ export default function OffreRefus() {
               }}
             >
               <option value="" disabled>Sélectionnez une raison</option>
-              <option value="trop_cher">Le tarif proposé est trop élevé</option>
-              <option value="plus_besoin">Nous n'avons plus besoin de machine à affranchir</option>
-              <option value="concurrent">Nous avons choisi un autre prestataire</option>
-              <option value="contact">Je souhaite être contacté pour en discuter</option>
-              <option value="autre">Autre raison</option>
+              <option value="economies">Faire des économies sur vos dépenses de courrier</option>
+              <option value="simplifier">Simplifier les processus de traitement de vos envois</option>
+              <option value="temps">Gagner du temps sur le traitement de vos envois</option>
+              <option value="facturation">Se conformer à la facturation électronique</option>
+              <option value="digitaliser">Digitaliser la gestion de vos documents</option>
             </select>
           </div>
 
           {/* Textarea */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>
-              Pouvez-vous précisez vos attentes
+              Informations complémentaires
             </label>
             <textarea
               name="comment"
               rows={3}
-              placeholder="Type your message here."
+              placeholder=""
               style={{
                 width: "100%",
                 minHeight: "76px",

@@ -201,11 +201,19 @@ export default function OffreInformations() {
         <Form method="get" action={`/offre/${accountNumber}/confirmer`}>
           <input type="hidden" name="offre" value={offerPosition} />
           <input type="hidden" name="installOption" value={installOption} />
+          <input type="hidden" name="installAddress1" value={client.installAddress1 || ""} />
+          <input type="hidden" name="installStreet" value={client.installStreet || ""} />
+          <input type="hidden" name="installPostcode" value={client.installPostcode || ""} />
+          <input type="hidden" name="installCity" value={client.installCity || ""} />
+          <input type="hidden" name="billingAddress1" value={client.billingAddress1 || ""} />
+          <input type="hidden" name="billingStreet" value={client.billingStreet || ""} />
+          <input type="hidden" name="billingPostcode" value={client.billingPostcode || ""} />
+          <input type="hidden" name="billingCity" value={client.billingCity || ""} />
 
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
             {/* Infos client */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <FieldReadonly label="Raison sociale" value={client.customerName} />
+              <FieldReadonly label="Raison sociale du donneur d'ordre" value={client.customerName} />
               <FieldReadonly label="SIRET" value={client.siret || ""} />
               <FieldEditable label="Email" name="email" value={bestEmail} icon={<MailIcon />} type="email" />
               <FieldEditable label="Téléphone" name="phone" value={bestPhone} icon={<PhoneIcon />} type="tel" />
@@ -217,10 +225,11 @@ export default function OffreInformations() {
                 Adresse d'installation
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <FieldEditable label="Adresse 1" name="installAddress1" value={client.installAddress1 || client.customerName} icon={<MapPinIcon />} />
-                <FieldEditable label="Adresse 2" name="installStreet" value={client.installStreet || ""} icon={<MapPinIcon />} />
-                <FieldEditable label="Code postal" name="installPostcode" value={client.installPostcode || ""} icon={<MailboxIcon />} />
-                <FieldEditable label="Ville" name="installCity" value={client.installCity || ""} icon={<BuildingIcon />} />
+                <FieldReadonly label="Raison sociale de l'installé" value={client.customerName} />
+                <FieldReadonly label="Adresse 1" value={client.installAddress1 || ""} />
+                <FieldReadonly label="Adresse 2" value={client.installStreet || ""} />
+                <FieldReadonly label="Code postal" value={client.installPostcode || ""} />
+                <FieldReadonly label="Ville" value={client.installCity || ""} />
               </div>
             </div>
 
@@ -236,10 +245,11 @@ export default function OffreInformations() {
               </label>
               {showBilling ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <FieldEditable label="Adresse 1" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Adresse 2" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Code postal" name="billingPostcode" value={client.billingPostcode || ""} icon={<MailboxIcon />} />
-                  <FieldEditable label="Ville" name="billingCity" value={client.billingCity || ""} icon={<BuildingIcon />} />
+                  <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
+                  <FieldReadonly label="Adresse 1" value={client.billingAddress1 || ""} />
+                  <FieldReadonly label="Adresse 2" value={client.billingStreet || ""} />
+                  <FieldReadonly label="Code postal" value={client.billingPostcode || ""} />
+                  <FieldReadonly label="Ville" value={client.billingCity || ""} />
                 </div>
               ) : null}
             </div>

@@ -258,15 +258,16 @@ export default function OffreConfirmer() {
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Durée</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{term}</span></div>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel HT</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(monthly)} €</span></div>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTotal)} €</span></div>
             </div>
-            {installOption && (
+            {installOption && installOption !== "auto" && (
               <>
                 <div style={{ height: "1px", background: "var(--pb-border)", margin: "4px 0" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>Installation HT</span>
+                  <span style={{ color: "var(--pb-text-muted)" }}>Installation HT*</span>
                   <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{installPrices[installOption] || "—"}</span>
                 </div>
+                <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>*Facturation unique et séparée</p>
               </>
             )}
           </div>
@@ -311,7 +312,7 @@ export default function OffreConfirmer() {
                   <option value="Autre">Autre</option>
                 </select>
               </div>
-              <FieldWithIcon label="Votre référence de commande" name="orderRef" icon={<DocIcon />}
+              <FieldWithIcon label="Votre référence interne de commande" name="orderRef" icon={<DocIcon />}
                 defaultValue={actionData?.values?.orderRef ?? ""} placeholder="Optionnel" />
             </div>
           </div>
@@ -324,7 +325,7 @@ export default function OffreConfirmer() {
             <label style={{ display: "flex", gap: "12px", alignItems: "flex-start", cursor: "pointer", padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px" }}>
               <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px", marginTop: "2px", flexShrink: 0 }} />
               <span style={{ fontSize: "14px", color: "var(--pb-text)", lineHeight: "20px" }}>
-                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version CC - 01.25 / LSF038 AP 01-25) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
+                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease - 04 26) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
               </span>
             </label>
 
