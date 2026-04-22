@@ -28,8 +28,8 @@ function generateContractHTML(data: ContractData): string {
   const today = formatDate(new Date());
 
   const monthlyVal = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
-  const billingTax = offer.billingTaxDiscount60 ?? offer.billingTaxDiscount48 ?? offer.billingTaxDiscount36 ?? offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
-  const billingTotal = monthlyVal && billingTax ? monthlyVal + billingTax : (offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36);
+  const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
+  const billingTotal = offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60" : (offer.monthly48 ?? offer.billing48) ? "48" : "36";
   const monthly = monthlyVal ? formatCurrency(monthlyVal) : "—";
   const annualHT = monthlyVal ? monthlyVal * 12 : null;
