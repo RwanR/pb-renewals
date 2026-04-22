@@ -185,6 +185,9 @@ export default function AdminDashboard() {
             <a href="/admin/export-links" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }} download>
               🔗 Exporter les liens d'accès
             </a>
+            <a href="/admin/export-acceptances" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }} download>
+              📊 Exporter les acceptations (Excel)
+            </a>
           </div>
         </div>
       </div>

@@ -75,7 +75,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function OffreSigner() {
-  const { client, signerUrl, accountNumber } = useLoaderData<typeof loader>();
+  const { client, signerUrl, accountNumber } = useLoaderData<any>();
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {

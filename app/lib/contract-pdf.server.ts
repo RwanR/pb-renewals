@@ -80,7 +80,9 @@ function generateContractHTML(data: ContractData): string {
   if (offer.pcn4 && offer.description4) {
     equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
   }
-  if (offer.template === "1" && offer.discount) {
+  const existingCodes = new Set(equipmentLines.map(l => l.code));
+
+  if (offer.template === "1" && offer.discount && !existingCodes.has("REMISE_" + offer.discount.replace("%", ""))) {
     equipmentLines.push({
       code: "REMISE_" + offer.discount.replace("%", ""),
       description: "Remise " + offer.discount + " les 12 premiers mois",
@@ -88,12 +90,13 @@ function generateContractHTML(data: ContractData): string {
     });
   }
 
-  // Date d'effet
-  equipmentLines.push({
-    code: "DATE_D_EFFET",
-    description: "Date d'effet préétablie",
-    monthly: "",
-  });
+  if (!existingCodes.has("DATE_D_EFFET")) {
+    equipmentLines.push({
+      code: "DATE_D_EFFET",
+      description: "Date d'effet préétablie",
+      monthly: "",
+    });
+  }
 
   if (acceptance.autoInkSelected && offer.autoInkPcn) {
     equipmentLines.push({
@@ -123,7 +126,7 @@ function generateContractHTML(data: ContractData): string {
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
+  @page { size: A4; margin: 12mm 12mm 12mm 12mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9pt; color: #1a1a1a; line-height: 1.4; }
 
@@ -155,11 +158,11 @@ function generateContractHTML(data: ContractData): string {
   table td:last-child { text-align: right; font-weight: 500; }
   .total-row td { border-top: 2px solid #1D2C6B; font-weight: 700; font-size: 9pt; }
 
-  .legal { margin-top: 10px; font-size: 6.5pt; color: #666; line-height: 1.3; }
+  .legal { margin-top: 6px; font-size: 6pt; color: #666; line-height: 1.2; }
   .legal p { margin-bottom: 4px; }
   .legal a { color: #1D2C6B; }
 
-  .signature-block { margin-top: 12px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; }
+  .signature-block { margin-top: 8px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; }
   .signature-block h3 { font-size: 8pt; text-transform: uppercase; color: #1D2C6B; margin-bottom: 8px; }
   .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .sig-field { font-size: 8pt; }
