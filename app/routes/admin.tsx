@@ -27,7 +27,7 @@ export default function AdminLayout() {
           <nav className="admin-nav">
             <Link to="/admin" className="admin-nav-link">Dashboard</Link>
             <Link to="/admin/import" className="admin-nav-link">Import</Link>
-            <Link to="/admin/export-links" className="admin-nav-link" reloadDocument>Export liens</Link>
+            <a href="/admin/export-links" className="admin-nav-link">Export liens</a>
             <a href="/admin/login?logout=1" className="admin-nav-link admin-logout">Déconnexion</a>
           </nav>
         </header>

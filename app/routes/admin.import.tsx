@@ -241,8 +241,8 @@ export default function AdminImport() {
             <button className="admin-btn admin-btn-outline" onClick={() => { setJobId(null); setDismissed(true); }}>
               Nouvel import
             </button>
-            <a href="/admin/export-links" className="admin-btn" download>
-              Exporter les liens CSV
+            <a href="/admin/export-links" className="admin-btn">
+              Exporter les liens
             </a>
           </div>
           </div>

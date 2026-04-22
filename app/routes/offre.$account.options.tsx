@@ -64,7 +64,7 @@ export default function OffreOptions() {
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const machineImg = getMachineImage(offer.modelName);
-  const [installOption, setInstallOption] = useState("auto");
+  const [installOption, setInstallOption] = useState("phone");
 
   return (
     <div>

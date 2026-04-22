@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { requireAdmin } from "~/lib/admin-auth.server";
 import prisma from "~/db.server";
+import ExcelJS from "exceljs";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
@@ -23,21 +24,31 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const appUrl = process.env.APP_URL || "https://pb-renewals.railway.app";
 
-  const header = "N° Compte;Raison sociale;Email;Lien personnalisé";
-  const rows = clients.map((c) => {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Liens");
+
+  sheet.columns = [
+    { header: "N° Compte", key: "account", width: 16 },
+    { header: "Raison sociale", key: "name", width: 40 },
+    { header: "Email", key: "email", width: 35 },
+    { header: "Lien personnalisé", key: "link", width: 60 },
+  ];
+
+  // Force text format on account number column
+  sheet.getColumn("account").numFmt = "@";
+
+  for (const c of clients) {
     const email = c.bestEmail || c.installEmail || c.billingEmail || "";
     const link = `${appUrl}/offre?token=${c.accessToken?.token}`;
-    // Escape semicolons and quotes in CSV
-    const name = c.customerName.replace(/"/g, '""');
-    return `${c.accountNumber};"${name}";${email};${link}`;
-  });
+    sheet.addRow({ account: c.accountNumber, name: c.customerName, email, link });
+  }
 
-  const csv = [header, ...rows].join("\n");
+  const buffer = await workbook.xlsx.writeBuffer();
 
-  return new Response(csv, {
+  return new Response(buffer as any, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="liens-pb-renewals-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="liens-pb-renewals-${new Date().toISOString().slice(0, 10)}.xlsx"`,
     },
   });
 }

@@ -182,7 +182,7 @@ export default function AdminDashboard() {
             <Link to="/admin/import" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
               📥 Importer un fichier Excel
             </Link>
-            <a href="/admin/export-links" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }} download>
+            <a href="/admin/export-links" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
               🔗 Exporter les liens d'accès
             </a>
             <a href="/admin/export-acceptances" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }} download>
