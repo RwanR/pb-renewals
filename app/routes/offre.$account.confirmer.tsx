@@ -135,11 +135,30 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    const { signatureRequestId, signerUrl } = await createSignatureRequest({
-      pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
-      signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
-      signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
-    });
+    // NOUVEAU
+    const esignProvider = process.env.ESIGN_PROVIDER || "yousign";
+    let signatureRequestId: string;
+    let signerUrl: string | null;
+
+    if (esignProvider === "docusign") {
+      const docusign = await import("~/lib/docusign.server");
+      const result = await docusign.createSignatureRequest({
+        pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
+        signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
+        signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
+      });
+      signatureRequestId = result.signatureRequestId;
+      signerUrl = result.signerUrl;
+    } else {
+      const yousign = await import("~/lib/yousign.server");
+      const result = await yousign.createSignatureRequest({
+        pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
+        signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
+        signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
+      });
+      signatureRequestId = result.signatureRequestId;
+      signerUrl = result.signerUrl;
+    }
     await prisma.acceptance.update({
       where: { id: acceptance.id },
       data: {

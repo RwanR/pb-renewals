@@ -27,45 +27,53 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
+// NOUVEAU
+  const esignProvider = process.env.ESIGN_PROVIDER || "yousign";
   let signerUrl: string | null = null;
 
-  // 1. Try DB first (stored at creation time in confirmer action)
-  if (client.acceptance.signedPdfUrl && client.acceptance.signedPdfUrl.startsWith("https://")) {
-    signerUrl = client.acceptance.signedPdfUrl;
-    console.log(`[SIGN] Using signer URL from DB for ${accountNumber}`);
-  }
+  if (esignProvider === "docusign") {
+    // DocuSign: always generate fresh URL via createRecipientView
+    console.log(`[SIGN] Fetching fresh DocuSign signer URL for ${accountNumber}`);
+    const { getSignerUrl } = await import("~/lib/docusign.server");
+    signerUrl = await getSignerUrl(
+      client.acceptance.adobeSignAgreementId,
+      accountNumber,
+      client.acceptance.signatoryEmail,
+      `${client.acceptance.signatoryFirstName} ${client.acceptance.signatoryLastName}`,
+    );
+  } else {
+    // Yousign: try DB first, then API fallback with retry
+    if (client.acceptance.signedPdfUrl && client.acceptance.signedPdfUrl.startsWith("https://")) {
+      signerUrl = client.acceptance.signedPdfUrl;
+      console.log(`[SIGN] Using Yousign signer URL from DB for ${accountNumber}`);
+    }
 
-  // 2. Fallback: fetch from Yousign API with retry
-  if (!signerUrl) {
-    console.log(`[SIGN] No valid signer URL in DB, fetching from Yousign API`);
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        if (attempt > 0) {
-          await new Promise(r => setTimeout(r, 2000)); // wait 2s between retries
-        }
-        const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
-        const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
-        console.log(`[SIGN] Attempt ${attempt + 1}: SR status=${sr.status}, signer status=${sr.signers?.[0]?.status}`);
-        signerUrl = sr.signers?.[0]?.signature_link || null;
+    if (!signerUrl) {
+      console.log(`[SIGN] Fetching from Yousign API for ${accountNumber}`);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
+          const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
+          const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
+          signerUrl = sr.signers?.[0]?.signature_link || null;
 
-        if (!signerUrl) {
-          const signerId = sr.signers?.[0]?.id;
-          if (signerId) {
-            const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
-            const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
-            const signerRes = await fetch(
-              `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
-              { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
-            );
-            const signerData = await signerRes.json();
-            signerUrl = signerData.signature_link;
-            console.log(`[SIGN] Attempt ${attempt + 1}: direct signer fetch, link=${signerUrl ? 'found' : 'null'}`);
+          if (!signerUrl) {
+            const signerId = sr.signers?.[0]?.id;
+            if (signerId) {
+              const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
+              const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
+              const signerRes = await fetch(
+                `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
+                { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
+              );
+              const signerData = await signerRes.json();
+              signerUrl = signerData.signature_link;
+            }
           }
+          if (signerUrl) break;
+        } catch (err) {
+          console.error(`[SIGN] Attempt ${attempt + 1} failed:`, err);
         }
-
-        if (signerUrl) break;
-      } catch (err) {
-        console.error(`[SIGN] Attempt ${attempt + 1} failed:`, err);
       }
     }
   }
@@ -85,11 +93,12 @@ export default function OffreSigner() {
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      console.log("[YOUSIGN IFRAME] message:", event.origin, event.data);
+      console.log("[ESIGN IFRAME] message:", event.origin, event.data);
+
+      // Yousign events
       if (event.origin.includes("yousign")) {
         try {
           const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-          console.log("[YOUSIGN IFRAME] parsed:", JSON.stringify(data));
           if (
             data.type === "signature_done" ||
             data.type === "success" ||
@@ -100,6 +109,20 @@ export default function OffreSigner() {
           }
         } catch (e) {
           if (typeof event.data === "string" && event.data.includes("done")) {
+            window.location.href = `/offre/${accountNumber}/merci`;
+          }
+        }
+      }
+
+      // DocuSign events
+      if (event.origin.includes("docusign")) {
+        try {
+          const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+          if (data.event === "signing_complete" || data.type === "signing_complete") {
+            window.location.href = `/offre/${accountNumber}/merci`;
+          }
+        } catch (e) {
+          if (typeof event.data === "string" && event.data.includes("signing_complete")) {
             window.location.href = `/offre/${accountNumber}/merci`;
           }
         }
