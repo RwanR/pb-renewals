@@ -77,7 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
-            to: "erwann.bocher@gmail.com", // TODO: remettre client.ownerEmail après recette
+            to: "emmanuel.mur@pb.com", // TODO: remettre client.ownerEmail après recette
             subject: `[PB Renewals] Contrat signé – ${client.customerName} (${accountNumber})`,
             html: `
               <h2>Contrat signé</h2>
