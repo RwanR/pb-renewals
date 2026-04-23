@@ -100,6 +100,7 @@ function generateContractHTML(data: ContractData): string {
     // Offre 2 (reconduction) — Machine, code, Remise, Date d'effet, Indexation
     equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
     if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
+    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
 
     const existingCodes = new Set(equipmentLines.map(l => l.code));
 
@@ -109,8 +110,6 @@ function generateContractHTML(data: ContractData): string {
     if (!existingCodes.has("DATE_D_EFFET")) {
       equipmentLines.push({ code: "DATE_D_EFFET", description: "Date d'effet préétablie", monthly: "" });
     }
-    // Indexation line from pcn3 if present
-    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
   }
 
   return `<!DOCTYPE html>
