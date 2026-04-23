@@ -177,8 +177,8 @@ export async function createSignatureRequest(params: CreateSignatureParams): Pro
     email: signerEmail,
     userName: `${signerFirstName} ${signerLastName}`,
     clientUserId,
-    frameAncestors: [APP_URL, "https://pb-renewals-production.up.railway.app"],
-    messageOrigins: [APP_URL, "https://pb-renewals-production.up.railway.app"],
+    frameAncestors: [APP_URL],
+    messageOrigins: [APP_URL],
   };
 
   const recipientView = await docusignAPI(`/envelopes/${envelopeId}/views/recipient`, {
@@ -219,8 +219,8 @@ export async function getSignerUrl(envelopeId: string, accountNumber: string, si
       email: signerEmail,
       userName: signerName,
       clientUserId: `pb-renewals-${accountNumber}`,
-      frameAncestors: [APP_URL, "https://pb-renewals-production.up.railway.app"],
-      messageOrigins: [APP_URL, "https://pb-renewals-production.up.railway.app"],
+      frameAncestors: [APP_URL],
+      messageOrigins: [APP_URL],
     };
 
     const recipientView = await docusignAPI(`/envelopes/${envelopeId}/views/recipient`, {
