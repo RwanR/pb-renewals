@@ -34,6 +34,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   try {
     const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
     const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
+    console.log(`[SIGN] SR status: ${sr.status}, signers:`, JSON.stringify(sr.signers?.map((s: any) => ({ id: s.id, status: s.status, signature_link: s.signature_link }))));
     signerUrl = sr.signers?.[0]?.signature_link || null;
 
     if (!signerUrl) {
@@ -47,7 +48,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         );
         const signerData = await signerRes.json();
         signerUrl = signerData.signature_link;
-        console.log(`[SIGN] Fetched signer directly, signature_link: ${signerUrl}`);
+        console.log(`[SIGN] Signer data:`, JSON.stringify({ id: signerData.id, status: signerData.status, signature_link: signerData.signature_link, delivery_mode: signerData.delivery_mode }));
       }
     }
   } catch (err) {
