@@ -134,8 +134,8 @@ const BuildingIcon = () => (
 export default function OffreInformations() {
   const { client, offer, offerPosition, installOption, accountNumber, hasOptions } = useLoaderData<typeof loader>();
 
-  const billing = offer.billing60 ?? offer.billing36;
-  const term = offer.billing60 ? "60 mois" : "36 mois";
+  const billing = offer.billing60 ?? offer.billing48 ?? offer.billing36;
+  const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const discount = offer.discount || "50%";
   const machineImg = getMachineImage(offer.modelName);
 
@@ -205,10 +205,6 @@ export default function OffreInformations() {
           <input type="hidden" name="installStreet" value={client.installStreet || ""} />
           <input type="hidden" name="installPostcode" value={client.installPostcode || ""} />
           <input type="hidden" name="installCity" value={client.installCity || ""} />
-          <input type="hidden" name="billingAddress1" value={client.billingAddress1 || ""} />
-          <input type="hidden" name="billingStreet" value={client.billingStreet || ""} />
-          <input type="hidden" name="billingPostcode" value={client.billingPostcode || ""} />
-          <input type="hidden" name="billingCity" value={client.billingCity || ""} />
 
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
             {/* Infos client */}
@@ -243,13 +239,21 @@ export default function OffreInformations() {
                   width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
                 }} />
               </label>
+              {!showBilling && (
+                <>
+                  <input type="hidden" name="billingAddress1" value={client.billingAddress1 || ""} />
+                  <input type="hidden" name="billingStreet" value={client.billingStreet || ""} />
+                  <input type="hidden" name="billingPostcode" value={client.billingPostcode || ""} />
+                  <input type="hidden" name="billingCity" value={client.billingCity || ""} />
+                </>
+              )}
               {showBilling ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
-                  <FieldReadonly label="Adresse 1" value={client.billingAddress1 || ""} />
-                  <FieldReadonly label="Adresse 2" value={client.billingStreet || ""} />
-                  <FieldReadonly label="Code postal" value={client.billingPostcode || ""} />
-                  <FieldReadonly label="Ville" value={client.billingCity || ""} />
+                  <FieldEditable label="Adresse 1" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Adresse 2" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Code postal" name="billingPostcode" value={client.billingPostcode || ""} icon={<MailboxIcon />} />
+                  <FieldEditable label="Ville" name="billingCity" value={client.billingCity || ""} icon={<BuildingIcon />} />
                 </div>
               ) : null}
             </div>

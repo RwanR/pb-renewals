@@ -207,9 +207,8 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">Raison sociale</span><span class="info-value">${client.billingCustomerName || client.customerName}</span></div>
     <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${billingAddress}</span></div>
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
-    <div class="info-row"><span class="info-label">Délai paiement</span><span class="info-value">${client.paymentTerms || "Prélèvement"}</span></div>
+    <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
-    <div class="info-row"><span class="info-label">Mode paiement</span><span class="info-value">Prélèvement</span></div>
   </div>
 </div>
 
@@ -274,7 +273,6 @@ function generateContractHTML(data: ContractData): string {
     <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName}</div></div>
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName}</div></div>
     <div class="sig-field"><span class="label">Email</span><div class="value">${acceptance.signatoryEmail}</div></div>
-    <div class="sig-field"><span class="label">Fonction</span><div class="value">${acceptance.signatoryFunction || "—"}</div></div>
     <div class="sig-field"><span class="label">Bon de commande interne</span><div class="value">${acceptance.notes?.replace("Réf commande: ", "") || "—"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>

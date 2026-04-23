@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useActionData, Form, Link } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import { generateContractPDF } from "~/lib/contract-pdf.server";
 import { createSignatureRequest } from "~/lib/yousign.server";
@@ -196,6 +196,7 @@ export default function OffreConfirmer() {
   const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useEffect(() => { setIsSubmitting(false); }, []);
 
 // NOUVEAU
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;

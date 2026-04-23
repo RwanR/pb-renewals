@@ -189,7 +189,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
         {/* Footnote */}
       <div style={offer2 ? {} : { maxWidth: "493px", margin: "0 auto" }}>
         <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", marginBottom: "32px" }}>
-          {"*Correspond à -" + (offer1?.discount || "50%") + " de remise sur le 1er loyer annuel de " + formatCurrency(offer1?.monthly60 ?? offer1?.monthly48 ?? offer1?.monthly36 ?? offer1?.billing60 ?? offer1?.billing48 ?? offer1?.billing36 ?? null) + " € HT, hors majoration annuelle de l'article 9 des conditions générales."}
+          {"*Correspond à -" + (offer1?.discount || "50%") + " de remise sur le 1er loyer annuel de " + formatCurrency(((offer1?.monthly60 ?? offer1?.monthly48 ?? offer1?.monthly36 ?? offer1?.billing60 ?? offer1?.billing48 ?? offer1?.billing36) ?? 0) * 12) + " € HT, hors majoration annuelle de l'article 9 des conditions générales."}
         </p>
 
         {/* Pas intéressé */}
