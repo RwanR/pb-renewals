@@ -196,7 +196,14 @@ export default function OffreConfirmer() {
   const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => { setIsSubmitting(false); }, []);
+  useEffect(() => {
+    setIsSubmitting(false);
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setIsSubmitting(false);
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
 // NOUVEAU
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
