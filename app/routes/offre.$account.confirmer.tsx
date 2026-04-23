@@ -72,9 +72,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   if (!client || client.offers.length === 0) return { errors: { _form: "Client ou offre introuvable" }, values: Object.fromEntries(formData) };
 
   // If an active signature request already exists, just redirect
-  if (client.acceptance?.adobeSignAgreementId && client.acceptance.adobeSignStatus === "sent") {
-    console.log(`[SIGN] Active SR already exists for ${accountNumber}, redirecting to signer`);
-    return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/signer` } });
+  if (client.acceptance?.adobeSignStatus === "sent") {
+    console.log(`[SIGN] Deleting previous unsigned acceptance for ${accountNumber}`);
+    await prisma.acceptance.delete({ where: { clientAccountNumber: accountNumber } });
   }
 
   const offer = client.offers[0];
