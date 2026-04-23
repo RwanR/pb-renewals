@@ -67,12 +67,19 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
-    include: { offers: { where: { offerPosition } } },
+    include: { offers: { where: { offerPosition } }, acceptance: true },
   });
   if (!client || client.offers.length === 0) return { errors: { _form: "Client ou offre introuvable" }, values: Object.fromEntries(formData) };
 
+  // If an active signature request already exists, just redirect
+  if (client.acceptance?.adobeSignAgreementId && client.acceptance.adobeSignStatus === "sent") {
+    console.log(`[SIGN] Active SR already exists for ${accountNumber}, redirecting to signer`);
+    return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/signer` } });
+  }
+
   const offer = client.offers[0];
   const acceptance = await prisma.acceptance.upsert({
+
     where: { clientAccountNumber: accountNumber },
     create: {
       clientAccountNumber: accountNumber, offerPosition,
