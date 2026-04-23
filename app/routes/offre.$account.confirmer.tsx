@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useActionData, useNavigation, Form, Link } from "react-router";
+import { useLoaderData, useActionData, Form, Link } from "react-router";
+import { useState } from "react";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import { generateContractPDF } from "~/lib/contract-pdf.server";
 import { createSignatureRequest } from "~/lib/yousign.server";
@@ -194,8 +195,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 export default function OffreConfirmer() {
   const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 // NOUVEAU
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
@@ -347,8 +347,8 @@ export default function OffreConfirmer() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginRight: "8px" }}><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Récapitulatif en PDF
             </a>
-            <button type="submit" disabled={isSubmitting} className="pb-btn pb-btn-primary" style={{ flex: 1, padding: "12px 24px", fontSize: "16px" }}>
-              {isSubmitting ? <><span className="pb-spinner" /> Préparation...</> : "Signer mon contrat"}
+            <button type="submit" disabled={isSubmitting} onClick={() => setIsSubmitting(true)} className="pb-btn pb-btn-primary" style={{ flex: 1, padding: "12px 24px", fontSize: "16px" }}>
+              {isSubmitting ? <><span className="pb-spinner" /> Préparation du contrat...</> : "Signer mon contrat"}
             </button>
           </div>
         </Form>
