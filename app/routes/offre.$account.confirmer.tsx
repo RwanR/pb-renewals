@@ -274,7 +274,7 @@ export default function OffreConfirmer() {
         </div>
 
         {/* Signatory form */}
-        <Form method="post" reloadDocument>
+        <Form method="post" reloadDocument onSubmit={() => setIsSubmitting(true)}>
           <input type="hidden" name="offerPosition" value={offerPosition} />
           <input type="hidden" name="installOption" value={installOption} />
           <input type="hidden" name="overrideEmail" value={overrideEmail} />
@@ -347,7 +347,7 @@ export default function OffreConfirmer() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginRight: "8px" }}><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Récapitulatif en PDF
             </a>
-            <button type="submit" disabled={isSubmitting} onClick={() => setIsSubmitting(true)} className="pb-btn pb-btn-primary" style={{ flex: 1, padding: "12px 24px", fontSize: "16px" }}>
+            <button type="submit" disabled={isSubmitting} className="pb-btn pb-btn-primary" style={{ flex: 1, padding: "12px 24px", fontSize: "16px" }}>
               {isSubmitting ? <><span className="pb-spinner" /> Préparation du contrat...</> : "Signer mon contrat"}
             </button>
           </div>
