@@ -296,11 +296,8 @@ export default function OffreConfirmer() {
               defaultValue={actionData?.values?.signatoryEmail ?? ""}
               placeholder="Entrez votre email"
               error={actionData?.errors?.signatoryEmail} />
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <FieldWithIcon label="Votre référence interne de commande" name="orderRef" icon={<DocIcon />}
-                defaultValue={actionData?.values?.orderRef ?? ""} placeholder="Optionnel" />
-            </div>
+            <FieldWithIcon label="Votre référence interne de commande" name="orderRef" icon={<DocIcon />}
+              defaultValue={actionData?.values?.orderRef ?? ""} placeholder="Optionnel" />
           </div>
 
           {/* Conditions */}
