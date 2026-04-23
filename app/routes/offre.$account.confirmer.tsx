@@ -298,21 +298,6 @@ export default function OffreConfirmer() {
               error={actionData?.errors?.signatoryEmail} />
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>Fonction</label>
-                <select name="signatoryFunction"
-                  defaultValue={actionData?.values?.signatoryFunction ?? client.contactPosition ?? ""}
-                  style={{ width: "100%", minHeight: "40px", padding: "9.5px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)", background: "white", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)", cursor: "pointer" }}>
-                  <option value="">Sélectionner</option>
-                  <option value="Directeur">Directeur</option>
-                  <option value="Directeur des achats">Directeur des achats</option>
-                  <option value="Comptable">Comptable</option>
-                  <option value="Responsable administratif">Responsable administratif</option>
-                  <option value="Gérant">Gérant</option>
-                  <option value="Secrétaire général">Secrétaire général</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </div>
               <FieldWithIcon label="Votre référence interne de commande" name="orderRef" icon={<DocIcon />}
                 defaultValue={actionData?.values?.orderRef ?? ""} placeholder="Optionnel" />
             </div>
