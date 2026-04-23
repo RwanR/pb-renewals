@@ -27,39 +27,52 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  // Always fetch fresh signer URL from Yousign API
   let signerUrl: string | null = null;
 
-  console.log(`[SIGN] Fetching signer URL from Yousign API for ${accountNumber}`);
-  try {
-    const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
-    const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
-    console.log(`[SIGN] SR status: ${sr.status}, signers:`, JSON.stringify(sr.signers?.map((s: any) => ({ id: s.id, status: s.status, signature_link: s.signature_link }))));
-    signerUrl = sr.signers?.[0]?.signature_link || null;
+  // 1. Try DB first (stored at creation time in confirmer action)
+  if (client.acceptance.signedPdfUrl && client.acceptance.signedPdfUrl.startsWith("https://")) {
+    signerUrl = client.acceptance.signedPdfUrl;
+    console.log(`[SIGN] Using signer URL from DB for ${accountNumber}`);
+  }
 
-    if (!signerUrl) {
-      const signerId = sr.signers?.[0]?.id;
-      if (signerId) {
-        const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
-        const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
-        const signerRes = await fetch(
-          `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
-          { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
-        );
-        const signerData = await signerRes.json();
-        signerUrl = signerData.signature_link;
-        console.log(`[SIGN] Signer data:`, JSON.stringify({ id: signerData.id, status: signerData.status, signature_link: signerData.signature_link, delivery_mode: signerData.delivery_mode }));
+  // 2. Fallback: fetch from Yousign API with retry
+  if (!signerUrl) {
+    console.log(`[SIGN] No valid signer URL in DB, fetching from Yousign API`);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) {
+          await new Promise(r => setTimeout(r, 2000)); // wait 2s between retries
+        }
+        const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
+        const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
+        console.log(`[SIGN] Attempt ${attempt + 1}: SR status=${sr.status}, signer status=${sr.signers?.[0]?.status}`);
+        signerUrl = sr.signers?.[0]?.signature_link || null;
+
+        if (!signerUrl) {
+          const signerId = sr.signers?.[0]?.id;
+          if (signerId) {
+            const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
+            const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
+            const signerRes = await fetch(
+              `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
+              { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
+            );
+            const signerData = await signerRes.json();
+            signerUrl = signerData.signature_link;
+            console.log(`[SIGN] Attempt ${attempt + 1}: direct signer fetch, link=${signerUrl ? 'found' : 'null'}`);
+          }
+        }
+
+        if (signerUrl) break;
+      } catch (err) {
+        console.error(`[SIGN] Attempt ${attempt + 1} failed:`, err);
       }
     }
-  } catch (err) {
-    console.error(`[SIGN] Failed to fetch signer URL:`, err);
   }
 
   if (!signerUrl) {
     throw new Response("Lien de signature indisponible. Veuillez réessayer.", { status: 500 });
   }
-
-  console.log(`[SIGN] Using signer URL for ${accountNumber}`);
 
   return Response.json(
     { client, signerUrl, accountNumber },
