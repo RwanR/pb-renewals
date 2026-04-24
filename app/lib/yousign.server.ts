@@ -73,7 +73,7 @@ export async function createSignatureRequest(params: {
     method: "POST",
     body: JSON.stringify({
       name: `Contrat PB Renewals - ${accountNumber}`,
-      delivery_mode: "email",
+      delivery_mode: "none",
       timezone: "Europe/Paris",
       ordered_signers: false,
       reminder_settings: {
