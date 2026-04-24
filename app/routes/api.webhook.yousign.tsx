@@ -142,7 +142,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
                     <!-- Logo -->
                     <tr><td align="center" style="padding: 32px 24px 16px;">
-                      <img src="https://www.pitneybowes.com/content/dam/pitneybowes/us/en/img/pb-logo-v2.svg" alt="Pitney Bowes" width="160" style="display:block;" />
+                      <img src="https://pb-renewals-production.up.railway.app/images/logo-pb.png" alt="Pitney Bowes" width="160" style="display:block;" />
                     </td></tr>
 
                     <!-- Title -->
