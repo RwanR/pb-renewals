@@ -92,7 +92,7 @@ export async function createSignatureRequest(params: {
 
   // 2. Upload PDF document (multipart)
   const formData = new FormData();
-  formData.append("file", new Blob([pdfBuffer], { type: "application/pdf" }), pdfFilename);
+  formData.append("file", new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), pdfFilename);
   formData.append("nature", "signable_document");
 
   const document = await fetch(
