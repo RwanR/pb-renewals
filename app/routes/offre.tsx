@@ -122,9 +122,10 @@ body {\
 .pb-header-gradient { height: 3px; background: linear-gradient(90deg, #1D2C6B 0%, #00A3E0 40%, #7B2D8E 70%, #E91E8C 100%); }\
 .pb-logo img { height: 40px; width: auto; }\
 .pb-header-spacer { flex: 1; }\
-.pb-header-client { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 14px; color: var(--pb-text); }\
+.pb-header-client { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 12px; color: var(--pb-text-muted); text-transform: lowercase; min-width: 0; overflow: hidden; }\
+.pb-header-client span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\
 .pb-header-client-icon { width: 16px; height: 16px; color: var(--pb-text-muted); }\
-.pb-header-client-mobile { display: none; align-items: center; justify-content: center; gap: 8px; padding: 10px 32px; font-size: 14px; color: var(--pb-text); background: white; border-bottom: 1px solid var(--pb-border); }\
+.pb-header-client-mobile { display: none; align-items: center; justify-content: center; gap: 8px; padding: 10px 32px; font-size: 12px; color: var(--pb-text-muted); text-transform: lowercase; background: white; border-bottom: 1px solid var(--pb-border); }\
 .pb-banner { background: var(--pb-muted-bg); border-bottom: 1px solid var(--pb-border); text-align: center; padding: 16px 32px; font-size: 14px; color: var(--pb-text); height: 64px; display: flex; align-items: center; justify-content: center; }\
 .pb-banner strong { font-weight: 600; }\
 .pb-main { flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; padding: 32px 32px 64px; }\
