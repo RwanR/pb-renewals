@@ -142,14 +142,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
                     <!-- Logo -->
                     <tr><td align="center" style="padding: 32px 24px 16px;">
-                      <img src="https://www.pitneybowes.com/content/dam/pitneybowes/us/en/homepage/pb-logo.svg" alt="Pitney Bowes" width="160" style="display:block;" />
+                      <img src="https://www.pitneybowes.com/content/dam/pitneybowes/us/en/img/pb-logo-v2.svg" alt="Pitney Bowes" width="160" style="display:block;" />
                     </td></tr>
 
-                    <!-- Success icon + title -->
+                    <!-- Title -->
                     <tr><td align="center" style="padding: 16px 24px;">
-                      <div style="width:48px; height:48px; border-radius:50%; border:2.5px solid #00b44a; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
-                        <span style="color:#00b44a; font-size:24px;">✓</span>
-                      </div>
                       <h1 style="margin:0; font-size:24px; font-weight:500; color:#1a1a1a;">Confirmation</h1>
                       <p style="margin:8px 0 0; font-size:14px; color:#6b7280;">Votre contrat a été signé avec succès</p>
                     </td></tr>
