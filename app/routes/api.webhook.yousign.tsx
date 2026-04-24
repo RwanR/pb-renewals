@@ -28,6 +28,12 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ ok: false, error: "Acceptance not found" });
       }
 
+      // Guard: don't process twice
+      if (acceptance.signedAt) {
+        console.log(`[YOUSIGN WEBHOOK] Already processed for ${acceptance.clientAccountNumber}, skipping`);
+        return Response.json({ ok: true, skipped: true });
+      }
+
       // Update acceptance status
       await prisma.acceptance.update({
         where: { id: acceptance.id },
