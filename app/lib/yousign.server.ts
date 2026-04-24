@@ -171,6 +171,10 @@ export async function createSignatureRequest(params: {
     signerUrl = activatedSigner.signature_link;
   }
 
+  if (YOUSIGN_API_URL.includes('sandbox') && signerUrl) {
+    signerUrl += (signerUrl.includes('?') ? '&' : '?') + 'disable_domain_validation=true';
+  }
+
   console.log(`[YOUSIGN] Signer URL: ${signerUrl}`);
 
   return {

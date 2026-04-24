@@ -163,6 +163,7 @@ export default function OffreSigner() {
       </div>
 
       <iframe
+        referrerPolicy="strict-origin-when-cross-origin"
         src={`${signerUrl}${(signerUrl as string).includes('?') ? '&' : '?'}nocache=${Date.now()}`}
         style={{
           flex: 1,
