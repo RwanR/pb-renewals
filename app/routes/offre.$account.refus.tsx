@@ -57,7 +57,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
       await resend.emails.send({
         from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
-        to: "erwann.bocher@proton.me",
+        to: "emmanuel.mur@pb.com",
         subject: `[PB Renewals] Refus – ${client.customerName} (${accountNumber})`,
         html: `
           <h2>Refus de renouvellement</h2>
