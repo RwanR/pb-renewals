@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
-import { requireAdmin } from "~/lib/auth.server";
+import { requireAdmin } from "~/lib/admin-auth.server";
 import prisma from "~/db.server";
 import { runC4CExport, getDateWindow } from "~/lib/c4c-runner.server";
 

@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { requireAdmin } from "~/lib/auth.server";
+import { requireAdmin } from "~/lib/admin-auth.server";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
