@@ -68,53 +68,14 @@ function formatDate(date: Date | null | undefined): string {
   return `${y}-${m}-${d}`;
 }
 
-/**
- * Mapping mode de paiement : valeurs base → codes template.
- * EN ATTENTE VALIDATION JEMINA — voir mail.
- */
-function mapPaymentMethod(method: string | null | undefined): string {
-  if (!method) return "";
-  const m = method.toLowerCase();
-  if (m.includes("prélèvement") || m.includes("prelevement")) return "P";
-  if (m.includes("virement")) return "V";
-  if (m.includes("mandat")) return "M";
-  return "";
-}
-
-/**
- * Mapping fréquence de facturation : "annuel" → "Yearly".
- * EN ATTENTE VALIDATION JEMINA — voir mail.
- */
-function mapBillingFrequency(freq: string | null | undefined): string {
-  if (!freq) return "";
-  const f = freq.toLowerCase();
-  if (f.includes("annuel") || f.includes("yearly") || f.includes("annual")) return "Yearly";
-  if (f.includes("trimestriel") || f.includes("quarterly")) return "Quarterly";
-  if (f.includes("mensuel") || f.includes("monthly")) return "Monthly";
-  return freq;
-}
-
-/**
- * Mapping installation : "auto" / "phone" / "onsite" → code produit.
- */
+/** Mapping installation : "auto" / "phone" / "onsite" → code produit */
 function mapInstallCode(installOption: string | null | undefined): string {
   if (installOption === "phone") return "INSTALL_P1";
   if (installOption === "onsite") return "INSTALL_P5";
   return "";
 }
 
-/**
- * PCN_FLAMMES : format "<pcnFlammes>+ <currentFlammes> FLAMMES"
- * Exemples observés : "RG97L+ 0 FLAMMES", "RG97LP+ 1 FLAMMES"
- */
-function buildPcnFlammes(client: Client): string {
-  const pcn = client.pcnFlammes || "";
-  const count = client.currentFlammes ?? 0;
-  if (!pcn) return "";
-  return `${pcn}+ ${count} FLAMMES`;
-}
-
-/** Durée en mois depuis termSelected ("60", "48", "36"). */
+/** Durée en mois depuis termSelected ("60", "48", "36") */
 function getDurationMonths(termSelected: string | null | undefined): string {
   if (!termSelected) return "";
   return `${termSelected} mois`;
@@ -135,72 +96,72 @@ function buildRow(acc: AcceptanceWithRelations): (string | number)[] {
   }
 
   const billingDifferent = acc.billingAddressDifferent;
-  const flagUpdate = "Y"; // EN ATTENTE VALIDATION JEMINA — voir mail
+  const flagUpdate = "Y"; // EN ATTENTE VALIDATION JEMINA
 
   return [
     // 1. Type de document
     "Lease Quote",
-    // 2. Description (DESCRIPTION1 ou DESCRIPTION2 selon offre)
+    // 2. Description
     offer.descriptionContract || "",
-    // 3. Donneur d'ordre (SOLDTOACCOUNTNUMBER_C4C)
+    // 3. Donneur d'ordre
     client.soldToAccountNumberC4C || "",
-    // 4. Livré (INSTALLACCOUNTNUMBER_C4C)
+    // 4. Livré
     client.installAccountNumberC4C || "",
-    // 5. Facturé (BILLINGACCOUNTNUMBER_C4C)
+    // 5. Facturé
     client.billingAccountNumberC4C || "",
-    // 6. Payeur (PAYERACCOUNTNUMBER_C4C)
+    // 6. Payeur
     client.payerAccountNumberC4C || "",
     // 7. ContactFirstName
     client.contactFirstName || "",
     // 8. ContactLastName
     client.contactLastName || "",
-    // 9. InstallPhone (CONTACTPHONE)
+    // 9. InstallPhone
     client.contactPhone || "",
-    // 10. InstallEmail (CONTACTEMAIL — bestEmail dans notre schéma)
+    // 10. InstallEmail
     client.bestEmail || "",
-    // 11. Agence commerciale (SALES_OFFICE)
+    // 11. Agence commerciale
     client.salesOffice || "",
-    // 12. Groupe de vendeurs (SALES_GROUP)
+    // 12. Groupe de vendeurs
     client.salesGroup || "",
-    // 13. Motif de la commande (OFFER1ORDERREASON ou OFFER2ORDERREASON — orderReason sur offer)
+    // 13. Motif de la commande
     offer.orderReason || "",
-    // 14. Date de signature (signedAt)
+    // 14. Date de signature
     formatDate(acc.signedAt),
-    // 15. Responsable (OWNER_NAME__C)
+    // 15. Responsable
     client.ownerName || "",
-    // 16. Note interne (NOTE — déjà au format "XXXX | EFFET DD/MM/YYYY")
+    // 16. Note interne
     client.noteContract || "",
     // 17. Durée en mois
     getDurationMonths(acc.termSelected),
-    // 18. Fréquence de facturation
-    mapBillingFrequency(client.billingFrequency),
+    // 18. Fréquence de facturation (valeur brute du fichier source : Yearly / Quarterly / Yearly Calendar)
+    client.currentPaymentFrequency || "",
     // 19. terme echu / echoir
     client.echuEchoir || "",
-    // 20. Purchase Order no. (référence interne saisie par le client)
+    // 20. Purchase Order no.
     acc.purchaseOrderNumber || "",
-    // 21. Date demandée (ACTIVATIONDATE)
+    // 21. Date demandée
     formatDate(client.activationDate),
-    // 22. Mode pmt
-    mapPaymentMethod(client.paymentMethod),
-    // 23. PCN_FLAMMES
-    buildPcnFlammes(client),
-    // 24. Code produit 1 (OFFER1PCN ou OFFER2PCN)
+    // 22. Mode pmt (valeur brute du fichier source, ex "E")
+    client.paymentMethod || "",
+    // 23. PCN_FLAMMES (valeur brute, déjà au format "RG97L+ 0 FLAMMES")
+    client.pcnFlammes || "",
+    // 24. Code produit 1
     offer.modelPcn || "",
-    // 25. Code produit 2 (OFFER1PCN2 ou OFFER2PCN2)
+    // 25. Code produit 2
     offer.pcn2 || "",
-    // 26. Code produit 3 (OFFER1PCN3 ou OFFER2PCN3)
+    // 26. Code produit 3
     offer.pcn3 || "",
-    // 27. Code produit 4 (OFFER1PCN4 ou OFFER2PCN4)
+    // 27. Code produit 4
     offer.pcn4 || "",
-    // 28. Code produit 5 (OFFER1PCN5 ou OFFER2PCN5)
+    // 28. Code produit 5
     offer.pcn5 || "",
-    // 29. Code produit 6 (INSTALL_P1 / INSTALL_P5 / blank)
+    // 29. Code produit 6
     mapInstallCode(acc.installOptionSelected),
-    // 30. Rent amount monthly (CURRENTMONTHLYPAYMENT — loyer mensuel actuel du client)
+    // 30. Rent amount monthly
     client.currentMonthlyPayment ?? "",
     // 31. Flag UPDATE
     flagUpdate,
-    // 32. New CONTACTEMAIL (saisi par le signataire)
+    // 32. New CONTACTEMAIL
     acc.signatoryEmail || "",
     // 33. New CONTACTPHONE
     acc.signatoryPhone || "",
@@ -210,7 +171,7 @@ function buildRow(acc: AcceptanceWithRelations): (string | number)[] {
     acc.signatoryLastName || "",
     // 36. Flag Billing address different
     billingDifferent ? "Y" : "N",
-    // 37. NEW BILLINGCUSTOMERNAME2 (uniquement si flag Y)
+    // 37. NEW BILLINGCUSTOMERNAME2
     billingDifferent ? client.billingCustomerName || "" : "",
     // 38. NEW BILLINGADDRESS1
     billingDifferent ? client.billingAddress1 || "" : "",
@@ -225,7 +186,6 @@ function buildRow(acc: AcceptanceWithRelations): (string | number)[] {
 
 /**
  * Génère le fichier xlsx C4C à partir d'une liste d'acceptances signées.
- * Retourne un Buffer prêt à être envoyé par mail ou stocké en DB.
  */
 export async function generateC4CExport(
   acceptances: AcceptanceWithRelations[]
@@ -236,26 +196,20 @@ export async function generateC4CExport(
 
   const sheet = workbook.addWorksheet("New Elease");
 
-  // Headers
   sheet.addRow(HEADERS);
   const headerRow = sheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.alignment = { wrapText: true, vertical: "middle" };
   headerRow.height = 40;
 
-  // Data rows
   for (const acc of acceptances) {
     try {
       sheet.addRow(buildRow(acc));
     } catch (err) {
-      console.error(
-        `[C4C] Failed to build row for acceptance ${acc.id}:`,
-        err
-      );
+      console.error(`[C4C] Failed to build row for acceptance ${acc.id}:`, err);
     }
   }
 
-  // Largeur de colonnes auto (estimation simple)
   sheet.columns.forEach((col) => {
     col.width = 22;
   });
@@ -265,8 +219,7 @@ export async function generateC4CExport(
 }
 
 /**
- * Calcule la fenêtre de dates J-1 (hier 00:00 → aujourd'hui 00:00).
- * Utilisé par le cron quotidien.
+ * Calcule la fenêtre J-1 : hier 00:00 → aujourd'hui 00:00.
  */
 export function getYesterdayWindow(): { from: Date; to: Date; refDate: Date } {
   const now = new Date();

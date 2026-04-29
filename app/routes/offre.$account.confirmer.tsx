@@ -93,11 +93,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const offer = client.offers[0];
-  const acceptance = await prisma.acceptance.upsert({
 
+  // Calcul de la durée selon le pricing disponible (priorité 60 > 48 > 36 mois)
+  const termSelected = (offer.monthly60 ?? offer.billing60) ? "60"
+    : (offer.monthly48 ?? offer.billing48) ? "48"
+    : "36";
+
+  const acceptance = await prisma.acceptance.upsert({
     where: { clientAccountNumber: accountNumber },
     create: {
       clientAccountNumber: accountNumber, offerPosition,
+      termSelected,
       installOptionSelected: installOption || null, autoInkSelected: autoInk,
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
@@ -108,7 +114,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
       userAgent: request.headers.get("user-agent") || null,
     },
     update: {
-      offerPosition, installOptionSelected: installOption || null, autoInkSelected: autoInk,
+      offerPosition,
+      termSelected,
+      installOptionSelected: installOption || null, autoInkSelected: autoInk,
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
       overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
@@ -150,7 +158,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    // NOUVEAU
     const esignProvider = process.env.ESIGN_PROVIDER || "yousign";
     let signatureRequestId: string;
     let signerUrl: string | null;
@@ -179,7 +186,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       data: {
         adobeSignAgreementId: signatureRequestId,
         adobeSignStatus: "sent",
-        signedPdfUrl: signerUrl || null, // Temporary: store signer URL here until signing is done
+        signedPdfUrl: signerUrl || null,
       },
     });
     console.log(`[SIGN] Redirecting to Yousign signer page`);
@@ -246,7 +253,6 @@ export default function OffreConfirmer() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-// NOUVEAU
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
   const billingTotal = monthly && billingTax ? monthly + billingTax : (offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36);

@@ -7,13 +7,13 @@ import { runC4CExport, getDateWindow } from "~/lib/c4c-runner.server";
 const PAGE_SIZE = 50;
 
 export async function loader({ request }: LoaderFunctionArgs) {
-await requireAdmin(request);
+  await requireAdmin(request);
 
   const url = new URL(request.url);
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [exports, total] = await Promise.all([
+  const [exports, total, totalContracts, totalSentByEmail, lastExport] = await Promise.all([
     prisma.c4CExport.findMany({
       orderBy: { exportDate: "desc" },
       skip,
@@ -30,15 +30,26 @@ await requireAdmin(request);
       },
     }),
     prisma.c4CExport.count(),
+    prisma.c4CExport.aggregate({ _sum: { acceptanceCount: true } }),
+    prisma.c4CExport.count({ where: { NOT: { emailSentAt: null } } }),
+    prisma.c4CExport.findFirst({ orderBy: { generatedAt: "desc" } }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  return { exports, total, page, totalPages };
+  return {
+    exports,
+    total,
+    totalContracts: totalContracts._sum.acceptanceCount || 0,
+    totalSentByEmail,
+    lastExport,
+    page,
+    totalPages,
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await requireAdmin(request);
+  await requireAdmin(request);
 
   const formData = await request.formData();
   const intent = formData.get("intent") as string;
@@ -73,80 +84,40 @@ export async function action({ request }: ActionFunctionArgs) {
   return { error: "Action inconnue" };
 }
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
 export default function AdminExportsC4C() {
-  const { exports, total, page, totalPages } = useLoaderData<typeof loader>();
+  const { exports, total, totalContracts, totalSentByEmail, lastExport, page, totalPages } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  // Date par défaut = hier
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const defaultDate = yesterday.toISOString().split("T")[0];
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "32px 24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 600, color: "var(--pb-text)", margin: 0 }}>
-            Exports C4C
-          </h1>
-          <p style={{ fontSize: "14px", color: "var(--pb-text-muted)", margin: "4px 0 0" }}>
-            {total} export{total > 1 ? "s" : ""} au total
-          </p>
+    <div>
+      <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "24px" }}>Exports C4C</h1>
+
+      {lastExport && (
+        <div style={{ fontSize: "13px", color: "#6B7280", marginBottom: "20px" }}>
+          Dernier export : <strong>{lastExport.fileName}</strong> — {new Date(lastExport.generatedAt).toLocaleString("fr-FR")} — {lastExport.acceptanceCount} contrats
         </div>
-        <Link
-          to="/admin"
-          style={{
-            fontSize: "14px",
-            color: "var(--pb-text-muted)",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          ← Retour admin
-        </Link>
+      )}
+
+      {/* KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "32px" }}>
+        <KpiCard label="Exports générés" value={total} />
+        <KpiCard label="Contrats exportés" value={totalContracts} />
+        <KpiCard label="Envoyés par email" value={totalSentByEmail} sub={total > 0 ? `${Math.round((totalSentByEmail / total) * 100)}%` : undefined} color="#059669" />
       </div>
 
       {/* Form régénération */}
-      <div
-        style={{
-          border: "1px solid var(--pb-border)",
-          borderRadius: "12px",
-          padding: "20px 24px",
-          marginBottom: "32px",
-          background: "var(--pb-muted-bg, #fafafa)",
-        }}
-      >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--pb-text)", marginTop: 0, marginBottom: "12px" }}>
-          Générer un export
-        </h2>
+      <div style={{ background: "white", borderRadius: "8px", border: "1px solid #E5E7EB", padding: "20px", marginBottom: "24px" }}>
+        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>Générer un export</h2>
         <Form method="post" style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap" }}>
           <input type="hidden" name="intent" value="regenerate" />
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "13px", color: "var(--pb-text)", fontWeight: 500 }}>
-              Date des contrats signés
-            </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label style={{ fontSize: "13px", color: "#6B7280", fontWeight: 500 }}>Date des contrats signés</label>
             <input
               type="date"
               name="date"
@@ -154,27 +125,22 @@ export default function AdminExportsC4C() {
               required
               style={{
                 padding: "8px 12px",
-                border: "1px solid var(--pb-border)",
-                borderRadius: "8px",
+                border: "1px solid #E5E7EB",
+                borderRadius: "6px",
                 fontSize: "14px",
                 fontFamily: "inherit",
               }}
             />
           </div>
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", marginBottom: "9px" }}>
-            <input type="checkbox" name="sendMail" value="1" style={{ accentColor: "#005cb1" }} />
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", paddingBottom: "9px" }}>
+            <input type="checkbox" name="sendMail" value="1" />
             Envoyer par email
           </label>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="pb-btn pb-btn-primary"
-            style={{ padding: "8px 20px", fontSize: "14px" }}
-          >
+          <button type="submit" disabled={isSubmitting} className="admin-btn admin-btn-primary">
             {isSubmitting ? "Génération..." : "Générer"}
           </button>
         </Form>
-        <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", margin: "12px 0 0" }}>
+        <p style={{ fontSize: "12px", color: "#9CA3AF", margin: "12px 0 0" }}>
           Si un export existe déjà pour cette date, il sera remplacé.
         </p>
       </div>
@@ -183,12 +149,12 @@ export default function AdminExportsC4C() {
         <div
           style={{
             padding: "12px 16px",
-            background: "#e8f5e8",
-            border: "1px solid #00b44a",
-            borderRadius: "8px",
+            background: "#F0FDF4",
+            border: "1px solid #BBF7D0",
+            borderRadius: "6px",
             marginBottom: "24px",
             fontSize: "14px",
-            color: "#1a5d1a",
+            color: "#166534",
           }}
         >
           {actionData.success}
@@ -198,12 +164,12 @@ export default function AdminExportsC4C() {
         <div
           style={{
             padding: "12px 16px",
-            background: "#fee",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
+            background: "#FEF2F2",
+            border: "1px solid #FECACA",
+            borderRadius: "6px",
             marginBottom: "24px",
             fontSize: "14px",
-            color: "#991b1b",
+            color: "#991B1B",
           }}
         >
           {actionData.error}
@@ -211,59 +177,48 @@ export default function AdminExportsC4C() {
       )}
 
       {/* Liste */}
-      {exports.length === 0 ? (
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-            border: "1px dashed var(--pb-border)",
-            borderRadius: "12px",
-            color: "var(--pb-text-muted)",
-            fontSize: "14px",
-          }}
-        >
-          Aucun export généré pour le moment.
-        </div>
-      ) : (
-        <div style={{ border: "1px solid var(--pb-border)", borderRadius: "12px", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+      <div style={{ background: "white", borderRadius: "8px", border: "1px solid #E5E7EB", padding: "20px" }}>
+        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>Historique</h2>
+        {exports.length === 0 ? (
+          <p style={{ color: "#9CA3AF", fontSize: "14px" }}>Aucun export pour l'instant</p>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
             <thead>
-              <tr style={{ background: "var(--pb-muted-bg, #fafafa)", borderBottom: "1px solid var(--pb-border)" }}>
-                <th style={{ textAlign: "left", padding: "12px 16px", fontWeight: 600 }}>Date</th>
-                <th style={{ textAlign: "right", padding: "12px 16px", fontWeight: 600 }}>Contrats</th>
-                <th style={{ textAlign: "left", padding: "12px 16px", fontWeight: 600 }}>Généré le</th>
-                <th style={{ textAlign: "left", padding: "12px 16px", fontWeight: 600 }}>Origine</th>
-                <th style={{ textAlign: "left", padding: "12px 16px", fontWeight: 600 }}>Email</th>
-                <th style={{ textAlign: "right", padding: "12px 16px", fontWeight: 600 }}></th>
+              <tr style={{ borderBottom: "2px solid #E5E7EB", textAlign: "left" }}>
+                <th style={{ padding: "8px 12px" }}>Date</th>
+                <th style={{ padding: "8px 12px", textAlign: "right" }}>Contrats</th>
+                <th style={{ padding: "8px 12px" }}>Généré le</th>
+                <th style={{ padding: "8px 12px" }}>Origine</th>
+                <th style={{ padding: "8px 12px" }}>Email</th>
+                <th style={{ padding: "8px 12px", textAlign: "right" }}></th>
               </tr>
             </thead>
             <tbody>
-              {exports.map((exp) => (
-                <tr key={exp.id} style={{ borderBottom: "1px solid var(--pb-border)" }}>
-                  <td style={{ padding: "12px 16px", fontWeight: 500 }}>{formatDate(new Date(exp.exportDate))}</td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>{exp.acceptanceCount}</td>
-                  <td style={{ padding: "12px 16px", color: "var(--pb-text-muted)" }}>
-                    {formatDateTime(new Date(exp.generatedAt))}
+              {exports.map((exp: any) => (
+                <tr key={exp.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 600 }}>
+                    {new Date(exp.exportDate).toLocaleDateString("fr-FR")}
                   </td>
-                  <td style={{ padding: "12px 16px", color: "var(--pb-text-muted)", fontSize: "13px" }}>
-                    {exp.generatedBy}
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600 }}>
+                    {exp.acceptanceCount}
                   </td>
-                  <td style={{ padding: "12px 16px", color: "var(--pb-text-muted)", fontSize: "13px" }}>
+                  <td style={{ padding: "8px 12px", color: "#6B7280" }}>
+                    {new Date(exp.generatedAt).toLocaleString("fr-FR")}
+                  </td>
+                  <td style={{ padding: "8px 12px" }}>
+                    <span style={{
+                      padding: "2px 8px", borderRadius: "4px", fontSize: "12px",
+                      background: exp.generatedBy === "cron" ? "#EEF2FF" : "#F3F4F6",
+                      color: exp.generatedBy === "cron" ? "#1D2C6B" : "#6B7280",
+                    }}>
+                      {exp.generatedBy}
+                    </span>
+                  </td>
+                  <td style={{ padding: "8px 12px", color: "#6B7280", fontSize: "12px" }}>
                     {exp.emailSentTo ? `✓ ${exp.emailSentTo}` : "—"}
                   </td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                    <a
-                      href={`/admin/exports-c4c/${exp.id}/download`}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#005cb1",
-                        color: "white",
-                        borderRadius: "6px",
-                        textDecoration: "none",
-                        fontSize: "13px",
-                        fontWeight: 500,
-                      }}
-                    >
+                  <td style={{ padding: "8px 12px", textAlign: "right" }}>
+                    <a href={`/admin/exports-c4c/${exp.id}/download`} className="admin-btn admin-btn-outline" style={{ fontSize: "12px", padding: "4px 12px" }}>
                       Télécharger
                     </a>
                   </td>
@@ -271,33 +226,46 @@ export default function AdminExportsC4C() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "20px" }}>
           {page > 1 && (
-            <Link
-              to={`/admin/exports-c4c?page=${page - 1}`}
-              style={{ padding: "6px 12px", border: "1px solid var(--pb-border)", borderRadius: "6px", textDecoration: "none", color: "var(--pb-text)" }}
-            >
+            <Link to={`/admin/exports-c4c?page=${page - 1}`} className="admin-btn admin-btn-outline" style={{ fontSize: "13px" }}>
               ← Précédent
             </Link>
           )}
-          <span style={{ padding: "6px 12px", color: "var(--pb-text-muted)", fontSize: "14px" }}>
+          <span style={{ padding: "6px 12px", color: "#6B7280", fontSize: "13px" }}>
             Page {page} / {totalPages}
           </span>
           {page < totalPages && (
-            <Link
-              to={`/admin/exports-c4c?page=${page + 1}`}
-              style={{ padding: "6px 12px", border: "1px solid var(--pb-border)", borderRadius: "6px", textDecoration: "none", color: "var(--pb-text)" }}
-            >
+            <Link to={`/admin/exports-c4c?page=${page + 1}`} className="admin-btn admin-btn-outline" style={{ fontSize: "13px" }}>
               Suivant →
             </Link>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function KpiCard({ label, value, sub, color }: { label: string; value: number; sub?: string; color?: string }) {
+  return (
+    <div style={{
+      background: "white",
+      borderRadius: "8px",
+      border: "1px solid #E5E7EB",
+      padding: "20px",
+    }}>
+      <div style={{ fontSize: "13px", color: "#6B7280", marginBottom: "8px" }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+        <span style={{ fontSize: "28px", fontWeight: 700, color: color || "#1a1a1a" }}>
+          {value.toLocaleString("fr-FR")}
+        </span>
+        {sub && <span style={{ fontSize: "14px", color: color || "#6B7280" }}>{sub}</span>}
+      </div>
     </div>
   );
 }

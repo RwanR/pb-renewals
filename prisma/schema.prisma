@@ -133,6 +133,7 @@ model Client {
   contactId                 String?  // CONTACT_ID
   salesOffice               String?  // SALES_OFFICE (FR10/FR20)
   salesGroup                String?  // SALES_GROUP (F13/F23)
+  currentPaymentFrequency   String?
 }
 
 model Offer {

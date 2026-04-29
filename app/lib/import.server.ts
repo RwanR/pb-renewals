@@ -277,6 +277,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       contactId:               clean(get(row, "CONTACT_ID")),
       salesOffice:             clean(get(row, "SALES_OFFICE")),
       salesGroup:              clean(get(row, "SALES_GROUP")),
+      currentPaymentFrequency: clean(get(row, "CURRENTPAYMENTFREQUENCY")),
     });
 
     // Offer 1
