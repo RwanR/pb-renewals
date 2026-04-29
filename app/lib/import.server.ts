@@ -35,6 +35,17 @@ function toDate(val: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+function cleanName(val: unknown): string | null {
+  const s = clean(val);
+  if (!s) return null;
+  if (s.length < 2) return null;
+  // Doit contenir au moins une lettre latine (incluant accents)
+  if (!/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(s)) return null;
+  // Rejeter placeholders explicites
+  if (/^(N\/A|nc|null|none|inconnu|unknown)$/i.test(s)) return null;
+  return s;
+}
+
 export interface ImportResult {
   importRunId: string;
   rowCount: number;
@@ -230,8 +241,8 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       billingPhone: null,
       billingEmail: null,
       bestEmail: contactEmail,
-      contactFirstName: clean(get(row, "CONTACTFIRSTNAME")),
-      contactLastName: clean(get(row, "CONTACTLASTNAME")),
+      contactFirstName: cleanName(get(row, "CONTACTFIRSTNAME")),
+      contactLastName:  cleanName(get(row, "CONTACTLASTNAME")),
       contactPosition: null,
       siret: clean(get(row, "INSTALLCOMPANYREGISTRATIONNUMBER")),
       vatNumber: clean(get(row, "INSTALLVAT")),
