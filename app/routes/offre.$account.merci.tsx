@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
 
@@ -102,11 +102,17 @@ export default function OffreMerci() {
         )}
 
         {/* Download signed contract */}
-        <a href={`/offre/${client.accountNumber}/contrat-signe`} className="pb-btn pb-btn-primary" download
-          style={{ padding: "12px 32px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", height: "48px" }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Télécharger mon contrat signé
-        </a>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          <a href={`/offre/${client.accountNumber}/contrat-signe`} className="pb-btn pb-btn-primary" download
+            style={{ padding: "12px 32px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", height: "48px" }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Télécharger mon contrat signé
+          </a>
+          <Link to={`/offre/${client.accountNumber}`} className="pb-btn pb-btn-secondary"
+            style={{ padding: "12px 32px", fontSize: "16px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", height: "48px" }}>
+            Quitter
+          </Link>
+        </div>
 
         {/* Livraison */}
         {isUpgrade && (
