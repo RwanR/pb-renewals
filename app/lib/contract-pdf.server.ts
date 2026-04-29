@@ -68,7 +68,7 @@ function generateContractHTML(data: ContractData): string {
   const equipmentLines: { code: string; description: string; monthly: string }[] = [];
 
   if (offer.template === "1") {
-    // Offre 1 (upgrade) — up to 5 PCN lines + install
+    // Offre 1 (upgrade) — Machine, PCN2/3, Indexation (PCN4), Flammes (PCN5), Remise, Date effet, AutoInk, Install
     equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
     if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
     if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
@@ -97,10 +97,12 @@ function generateContractHTML(data: ContractData): string {
       if (install) equipmentLines.push({ code: install.pcn, description: install.desc, monthly: install.price });
     }
   } else {
-    // Offre 2 (reconduction) — Machine, Remise, Date d'effet, puis Indexation (PCN4) et Flammes (PCN5)
+    // Offre 2 (reconduction) — Machine, PCN2/3, Indexation (PCN4), Flammes (PCN5), Remise, Date effet
     equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
     if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
     if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
+    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
+    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: offer.description5, monthly: "" });
 
     const existingCodes = new Set(equipmentLines.map(l => l.code));
 
@@ -110,10 +112,6 @@ function generateContractHTML(data: ContractData): string {
     if (!existingCodes.has("DATE_D_EFFET")) {
       equipmentLines.push({ code: "DATE_D_EFFET", description: "Date d'effet préétablie", monthly: "" });
     }
-
-    // Indexation et flammes (après Date d'effet, comme demandé par Jemina)
-    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
-    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: offer.description5, monthly: "" });
   }
 
   return `<!DOCTYPE html>
