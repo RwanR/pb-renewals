@@ -14,7 +14,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const signatureError = url.searchParams.get("error") === "signature";
   const autoInk = false; // AutoInk supprimé par PB
-  const installOption = url.searchParams.get("installOption") || "";
+  const installOption = offerPosition === 1
+  ? (url.searchParams.get("installOption") || "")
+  : ""; // Offre 2: jamais d'install (règle métier PB)
   const overrideEmail = url.searchParams.get("email") || "";
   const overridePhone = url.searchParams.get("phone") || "";
   const billingAddress1 = url.searchParams.get("billingAddress1") || "";
@@ -51,7 +53,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const overridePhone = (formData.get("overridePhone") as string)?.trim();
   const orderRef = (formData.get("orderRef") as string)?.trim();
   const offerPosition = parseInt(formData.get("offerPosition") as string || "1");
-  const installOption = (formData.get("installOption") as string)?.trim();
+  const installOption = offerPosition === 1
+  ? (formData.get("installOption") as string)?.trim()
+  : ""; // Offre 2: jamais d'install (règle métier PB)
   const autoInk = false; // AutoInk supprimé par PB
   const billingAddress1 = (formData.get("billingAddress1") as string)?.trim();
   const billingStreet = (formData.get("billingStreet") as string)?.trim();
