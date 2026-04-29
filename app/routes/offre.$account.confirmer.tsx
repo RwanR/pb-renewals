@@ -63,8 +63,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const billingCity = (formData.get("billingCity") as string)?.trim();
 
   const errors: Record<string, string> = {};
+  const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]{2,}$/;
   if (!signatoryFirstName) errors.signatoryFirstName = "Obligatoire";
+  else if (!NAME_REGEX.test(signatoryFirstName)) errors.signatoryFirstName = "Prénom invalide";
   if (!signatoryLastName) errors.signatoryLastName = "Obligatoire";
+  else if (!NAME_REGEX.test(signatoryLastName)) errors.signatoryLastName = "Nom invalide";
   if (!signatoryEmail) errors.signatoryEmail = "Obligatoire";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signatoryEmail)) errors.signatoryEmail = "Email invalide";
   if (Object.keys(errors).length > 0) return { errors, values: Object.fromEntries(formData) };
