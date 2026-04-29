@@ -249,6 +249,23 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       paymentTerms: clean(get(row, "PAYMENT_TERMS")),
       pieceCountLast12m: toInt(get(row, "TOTALPIECECOUNTLAST12MONTHS")),
       resetValueLast12m: toInt(get(row, "TOTALRESETVALUELAST12MONTHS")),
+      // C4C export fields
+      categoryContract:        clean(get(row, "CATEGORY_CONTRACT")),
+      offerContract:           clean(get(row, "OFFER_CONTRACT")),
+      currentFlammes:          toInt(get(row, "CURRENTFLAMMES")),
+      pcnFlammes:              clean(get(row, "PCN_FLAMMES")),
+      indexationMaterial:      clean(get(row, "INDEXATION_MATERIAL")),
+      echuEchoir:              clean(get(row, "Echu-Echoir")),
+      paymentMethod:           clean(get(row, "PAYMENT_METHOD")),
+      noteContract:            clean(get(row, "NOTE")),
+      installAccountNumberC4C: clean(get(row, "INSTALLACCOUNTNUMBER_C4C")),
+      soldToAccountNumberC4C:  clean(get(row, "SOLDTOACCOUNTNUMBER_C4C")),
+      billingAccountNumberC4C: clean(get(row, "BILLINGACCOUNTNUMBER_C4C")),
+      payerAccountNumberC4C:   clean(get(row, "PAYERACCOUNTNUMBER_C4C")),
+      ownerId:                 clean(get(row, "OWNERID")),
+      contactId:               clean(get(row, "CONTACT_ID")),
+      salesOffice:             clean(get(row, "SALES_OFFICE")),
+      salesGroup:              clean(get(row, "SALES_GROUP")),
     });
 
     // Offer 1
@@ -321,6 +338,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitDescription: clean(get(row, "OFFER1STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER1CONFIRMATIONWHATSNEXT")),
         orderReason: clean(get(row, "OFFER1ORDERREASON")),
+        descriptionContract: clean(get(row, "DESCRIPTION1")),
       });
     }
 
@@ -394,6 +412,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         starterKitDescription: clean(get(row, "OFFER2STARTERKITDESCRIPTION")),
         confirmationWhatsNext: clean(get(row, "OFFER2CONFIRMATIONWHATSNEXT")),
         orderReason: clean(get(row, "OFFER2ORDERREASON")),
+        descriptionContract: clean(get(row, "DESCRIPTION2")),
       });
     }
   }
