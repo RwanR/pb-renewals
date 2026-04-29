@@ -23,6 +23,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const billingStreet = url.searchParams.get("billingStreet") || "";
   const billingPostcode = url.searchParams.get("billingPostcode") || "";
   const billingCity = url.searchParams.get("billingCity") || "";
+  const billingDifferent = url.searchParams.get("billingDifferent") === "1";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -36,7 +37,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const hasOptions = client.offers[0].installAvailable;
 
-  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions };
+  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, hasOptions };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -52,6 +53,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const overrideEmail = (formData.get("overrideEmail") as string)?.trim();
   const overridePhone = (formData.get("overridePhone") as string)?.trim();
   const orderRef = (formData.get("orderRef") as string)?.trim();
+  const billingDifferent = formData.get("billingDifferent") === "1";
   const offerPosition = parseInt(formData.get("offerPosition") as string || "1");
   const installOption = offerPosition === 1
   ? (formData.get("installOption") as string)?.trim()
@@ -100,8 +102,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
       overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
-      overrideAddress: [billingAddress1, billingStreet, billingPostcode, billingCity].filter(Boolean).join(", ") || null,
-      notes: orderRef ? `Réf commande: ${orderRef}` : null,
+      purchaseOrderNumber: orderRef || null,
+      billingAddressDifferent: billingDifferent,
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || null,
       userAgent: request.headers.get("user-agent") || null,
     },
@@ -110,15 +112,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
       signatoryFirstName, signatoryLastName, signatoryEmail,
       signatoryFunction: signatoryFunction || null, signatoryPhone: signatoryPhone || null,
       overrideEmail: overrideEmail || null, overridePhone: overridePhone || null,
-      overrideAddress: [billingAddress1, billingStreet, billingPostcode, billingCity].filter(Boolean).join(", ") || null,
-      notes: orderRef ? `Réf commande: ${orderRef}` : null,
+      purchaseOrderNumber: orderRef || null,
+      billingAddressDifferent: billingDifferent,
       ipAddress: request.headers.get("x-forwarded-for") || null,
       userAgent: request.headers.get("user-agent") || null,
     },
   });
 
   // Update client billing address if modified
-  if (billingAddress1 || billingCity) {
+  if (billingDifferent) {
     await prisma.client.update({
       where: { accountNumber },
       data: {
@@ -232,7 +234,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, hasOptions } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
@@ -330,6 +332,7 @@ export default function OffreConfirmer() {
           <input type="hidden" name="billingStreet" value={billingStreet} />
           <input type="hidden" name="billingPostcode" value={billingPostcode} />
           <input type="hidden" name="billingCity" value={billingCity} />
+          <input type="hidden" name="billingDifferent" value={billingDifferent ? "1" : "0"} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <FieldWithIcon label="Prénom" name="signatoryFirstName" icon={<UserIcon />} required

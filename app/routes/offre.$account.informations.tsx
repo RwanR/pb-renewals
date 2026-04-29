@@ -205,6 +205,7 @@ export default function OffreInformations() {
           <input type="hidden" name="installStreet" value={client.installStreet || ""} />
           <input type="hidden" name="installPostcode" value={client.installPostcode || ""} />
           <input type="hidden" name="installCity" value={client.installCity || ""} />
+          <input type="hidden" name="billingDifferent" value={showBilling ? "1" : "0"} />
 
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
             {/* Infos client */}

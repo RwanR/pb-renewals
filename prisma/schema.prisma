@@ -261,6 +261,9 @@ model Acceptance {
   signedAt              DateTime?
   emailSentAt           DateTime?
   shopifySyncedAt       DateTime?
+
+  purchaseOrderNumber       String?
+  billingAddressDifferent   Boolean  @default(false)
 }
 
 model Refusal {
