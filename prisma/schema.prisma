@@ -112,6 +112,27 @@ model Client {
   
   activationDate                  DateTime?
   paymentTerms                    String?
+
+  // Champs C4C export
+  categoryContract          String?  // CATEGORY_CONTRACT (MIGRATED)
+  offerContract             String?  // OFFER_CONTRACT (DM300SGFR, etc.)
+  currentFlammes            Int?     // CURRENTFLAMMES (0-4)
+  pcnFlammes                String?  // PCN_FLAMMES (RG97LP+ 1 FLAMMES)
+  indexationMaterial        String?  // INDEXATION_MATERIAL (INDEXATIONFR)
+
+  echuEchoir                String?  // Echu-Echoir (Echoir)
+  paymentMethod             String?  // PAYMENT_METHOD (E)
+  noteContract              String?  // NOTE (XXXX | EFFET DD/MM/YYYY)
+
+  installAccountNumberC4C   String?
+  soldToAccountNumberC4C    String?
+  billingAccountNumberC4C   String?
+  payerAccountNumberC4C     String?
+
+  ownerId                   String?  // OWNERID
+  contactId                 String?  // CONTACT_ID
+  salesOffice               String?  // SALES_OFFICE (FR10/FR20)
+  salesGroup                String?  // SALES_GROUP (F13/F23)
 }
 
 model Offer {
@@ -198,6 +219,8 @@ model Offer {
   billingTaxDiscount48  Float?
   billingTaxDiscount36  Float?
   billingTaxDiscount24  Float?
+
+  descriptionContract   String?  // DESCRIPTION1 / DESCRIPTION2 (ELEASE_FR-DM300-UPGRADE-SENDPROC)
 
   @@unique([clientAccountNumber, offerPosition])
 }
