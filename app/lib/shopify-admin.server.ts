@@ -374,12 +374,7 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
       lineItems.push({
         variantId,
         quantity: 1,
-        appliedDiscount: {
-          title: "Tarif client",
-          valueType: "FIXED_AMOUNT",
-          value: 0,
-          description: `Loyer mensuel HT: ${billingAnnualHT}€`,
-        },
+        originalUnitPrice: String(billingAnnualHT),
       });
     } else {
       lineItems.push({
