@@ -28,6 +28,7 @@ export default function AdminLayout() {
             <Link to="/admin" className="admin-nav-link">Dashboard</Link>
             <Link to="/admin/import" className="admin-nav-link">Import</Link>
             <a href="/admin/export-links" className="admin-nav-link">Export liens</a>
+            <Link to="/admin/exports-c4c" className="admin-nav-link">Exports C4C</Link>
             <a href="/admin/login?logout=1" className="admin-nav-link admin-logout">Déconnexion</a>
           </nav>
         </header>

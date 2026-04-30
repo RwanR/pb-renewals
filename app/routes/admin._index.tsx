@@ -20,6 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     recentAcceptances,
     recentRefusals,
     lastImport,
+    lastC4CExport, 
   ] = await Promise.all([
     prisma.client.count({ where: { archived: false } }),
     prisma.client.count({ where: { archived: false, NOT: { bestEmail: null } } }),
@@ -66,6 +67,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     }),
     prisma.importRun.findFirst({ orderBy: { importedAt: "desc" } }),
+    prisma.c4CExport.findFirst({
+      orderBy: { exportDate: "desc" },
+      select: { exportDate: true, acceptanceCount: true, generatedAt: true },
+    }),
   ]);
 
   // Model breakdown
@@ -100,6 +105,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     recentAcceptances,
     recentRefusals,
     lastImport,
+    lastC4CExport,
   };
 }
 
@@ -188,6 +194,9 @@ export default function AdminDashboard() {
             <a href="/admin/export-acceptances" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }} download>
               📊 Exporter les acceptations (Excel)
             </a>
+            <Link to="/admin/exports-c4c" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
+              📤 Exports C4C
+            </Link>
           </div>
         </div>
       </div>
