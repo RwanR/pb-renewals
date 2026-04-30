@@ -1,10 +1,11 @@
 /**
  * Cron quotidien C4C
  *
- * Lancé chaque jour à 00:05 Paris (TZ=Europe/Paris sur Railway).
+ * Lancé chaque jour à 00:05 UTC (= 02:05 Paris été / 01:05 Paris hiver).
+ * Fenêtre J-1 calculée en heure locale (TZ=Europe/Paris).
  *
  * Comportement :
- *   1. Calcule la fenêtre J-1 (hier 00:00 → aujourd'hui 00:00, heure locale)
+ *   1. Calcule la fenêtre J-1 (hier 00:00 → aujourd'hui 00:00, heure Paris)
  *   2. Cherche les contrats signés dans cette fenêtre
  *   3. Si 0 contrat : log + exit 0 (pas d'export, pas de mail)
  *   4. Sinon : génère le xlsx, le persiste en DB, envoie le mail
@@ -14,12 +15,18 @@
  *   - RESEND_API_KEY
  *   - EMAIL_FROM (optionnel, default "PB Renewals <noreply@nemet.tech>")
  *   - C4C_EXPORT_EMAIL (destinataire)
- *
- * Lancé par Railway en mode "cron service" via railway.json schedule.
+ *   - TZ=Europe/Paris (forcé sur le service Railway cron)
  */
 
 import { runC4CExport, getYesterdayWindow } from "../app/lib/c4c-runner.server";
 import prisma from "../app/db.server";
+
+/** Force le process à se terminer même si Prisma/Resend laissent des sockets ouverts */
+function forceExit(code: number): never {
+  setTimeout(() => process.exit(code), 100).unref();
+  // Ne retourne jamais réellement, mais TypeScript veut un type never
+  return undefined as never;
+}
 
 async function main() {
   const startedAt = new Date();
@@ -32,7 +39,6 @@ async function main() {
     `[CRON C4C] Window: signedAt >= ${window.signedFrom.toISOString()} AND < ${window.signedTo.toISOString()}`
   );
 
-  // Pré-check : combien de contrats dans la fenêtre ?
   const count = await prisma.acceptance.count({
     where: {
       adobeSignStatus: "signed",
@@ -46,7 +52,7 @@ async function main() {
   if (count === 0) {
     console.log(`[CRON C4C] 0 contracts signed on ${dateStr} — skipping export and email`);
     await prisma.$disconnect();
-    process.exit(0);
+    forceExit(0);
   }
 
   console.log(`[CRON C4C] ${count} contract(s) to export for ${dateStr}`);
@@ -73,15 +79,15 @@ async function main() {
   } catch (err) {
     console.error("[CRON C4C] Export failed:", err);
     await prisma.$disconnect();
-    process.exit(1);
+    forceExit(1);
   }
 
   await prisma.$disconnect();
-  process.exit(0);
+  forceExit(0);
 }
 
 main().catch(async (err) => {
   console.error("[CRON C4C] Unhandled error:", err);
   await prisma.$disconnect();
-  process.exit(1);
+  forceExit(1);
 });
