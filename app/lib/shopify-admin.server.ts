@@ -374,7 +374,10 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
       lineItems.push({
         variantId,
         quantity: 1,
-        originalUnitPrice: String(billingAnnualHT),
+        priceOverride: {
+          amount: String(billingAnnualHT),
+          currencyCode: "EUR",
+        },
       });
     } else {
       lineItems.push({
