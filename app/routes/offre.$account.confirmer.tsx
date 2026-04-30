@@ -3,7 +3,6 @@ import { useLoaderData, useActionData, Form, Link } from "react-router";
 import { useState, useEffect } from "react";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import { generateContractPDF } from "~/lib/contract-pdf.server";
-import { createSignatureRequest } from "~/lib/yousign.server";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -158,29 +157,13 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   try {
-    const esignProvider = process.env.ESIGN_PROVIDER || "yousign";
-    let signatureRequestId: string;
-    let signerUrl: string | null;
-
-    if (esignProvider === "docusign") {
-      const docusign = await import("~/lib/docusign.server");
-      const result = await docusign.createSignatureRequest({
-        pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
-        signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
-        signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
-      });
-      signatureRequestId = result.signatureRequestId;
-      signerUrl = result.signerUrl;
-    } else {
-      const yousign = await import("~/lib/yousign.server");
-      const result = await yousign.createSignatureRequest({
-        pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
-        signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
-        signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
-      });
-      signatureRequestId = result.signatureRequestId;
-      signerUrl = result.signerUrl;
-    }
+    const yousign = await import("~/lib/yousign.server");
+    const result = await yousign.createSignatureRequest({
+      pdfBuffer, pdfFilename: `contrat-pb-${accountNumber}.pdf`,
+      signerFirstName: signatoryFirstName, signerLastName: signatoryLastName,
+      signerEmail: signatoryEmail, signerPhone: signatoryPhone || undefined, accountNumber,
+    });
+    const { signatureRequestId, signerUrl } = result;
     await prisma.acceptance.update({
       where: { id: acceptance.id },
       data: {

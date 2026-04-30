@@ -27,53 +27,39 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-// NOUVEAU
-  const esignProvider = process.env.ESIGN_PROVIDER || "yousign";
+  // Yousign: try DB first, then API fallback with retry
   let signerUrl: string | null = null;
 
-  if (esignProvider === "docusign") {
-    // DocuSign: always generate fresh URL via createRecipientView
-    console.log(`[SIGN] Fetching fresh DocuSign signer URL for ${accountNumber}`);
-    const { getSignerUrl } = await import("~/lib/docusign.server");
-    signerUrl = await getSignerUrl(
-      client.acceptance.adobeSignAgreementId,
-      accountNumber,
-      client.acceptance.signatoryEmail,
-      `${client.acceptance.signatoryFirstName} ${client.acceptance.signatoryLastName}`,
-    );
-  } else {
-    // Yousign: try DB first, then API fallback with retry
-    if (client.acceptance.signedPdfUrl && client.acceptance.signedPdfUrl.startsWith("https://")) {
-      signerUrl = client.acceptance.signedPdfUrl;
-      console.log(`[SIGN] Using Yousign signer URL from DB for ${accountNumber}`);
-    }
+  if (client.acceptance.signedPdfUrl && client.acceptance.signedPdfUrl.startsWith("https://")) {
+    signerUrl = client.acceptance.signedPdfUrl;
+    console.log(`[SIGN] Using Yousign signer URL from DB for ${accountNumber}`);
+  }
 
-    if (!signerUrl) {
-      console.log(`[SIGN] Fetching from Yousign API for ${accountNumber}`);
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
-          const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
-          const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
-          signerUrl = sr.signers?.[0]?.signature_link || null;
+  if (!signerUrl) {
+    console.log(`[SIGN] Fetching from Yousign API for ${accountNumber}`);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
+        const { getSignatureRequestStatus } = await import("~/lib/yousign.server");
+        const sr = await getSignatureRequestStatus(client.acceptance.adobeSignAgreementId);
+        signerUrl = sr.signers?.[0]?.signature_link || null;
 
-          if (!signerUrl) {
-            const signerId = sr.signers?.[0]?.id;
-            if (signerId) {
-              const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
-              const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
-              const signerRes = await fetch(
-                `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
-                { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
-              );
-              const signerData = await signerRes.json();
-              signerUrl = signerData.signature_link;
-            }
+        if (!signerUrl) {
+          const signerId = sr.signers?.[0]?.id;
+          if (signerId) {
+            const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
+            const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
+            const signerRes = await fetch(
+              `${YOUSIGN_API_URL}/signature_requests/${client.acceptance.adobeSignAgreementId}/signers/${signerId}`,
+              { headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` } }
+            );
+            const signerData = await signerRes.json();
+            signerUrl = signerData.signature_link;
           }
-          if (signerUrl) break;
-        } catch (err) {
-          console.error(`[SIGN] Attempt ${attempt + 1} failed:`, err);
         }
+        if (signerUrl) break;
+      } catch (err) {
+        console.error(`[SIGN] Attempt ${attempt + 1} failed:`, err);
       }
     }
   }
@@ -95,36 +81,21 @@ export default function OffreSigner() {
     function handleMessage(event: MessageEvent) {
       console.log("[ESIGN IFRAME] message:", event.origin, event.data);
 
-      // Yousign events
-      if (event.origin.includes("yousign")) {
-        try {
-          const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-          if (
-            data.type === "signature_done" ||
-            data.type === "success" ||
-            data.event === "success" ||
-            data.event_name === "signature_request.done"
-          ) {
-            window.location.href = `/offre/${accountNumber}/merci`;
-          }
-        } catch (e) {
-          if (typeof event.data === "string" && event.data.includes("done")) {
-            window.location.href = `/offre/${accountNumber}/merci`;
-          }
-        }
-      }
+      if (!event.origin.includes("yousign")) return;
 
-      // DocuSign events
-      if (event.origin.includes("docusign")) {
-        try {
-          const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-          if (data.event === "signing_complete" || data.type === "signing_complete") {
-            window.location.href = `/offre/${accountNumber}/merci`;
-          }
-        } catch (e) {
-          if (typeof event.data === "string" && event.data.includes("signing_complete")) {
-            window.location.href = `/offre/${accountNumber}/merci`;
-          }
+      try {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        if (
+          data.type === "signature_done" ||
+          data.type === "success" ||
+          data.event === "success" ||
+          data.event_name === "signature_request.done"
+        ) {
+          window.location.href = `/offre/${accountNumber}/merci`;
+        }
+      } catch (e) {
+        if (typeof event.data === "string" && event.data.includes("done")) {
+          window.location.href = `/offre/${accountNumber}/merci`;
         }
       }
     }
