@@ -11,6 +11,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const autoInk = false; // AutoInk supprimé par PB
   const installOption = url.searchParams.get("installOption") || "";
+  const overrideEmail = url.searchParams.get("email") || "";
   const orderRef = url.searchParams.get("orderRef") || "";
 
   const client = await prisma.client.findUnique({
@@ -34,7 +35,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     autoInkSelected: autoInk,
     signatoryFirstName: "(prénom)",
     signatoryLastName: "(nom)",
-    signatoryEmail: client.bestEmail || client.installEmail || "",
+    signatoryEmail: overrideEmail || client.bestEmail || client.installEmail || "",
     signatoryFunction: null,
     signatoryPhone: null,
     overrideEmail: null,

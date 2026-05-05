@@ -274,7 +274,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName}</div></div>
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName}</div></div>
     <div class="sig-field"><span class="label">Email</span><div class="value">${acceptance.signatoryEmail}</div></div>
-    <div class="sig-field"><span class="label">Bon de commande interne</span><div class="value">${acceptance.purchaseOrderNumber || "—"}</div></div>
+    <div class="sig-field"><span class="label">Référence interne de commande</span><div class="value">${acceptance.purchaseOrderNumber || "—"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>
 </div>

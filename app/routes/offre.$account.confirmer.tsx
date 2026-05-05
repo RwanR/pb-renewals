@@ -280,7 +280,7 @@ export default function OffreConfirmer() {
           <div style={{ position: "relative", width: "180px", flexShrink: 0 }}>
             {machineImg && <img src={machineImg} alt={offer.modelName || ""} style={{ width: "100%", objectFit: "contain" }}
               onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }} />}
-            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}`}
+            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}${email ? `&email=${encodeURIComponent(email)}` : ""}`}
               target="_blank" rel="noopener" style={{
               position: "absolute", bottom: 0, left: 0, padding: "3px 8px", background: "white",
               border: "1px solid var(--pb-border-dark)", borderRadius: "8px", fontSize: "12px", fontWeight: 500,
@@ -373,7 +373,7 @@ export default function OffreConfirmer() {
             <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
-            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}`}
+            <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}${email ? `&email=${encodeURIComponent(email)}` : ""}`}
               className="pb-btn pb-btn-secondary" target="_blank" rel="noopener"
               style={{ flex: 1, padding: "12px 24px", fontSize: "16px", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginRight: "8px" }}><path d="M8 2.5v7M5 7.5l3 3 3-3M2.5 12.5h11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
