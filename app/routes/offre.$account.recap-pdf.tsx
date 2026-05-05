@@ -13,6 +13,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const installOption = url.searchParams.get("installOption") || "";
   const overrideEmail = url.searchParams.get("email") || "";
   const orderRef = url.searchParams.get("orderRef") || "";
+  const overrideFirstName = url.searchParams.get("firstName") || "";
+  const overrideLastName = url.searchParams.get("lastName") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -33,8 +35,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     termSelected: offer.billing60 ? "60" : "36",
     installOptionSelected: installOption || null,
     autoInkSelected: autoInk,
-    signatoryFirstName: "(prénom)",
-    signatoryLastName: "(nom)",
+    signatoryFirstName: overrideFirstName || client.contactFirstName || "(prénom)",
+    signatoryLastName: overrideLastName || client.contactLastName || "(nom)",
     signatoryEmail: overrideEmail || client.bestEmail || client.installEmail || "",
     signatoryFunction: null,
     signatoryPhone: null,
