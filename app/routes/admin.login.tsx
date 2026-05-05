@@ -24,7 +24,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const session = await sessionStorage.getSession();
   session.set("authenticated", true);
 
-  return redirect("/admin/import", {
+  return redirect("/admin", {
     headers: { "Set-Cookie": await sessionStorage.commitSession(session) },
   });
 }
