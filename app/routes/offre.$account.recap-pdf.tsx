@@ -11,6 +11,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const autoInk = false; // AutoInk supprimé par PB
   const installOption = url.searchParams.get("installOption") || "";
+  const orderRef = url.searchParams.get("orderRef") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -40,6 +41,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     overridePhone: null,
     overrideAddress: null,
     notes: null,
+    purchaseOrderNumber: orderRef || null,
+    billingAddressDifferent: false,
     ipAddress: null,
     userAgent: null,
     adobeSignAgreementId: null,

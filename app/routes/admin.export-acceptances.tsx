@@ -84,7 +84,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const installAddr = [a.client.installAddress1, a.client.installStreet, a.client.installPostcode, a.client.installCity].filter(Boolean).join(", ");
     const billingAddr = [a.client.billingAddress1, a.client.billingStreet, a.client.billingPostcode, a.client.billingCity].filter(Boolean).join(", ");
 
-    const orderRef = a.notes?.replace("Réf commande: ", "") || "";
+    const orderRef = a.purchaseOrderNumber || "";
 
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
 
