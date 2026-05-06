@@ -3,6 +3,7 @@ import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-r
 import { requireAdmin } from "~/lib/admin-auth.server";
 import prisma from "~/db.server";
 import { runC4CExport, getDateWindow, getDateRangeWindow } from "~/lib/c4c-runner.server";
+import { useEffect } from "react";
 
 const PAGE_SIZE = 50;
 
@@ -76,6 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
         success: `Export généré pour ${dateStr} : ${result.acceptanceCount} contrat${
           result.acceptanceCount > 1 ? "s" : ""
         }`,
+        downloadUrl: `/admin/exports-c4c/${result.exportId}/download`,
       };
     } catch (err: any) {
       console.error("[ADMIN C4C] Export failed:", err);
@@ -110,6 +112,7 @@ export async function action({ request }: ActionFunctionArgs) {
         success: `Export généré pour ${fromStr} → ${toStr} : ${result.acceptanceCount} contrat${
           result.acceptanceCount > 1 ? "s" : ""
         }`,
+        downloadUrl: `/admin/exports-c4c/${result.exportId}/download`,
       };
     } catch (err: any) {
       console.error("[ADMIN C4C] Range export failed:", err);
@@ -125,6 +128,17 @@ export default function AdminExportsC4C() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  useEffect(() => {
+  if (actionData && "downloadUrl" in actionData && actionData.downloadUrl) {
+    const link = document.createElement("a");
+    link.href = actionData.downloadUrl as string;
+    link.download = "";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}, [actionData]);
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
