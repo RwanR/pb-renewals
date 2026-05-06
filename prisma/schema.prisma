@@ -306,15 +306,17 @@ model ShopifyProduct {
 }
 
 model C4CExport {
-  id            String   @id @default(cuid())
-  exportDate    DateTime @unique           // date de référence (J-1 pour les crons)
-  signedFrom    DateTime                    // début fenêtre signedAt
-  signedTo      DateTime                    // fin fenêtre signedAt
-  acceptanceCount Int                       // nb de lignes
-  fileData      Bytes                       // .xlsx binaire
-  fileName      String                      // ex "c4c-export-2026-04-30.xlsx"
-  generatedAt   DateTime @default(now())
-  generatedBy   String                      // "cron" | "admin:erwann"
-  emailSentTo   String?                     // email destinataire (null si non envoyé)
-  emailSentAt   DateTime?
+  id              String   @id @default(cuid())
+  exportDate      DateTime           // ← retirer @unique
+  signedFrom      DateTime
+  signedTo        DateTime
+  acceptanceCount Int
+  fileData        Bytes
+  fileName        String
+  generatedAt     DateTime @default(now())
+  generatedBy     String
+  emailSentTo     String?
+  emailSentAt     DateTime?
+
+  @@index([exportDate])  // ← garder un index pour les requêtes par date
 }
