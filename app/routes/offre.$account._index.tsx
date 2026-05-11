@@ -52,7 +52,6 @@ export default function OffreClient() {
 
 if (client.acceptance?.adobeSignStatus === "signed") {
     var signedOffer = client.offers.find(function(o: any) { return o.offerPosition === client.acceptance?.offerPosition; });
-// NOUVEAU
     var signedMonthly = signedOffer?.monthly60 ?? signedOffer?.monthly48 ?? signedOffer?.monthly36 ?? signedOffer?.billing60 ?? signedOffer?.billing48 ?? signedOffer?.billing36;
     var signedTerm = (signedOffer?.billing60 ?? signedOffer?.monthly60) ? "60 mois" : (signedOffer?.billing48 ?? signedOffer?.monthly48) ? "48 mois" : "36 mois";
 
@@ -128,7 +127,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
     <div>
       {/* Banner */}
       <div className="pb-banner">
-        <p>Bénéficiez de <span style={{ fontWeight: 600 }}>{offer1?.discount || "50%"}</span> de réduction sur les 12 premiers mois</p>
+        <p>Bénéficiez de <span style={{ fontWeight: 600 }}>{offer1?.discount || "50%"}</span> de réduction sur les 12 premiers mois*</p>
       </div>
 
       <div className="pb-main">
@@ -194,14 +193,14 @@ if (client.acceptance?.adobeSignStatus === "signed") {
 
         {/* Pas intéressé */}
         <div style={{ maxWidth: "493px", marginBottom: "32px" }}>
-          <p className="pb-heading" style={{ marginBottom: "16px" }}>Vous souhaitez gérer vos envois différemment ?</p>
+          <p className="pb-heading" style={{ marginBottom: "16px" }}>Aucune offre ne vous convient ?</p>
           <div style={{ background: "var(--pb-muted-bg)", border: "1px solid var(--pb-border)", borderRadius: "8px", display: "flex", alignItems: "center", gap: "16px", padding: "16px" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
               <circle cx="10" cy="10" r="8" stroke="#737373" strokeWidth="1.5" fill="none"/>
               <text x="10" y="14" textAnchor="middle" fontSize="11" fill="#737373">?</text>
             </svg>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-foreground)" }}>Aucune offre ne vous convient ?</p>
+              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-foreground)" }}>Vous souhaitez gérer vos envois différemment ?</p>
               <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-text-muted)" }}>Faites-nous part de vos attentes et objectifs.</p>
             </div>
             <Link to={"/offre/" + client.accountNumber + "/refus"} style={{
@@ -241,9 +240,9 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
   return (
     <div style={cardStyle}>
       {isRecommended ? (
-        <span className="pb-badge pb-badge-recommended">Recommandé pour vous</span>
+        <span className="pb-badge pb-badge-recommended">Offre de remplacement</span>
       ) : (
-        <span className="pb-badge pb-badge-current">Machine actuelle</span>
+        <span className="pb-badge pb-badge-current">Offre de renouvellement</span>
       )}
 
       <p className="pb-heading">{offer.modelName || "—"}</p>
@@ -261,7 +260,7 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
           </span>
         ) : null}
         <span className="pb-price">{discountedMonthly ? formatCurrency(discountedMonthly) : "—"}</span>
-        <span className="pb-price-unit">€ HT par mois*</span>
+        <span className="pb-price-unit">€ HT par mois les 12 premiers mois*</span>
       </div>
 
       {/* Term — static badge, no select */}
@@ -307,7 +306,7 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
       {/* Promo block */}
       <div className={isRecommended ? "pb-promo pb-promo-recommended" : "pb-promo pb-promo-default"}>
         <p className="pb-promo-title">{"Contrat de " + term + ". Paiement annuel."}</p>
-        <p className="pb-promo-sub">-{offer.discount || "50%"} sur les 12 premiers mois</p>
+        <p className="pb-promo-sub">-{offer.discount || "50%"} sur les 12 premiers mois*</p>
       </div>
 
       <Link to={optionsUrl} className={isRecommended ? "pb-btn pb-btn-full pb-btn-primary" : "pb-btn pb-btn-full pb-btn-secondary"}>
