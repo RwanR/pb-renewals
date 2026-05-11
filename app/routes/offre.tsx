@@ -201,5 +201,10 @@ body {\
   .pb-situation-card { flex-direction: column !important; }\
   .pb-situation-card .pb-situation-img { display: none !important; }\
   .pb-situation-card .pb-situation-info { width: 100% !important; }\
+  .pb-discount-line { text-align: center !important; }\
+  .pb-options-card { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 16px !important; }\
+  .pb-options-card .pb-options-content { width: 100%; align-items: center !important; }\
+  .pb-options-card .pb-options-content > div:first-child { align-items: center !important; }\
+  .pb-options-card .pb-options-content label { text-align: left; }\
 }\
 ";

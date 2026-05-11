@@ -84,7 +84,7 @@ export default function OffreOptions() {
           </span>
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
-         <p style={{ fontSize: "14px", color: "var(--pb-text)", textAlign: "right" }}>{offer.discount || "50%"} de réduction la première année</p>
+         <p className="pb-discount-line">{offer.discount || "50%"} de réduction la première année</p>
         </div>
       </div>
 
@@ -109,13 +109,13 @@ export default function OffreOptions() {
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Installation */}
             {hasInstall && (
-              <div style={{ border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px", display: "flex", gap: "32px", alignItems: "flex-start" }}>
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+              <div className="pb-options-card" style={{ border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px", display: "flex", gap: "32px", alignItems: "flex-start" }}>
+                <svg className="pb-options-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
                   <rect x="4" y="6" width="24" height="16" rx="2" stroke="#005cb1" strokeWidth="1.8" fill="none"/>
                   <path d="M10 26H22" stroke="#005cb1" strokeWidth="1.8" strokeLinecap="round"/>
                   <path d="M12 15L15 18L21 12" stroke="#005cb1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
+                <div className="pb-options-content" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>Installation (avec livraison offerte)</p>
                     <p style={{ fontSize: "14px", lineHeight: "20px", color: "var(--pb-text)" }}>
