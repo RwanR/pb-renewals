@@ -17,8 +17,7 @@ type Offer = {
   priceSuffix: string;
   ctaLabel: string;
   ctaBg: string;
-  borderColor: string;
-  highlighted?: boolean;
+  accentColor: string;
 };
 
 const offers: Offer[] = [
@@ -38,8 +37,7 @@ const offers: Offer[] = [
     priceSuffix: "€ HT / mois",
     ctaLabel: "Souscrire en ligne",
     ctaBg: "#d7008f",
-    borderColor: "#6c278b",
-    highlighted: true,
+    accentColor: "#6c278b",
   },
   {
     badge: "Factures clients et fournisseurs",
@@ -57,7 +55,7 @@ const offers: Offer[] = [
     priceSuffix: "€ HT / mois",
     ctaLabel: "Nous contacter",
     ctaBg: "#0092db",
-    borderColor: "#d4d4d4",
+    accentColor: "#0092db",
   },
   {
     badge: "Sur mesure",
@@ -76,7 +74,7 @@ const offers: Offer[] = [
     priceSuffix: "",
     ctaLabel: "Nous contacter",
     ctaBg: "#9a44a1",
-    borderColor: "#d4d4d4",
+    accentColor: "#9a44a1",
   },
 ];
 
@@ -101,7 +99,7 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 
 function OfferCard({ offer }: { offer: Offer }) {
   return (
-    <div className="relative flex-1 bg-white rounded-2xl p-6 flex flex-col gap-4 h-[453px] overflow-hidden" style={{ border: `${offer.highlighted ? '2px' : '1px'} solid ${offer.borderColor}` }}>
+    <div className="relative flex-1 bg-white rounded-2xl p-6 flex flex-col gap-4 h-[453px] overflow-hidden border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
       <div>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: offer.badgeBg }}>
           {offer.badge}
