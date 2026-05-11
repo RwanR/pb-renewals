@@ -99,7 +99,7 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 
 function OfferCard({ offer }: { offer: Offer }) {
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[520px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
+    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
       <div>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: offer.badgeBg }}>
           {offer.badge}
