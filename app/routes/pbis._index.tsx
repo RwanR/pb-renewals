@@ -29,6 +29,11 @@ export default function PbisIndex() {
           href="#offres"
           className="inline-flex items-center gap-4 bg-white border border-neutral-200 rounded-md px-6 py-2 shadow-xl hover:shadow-2xl transition-shadow"
         >
+          <img
+            src="/images/pbis-cta-laptop.jpg"
+            alt=""
+            className="w-24 h-[54px] object-cover"
+          />
           <span className="text-[#d7008f] font-medium">Découvrir nos offres →</span>
         </a>
       </div>
