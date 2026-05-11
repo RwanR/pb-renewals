@@ -1,6 +1,6 @@
 import type { Route } from "./+types/pbis._index";
-import { FileText, ShieldCheck, Zap, BarChart3 } from "lucide-react";
-import { Fragment } from "react";
+import { FileText, ShieldCheck, Zap, BarChart3, Calendar, Minus, Plus } from "lucide-react";
+import { Fragment, useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS — Pitney Bowes Invoicing Solutions" }];
@@ -14,6 +14,8 @@ const features = [
 ];
 
 export default function PbisIndex() {
+  const [aboutOpen, setAboutOpen] = useState(true);
+
   return (
     <>
       <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
@@ -39,7 +41,7 @@ export default function PbisIndex() {
       </section>
 
       <div className="relative px-4">
-        <div className="-mt-14 mx-auto max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
+        <div className="-mt-12 mx-auto max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
           {features.map(({ Icon, title, sub }, i) => (
             <Fragment key={title}>
               {i > 0 && <div className="w-px h-[71px] bg-white/20 shrink-0" />}
@@ -52,6 +54,34 @@ export default function PbisIndex() {
               </div>
             </Fragment>
           ))}
+        </div>
+      </div>
+
+      <div id="offres" className="flex flex-col items-center gap-8 pt-28 pb-12 px-4 font-inter">
+        <div className="w-full max-w-[600px] aspect-[600/337] rounded-md bg-[#6297d9] flex flex-col items-center justify-center gap-6 text-white">
+          <Calendar className="w-16 h-16" strokeWidth={1.5} />
+          <p className="text-lg">Facturation électronique</p>
+        </div>
+
+        <div className="w-full max-w-[600px] border border-neutral-300 rounded-lg px-5 py-6 flex flex-col items-center gap-3">
+          <p className="text-sm font-medium leading-5 text-center text-neutral-950">
+            Réception obligatoire des e-factures<br />dès septembre 2026
+          </p>
+          <button type="button" className="inline-flex items-center gap-2 bg-[#d7008f] text-white rounded-full px-8 py-3 font-medium hover:opacity-90 transition-opacity">
+            Voir les offres →
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center gap-8 mt-4">
+          <button type="button" onClick={() => setAboutOpen(!aboutOpen)} className="flex items-center gap-2 text-[#005cb1] cursor-pointer">
+            <span className="font-precision text-xl leading-6 tracking-[-0.3px]">À propos de Pitney Bowes</span>
+            {aboutOpen ? <Minus className="w-6 h-6" strokeWidth={1.5} /> : <Plus className="w-6 h-6" strokeWidth={1.5} />}
+          </button>
+          {aboutOpen && (
+            <p className="max-w-[600px] text-sm leading-5 text-neutral-950 text-center">
+              Visualiser une version lisible (PDF) pour toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi.
+            </p>
+          )}
         </div>
       </div>
     </>
