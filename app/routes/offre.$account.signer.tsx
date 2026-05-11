@@ -105,7 +105,7 @@ export default function OffreSigner() {
   }, [accountNumber]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       <div style={{
         padding: "12px 24px",
         borderBottom: "1px solid #E5E7EB",
@@ -140,7 +140,7 @@ export default function OffreSigner() {
           flex: 1,
           width: "100%",
           border: "none",
-          minHeight: "calc(100vh - 100px)",
+          minHeight: 0,
         }}
         allow="camera"
         title="Signature du contrat"
