@@ -125,11 +125,10 @@ function OfferCard({ offer }: { offer: Offer }) {
         ))}
       </div>
 
-      {offer.slot && (
-        <p className="text-xs leading-4 text-[#737373] whitespace-pre-line">{offer.slot}</p>
-      )}
-
       <div className="mt-auto flex flex-col gap-3">
+        {offer.slot && (
+          <p className="text-xs leading-4 text-[#737373] whitespace-pre-line">{offer.slot}</p>
+        )}
         <div className="flex gap-1 items-baseline">
           <span className="font-medium text-lg leading-[27px] text-neutral-950">{offer.price}</span>
           {offer.priceSuffix && (
