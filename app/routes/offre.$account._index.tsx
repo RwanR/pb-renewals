@@ -200,7 +200,7 @@ if (client.acceptance?.adobeSignStatus === "signed") {
               <text x="10" y="14" textAnchor="middle" fontSize="11" fill="#737373">?</text>
             </svg>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-foreground)" }}>Vous souhaitez gérer vos envois différemment ?</p>
+              <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-foreground)" }}>Vous souhaitez gérer vos envois différemment{"\u00a0"}?</p>
               <p style={{ fontSize: "14px", fontWeight: 500, lineHeight: "20px", color: "var(--pb-text-muted)" }}>Faites-nous part de vos attentes et objectifs.</p>
             </div>
             <Link to={"/offre/" + client.accountNumber + "/refus"} style={{
