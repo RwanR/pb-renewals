@@ -259,8 +259,10 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
             {formatCurrency(monthly)} €HT
           </span>
         ) : null}
-        <span className="pb-price">{discountedMonthly ? formatCurrency(discountedMonthly) : "—"}</span>
-        <span className="pb-price-unit">€ HT par mois les 12 premiers mois*</span>
+        <span style={{ display: "inline-flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+          <span className="pb-price">{discountedMonthly ? formatCurrency(discountedMonthly) : "—"}</span>
+          <span className="pb-price-unit">€ HT par mois les 12 premiers mois*</span>
+        </span>
       </div>
 
       {/* Term — static badge, no select */}
