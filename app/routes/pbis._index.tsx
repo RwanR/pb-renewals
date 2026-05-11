@@ -6,7 +6,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function PbisIndex() {
   return (
-    <section className="relative bg-[#6297d9] h-[600px] overflow-hidden">
+    <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
       <img
         src="/images/pbis-hero.jpg"
         alt=""
@@ -17,7 +17,7 @@ export default function PbisIndex() {
           Loi de finances
         </span>
 
-        <h1 className="text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
+        <h1 className="font-precision text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
           La facture électronique simplement. Sans attendre.
         </h1>
 
