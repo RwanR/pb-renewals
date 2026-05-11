@@ -279,7 +279,7 @@ export default function OffreConfirmer() {
 
       <div style={{ maxWidth: "596px", margin: "0 auto" }}>
         {/* Recap card */}
-        <div style={{ border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px", display: "flex", gap: "24px", alignItems: "flex-start", marginBottom: "40px" }}>
+        <div style={{ border: "1px solid var(--pb-border)", borderRadius: "16px", padding: "24px", display: "flex", gap: "24px", alignItems: "flex-start", marginBottom: "16px" }}>
           <div style={{ position: "relative", width: "180px", flexShrink: 0 }}>
             {machineImg && <img src={machineImg} alt={offer.modelName || ""} style={{ width: "100%", objectFit: "contain" }}
               onError={function(e) { (e.target as HTMLImageElement).style.display = "none"; }} />}
@@ -298,7 +298,7 @@ export default function OffreConfirmer() {
             <p style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)" }}>{offer.modelName}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Durée</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{term}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel HT</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(monthly)} €</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer initial mensuel HT*</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(monthly)} €</span></div>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>TVA 20%</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTax)} €</span></div>
               <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "var(--pb-text-muted)" }}>Loyer mensuel TTC</span><span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{formatCurrency(billingTotal)} €</span></div>
             </div>
@@ -306,14 +306,19 @@ export default function OffreConfirmer() {
               <>
                 <div style={{ height: "1px", background: "var(--pb-border)", margin: "4px 0" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                  <span style={{ color: "var(--pb-text-muted)" }}>Installation HT*</span>
+                  <span style={{ color: "var(--pb-text-muted)" }}>Installation HT**</span>
                   <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{installPrices[installOption] || "—"}</span>
                 </div>
-                <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>*Facturation unique et séparée</p>
+                <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>**Facturation unique et séparée</p>
               </>
             )}
           </div>
         </div>
+
+        {/* Notes de bas de récap */}
+        <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", lineHeight: "16px", marginBottom: "40px" }}>
+          *Hors majoration annuelle de l'article 9 des conditions générales. Les 12 premiers mois seront minorés de {offer.discount || "50%"}.
+        </p>
 
         {/* Signatory form */}
         <Form method="post" reloadDocument onSubmit={() => setIsSubmitting(true)}>
@@ -356,14 +361,14 @@ export default function OffreConfirmer() {
               {actionData?.errors?.signatoryLastName && <span style={{ color: "#DC2626", fontSize: "12px" }}>{actionData.errors.signatoryLastName}</span>}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>Email</label>
+              <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>E-mail</label>
               <div style={{
                 background: "white", border: actionData?.errors?.signatoryEmail ? "1px solid #DC2626" : "1px solid var(--pb-border)",
                 borderRadius: "8px", padding: "9.5px 16px", display: "flex", alignItems: "center", gap: "12px",
                 minHeight: "40px", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
               }}>
                 <div style={{ flexShrink: 0, width: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}><MailIcon /></div>
-                <input name="signatoryEmail" type="email" value={signatoryEmail} onChange={(e) => setSignatoryEmail(e.target.value)} required placeholder="Entrez votre email"
+                <input name="signatoryEmail" type="email" value={signatoryEmail} onChange={(e) => setSignatoryEmail(e.target.value)} required placeholder="Entrez votre e-mail"
                   style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)" }} />
               </div>
               {actionData?.errors?.signatoryEmail && <span style={{ color: "#DC2626", fontSize: "12px" }}>{actionData.errors.signatoryEmail}</span>}
@@ -390,7 +395,7 @@ export default function OffreConfirmer() {
             <label style={{ display: "flex", gap: "12px", alignItems: "flex-start", cursor: "pointer", padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px" }}>
               <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px", marginTop: "2px", flexShrink: 0 }} />
               <span style={{ fontSize: "14px", color: "var(--pb-text)", lineHeight: "20px" }}>
-                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease - 04 26) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
+                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease V1.0) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
               </span>
             </label>
 
