@@ -206,5 +206,10 @@ body {\
   .pb-options-card .pb-options-content { width: 100%; align-items: center !important; }\
   .pb-options-card .pb-options-content > div:first-child { align-items: center !important; }\
   .pb-options-card .pb-options-content label { text-align: left; }\
+  .pb-confirmer-recap { flex-direction: column !important; align-items: center !important; gap: 16px !important; }\
+  .pb-confirmer-recap-img { width: 200px !important; }\
+  .pb-confirmer-recap-content { width: 100%; }\
+  .pb-confirmer-ctas { flex-wrap: wrap !important; }\
+  .pb-confirmer-cta-sign { flex: 1 1 100% !important; order: 2 !important; }\
 }\
 ";
