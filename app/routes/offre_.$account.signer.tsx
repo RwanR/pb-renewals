@@ -105,19 +105,21 @@ export default function OffreSigner() {
   }, [accountNumber]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden", background: "white" }}>
       <div style={{
-        padding: "12px 24px",
+        padding: "10px 16px",
         borderBottom: "1px solid #E5E7EB",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        gap: "12px",
         background: "white",
+        flexShrink: 0,
       }}>
-        <div style={{ fontSize: "14px", color: "#6B7280" }}>
+        <div style={{ fontSize: "13px", color: "#6B7280", minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           Signature du contrat — <strong>{client.customerName}</strong>
         </div>
-        <div style={{ fontSize: "13px", color: "#9CA3AF" }}>
+        <div style={{ fontSize: "12px", color: "#9CA3AF", textAlign: "right", flexShrink: 0 }}>
           Signature électronique sécurisée
         </div>
       </div>
