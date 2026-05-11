@@ -59,13 +59,6 @@ export default function ConditionsGenerales() {
           </a>
           </p>
         </div>
-
-        {/* Retour → confirmer */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: "40px" }}>
-          <button onClick={function() { window.history.back(); }} className="pb-btn pb-btn-secondary" style={{ padding: "12px 32px", fontSize: "16px" }}>
-            Retour
-          </button>
-        </div>
       </div>
     </div>
   );
