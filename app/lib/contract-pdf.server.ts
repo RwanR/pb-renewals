@@ -209,7 +209,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
-    <div class="info-row"><span class="info-label">Bon de commande interne</span><span class="info-value">${acceptance.purchaseOrderNumber || "—"}</span></div>
+    ${acceptance.purchaseOrderNumber ? `<div class="info-row"><span class="info-label">Bon de commande interne</span><span class="info-value">${acceptance.purchaseOrderNumber}</span></div>` : ""}
   </div>
 </div>
 
