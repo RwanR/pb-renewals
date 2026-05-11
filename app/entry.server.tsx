@@ -23,6 +23,17 @@ export default async function handleRequest(
   responseHeaders: Headers,
   reactRouterContext: EntryContext
 ) {
+  const appName = process.env.APP_NAME ?? 'renewals';
+  const url = new URL(request.url);
+  const isPbisRoute = url.pathname.startsWith('/pbis');
+
+  if (isPbisRoute && appName !== 'pbis') {
+    return new Response('Not Found', { status: 404 });
+  }
+  if (!isPbisRoute && appName !== 'renewals') {
+    return new Response('Not Found', { status: 404 });
+  }
+
   addDocumentResponseHeaders(request, responseHeaders);
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? '')

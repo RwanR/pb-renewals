@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/pbis-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PbisImportRun {
+  id         String       @id @default(cuid())
+  filename   String
+  importedAt DateTime     @default(now())
+  rowCount   Int
+  status     String
+  errorLog   String?      @db.Text
+  clients    PbisClient[]
+}
+
+model PbisClient {
+  id               String  @id @default(cuid())
+  accountNumber    String  @unique
+  companyName      String
+  siret            String?
+  vatNumber        String?
+
+  address1         String?
+  address2         String?
+  city             String?
+  postcode         String?
+
+  contactFirstName String?
+  contactLastName  String?
+  contactEmail     String?
+  contactPhone     String?
+  contactPosition  String?
+
+  ownerName        String?
+  ownerEmail       String?
+
+  acceptances      PbisAcceptance[]
+  leads            PbisLead[]
+  accessToken      PbisAccessToken?
+
+  importRunId      String?
+  importRun        PbisImportRun?   @relation(fields: [importRunId], references: [id])
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model PbisAcceptance {
+  id                    String     @id @default(cuid())
+  clientId              String
+  client                PbisClient @relation(fields: [clientId], references: [id])
+
+  offerCode             String
+
+  signatoryFirstName    String
+  signatoryLastName     String
+  signatoryEmail        String
+  signatoryFunction     String?
+  signatoryPower        String?
+
+  cgvAcceptedAt         DateTime?
+
+  yousignProcedureId    String?
+  yousignStatus         String?
+  signedPdfUrl          String?
+
+  generixRedirectedAt   DateTime?
+  formalAgreementStatus String?
+
+  shopifyCustomerId     String?
+  shopifyDraftOrderId   String?
+  shopifyCheckoutUrl    String?
+  paymentStatus         String?
+  paidAt                DateTime?
+
+  ipAddress             String?
+  userAgent             String?    @db.Text
+
+  acceptedAt            DateTime   @default(now())
+  signedAt              DateTime?
+}
+
+model PbisLead {
+  id                 String      @id @default(cuid())
+  clientId           String?
+  client             PbisClient? @relation(fields: [clientId], references: [id])
+
+  offerCode          String
+
+  companyName        String
+  siret              String?
+  contactFirstName   String
+  contactLastName    String
+  contactEmail       String
+  contactPhone       String?
+
+  invoiceVolume      String?
+  accountingSoftware String?
+  notes              String?     @db.Text
+
+  status             String      @default("new")
+
+  ipAddress          String?
+  userAgent          String?     @db.Text
+
+  createdAt          DateTime    @default(now())
+}
+
+model PbisAccessToken {
+  token     String     @id @default(uuid())
+  clientId  String     @unique
+  client    PbisClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime   @default(now())
+}
