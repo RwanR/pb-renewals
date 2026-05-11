@@ -188,8 +188,8 @@ function formatCurrency(amount: number | null): string {
 function getMachineImage(model: string | null): string | null {
   if (!model) return null;
   const images: Record<string, string> = {
-    "SendPro C Lite": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
-    "SendPro C": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
+    "SendPro C Lite": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
+    "SendPro C": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
     "DM400": "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/legacy/images/international/common/products/gms/digital-franking-machines/dm400c/dm400-box-left--proddetail_large.jpg",
     "DM50/55": "https://www.pitneybowes.com/content/dam/pitneybowes/Support/dm55_s1.jpg",
     "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",

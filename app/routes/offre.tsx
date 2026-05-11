@@ -73,7 +73,7 @@ export default function OffreLayout() {
           <div className="pb-footer-inner">
             <p>©1996-2026 Pitney Bowes Inc. Tous droits réservés.</p>
             <p className="pb-footer-links">
-              <a href="https://www.pitneybowes.com/fr/legal.html" target="_blank" rel="noopener">Mentions légales</a>
+              <a href="https://www.pitneybowes.com/fr/mentionslegales.html" target="_blank" rel="noopener">Mentions légales</a>
               {"  "}
               <a href="https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html" target="_blank" rel="noopener">Protection des données</a>
               {"  "}
