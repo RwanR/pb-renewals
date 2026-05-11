@@ -119,7 +119,7 @@ export default function OffreOptions() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>Installation (avec livraison offerte)</p>
                     <p style={{ fontSize: "14px", lineHeight: "20px", color: "var(--pb-text)" }}>
-                      Besoin d'aide pour l'installation de votre équipement? Pitney Bowes vous propose les options suivantes pour vous assister:
+                      Besoin d'aide pour l'installation de votre équipement{"\u00a0"}? Pitney Bowes vous propose les options suivantes pour vous assister{"\u00a0"}:
                     </p>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
