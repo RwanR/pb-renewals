@@ -253,17 +253,18 @@ function OfferCard({ offer, isRecommended }: { offer: any; isRecommended: boolea
       ) : null}
 
       {/* Price — monthly with strikethrough */}
-    <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
-      {monthly ? (
-        <span style={{ fontSize: "18px", color: "var(--pb-text-muted)", textDecoration: "line-through", whiteSpace: "nowrap" }}>
-          {formatCurrency(monthly)} €HT
+      <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+        {monthly ? (
+          <span style={{ fontSize: "18px", color: "var(--pb-text-muted)", textDecoration: "line-through", whiteSpace: "nowrap" }}>
+            {formatCurrency(monthly)} €HT
+          </span>
+        ) : null}
+        <span style={{ display: "inline-flex", alignItems: "baseline", gap: "8px", flexWrap: "nowrap", whiteSpace: "nowrap" }}>
+          <span className="pb-price">{discountedMonthly ? formatCurrency(discountedMonthly) : "—"}</span>
+          <span className="pb-price-unit">€ HT</span>
         </span>
-      ) : null}
-      <span className="pb-price" style={{ whiteSpace: "nowrap" }}>
-        {discountedMonthly ? formatCurrency(discountedMonthly) : "—"} € HT
-      </span>
-      <span className="pb-price-unit">par mois les 12 premiers mois*</span>
-    </div>
+        <span className="pb-price-unit">par mois les 12 premiers mois*</span>
+      </div>
 
       {/* Term — static badge, no select */}
       <span style={{
