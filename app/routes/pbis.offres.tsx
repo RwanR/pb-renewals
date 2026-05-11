@@ -99,7 +99,7 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 
 function OfferCard({ offer }: { offer: Offer }) {
   return (
-    <div className="relative flex-1 bg-white rounded-2xl p-6 flex flex-col gap-4 h-[453px] overflow-hidden border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
+    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
       <div>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: offer.badgeBg }}>
           {offer.badge}
@@ -112,13 +112,13 @@ function OfferCard({ offer }: { offer: Offer }) {
 
       <p className="text-sm leading-5 text-neutral-950">{offer.description}</p>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1">
         {offer.features.map((feature, i) => (
-          <div key={i} className="flex gap-2 items-center py-1">
+          <div key={i} className="flex gap-2 items-center">
             {feature.included ? (
-              <Check className="w-6 h-6 shrink-0 text-neutral-950" strokeWidth={1.5} />
+              <Check className="w-5 h-5 shrink-0 text-green-600" strokeWidth={2} />
             ) : (
-              <X className="w-6 h-6 shrink-0 text-neutral-950" strokeWidth={1.5} />
+              <X className="w-5 h-5 shrink-0 text-neutral-400" strokeWidth={2} />
             )}
             <p className="flex-1 text-sm leading-5 text-neutral-950">{feature.text}</p>
           </div>
@@ -129,8 +129,8 @@ function OfferCard({ offer }: { offer: Offer }) {
         <p className="text-xs leading-4 text-[#737373] whitespace-pre-line">{offer.slot}</p>
       )}
 
-      <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-4">
-        <div className="flex gap-1 items-baseline py-1">
+      <div className="mt-auto flex flex-col gap-3">
+        <div className="flex gap-1 items-baseline">
           <span className="font-medium text-lg leading-[27px] text-neutral-950">{offer.price}</span>
           {offer.priceSuffix && (
             <span className="text-sm leading-5 text-[#737373]">{offer.priceSuffix}</span>
