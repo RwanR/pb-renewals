@@ -1,7 +1,7 @@
 import type { Client, Offer, Acceptance } from "@prisma/client";
 import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos.server";
 
-const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "Elease - 04 26";
+const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "V1.0";
 
 interface ContractData {
   client: Client;
@@ -177,8 +177,7 @@ function generateContractHTML(data: ContractData): string {
   <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
     <div>
       <div class="version">${CONTRACT_VERSION}</div>
-      Date : ${today}<br>
-      Proposition valable 90 jours
+      Date : ${today}
     </div>
     <img src="${PLATEFORME_AGREEE}" alt="Plateforme Agréée" style="height:44px; width:auto;" />
     <img src="${ISO_27001}" alt="ISO 27001" style="height:44px; width:auto;" />
@@ -210,6 +209,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
+    <div class="info-row"><span class="info-label">Bon de commande interne</span><span class="info-value">${acceptance.purchaseOrderNumber || "—"}</span></div>
   </div>
 </div>
 
@@ -263,7 +263,7 @@ function generateContractHTML(data: ContractData): string {
 
 <div class="legal">
   <p>Tous les montants s'entendent hors TVA légale. Le loyer initial est un loyer mensuel. En signant ce contrat, le Locataire reconnait avoir pris connaissance de l'article 9 des conditions générales. Ainsi, les factures suivantes seront établies sur la base du loyer annuel initial et de la fréquence de facturation, majorés de cet article.</p>
-  <p>La commande du Locataire vaut demande irrévocable de location. Le Locataire accepte de subordonner l'entrée en vigueur du contrat à l'acceptation par le service Crédit de Pitney Bowes (article 2 des CGL), selon le mode et délai de paiement habituels.</p>
+  <p>La commande du Locataire vaut demande irrévocable de location, selon le mode et délai de paiement habituels. Le Locataire accepte de subordonner l'entrée en vigueur du contrat à l'acceptation par le service Crédit de Pitney Bowes (article 2 des CGL).</p>
   <p>Les Conditions Générales de Location (version ${CONTRACT_VERSION}) sont consultables à l'adresse <a href="https://pb.com/fr/cc">pb.com/fr/cc</a> et acceptées par le Locataire, y compris la clause attributive de juridiction (article 25).</p>
   <p>Contact : <a href="mailto:fr-elease@pb.com">fr-elease@pb.com</a></p>
 </div>
@@ -273,7 +273,7 @@ function generateContractHTML(data: ContractData): string {
   <div class="sig-grid">
     <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName}</div></div>
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName}</div></div>
-    <div class="sig-field"><span class="label">Email</span><div class="value">${acceptance.signatoryEmail}</div></div>
+    <div class="sig-field"><span class="label">E-mail</span><div class="value">${acceptance.signatoryEmail}</div></div>
     <div class="sig-field"><span class="label">Référence interne de commande</span><div class="value">${acceptance.purchaseOrderNumber || "—"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>
