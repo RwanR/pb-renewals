@@ -137,7 +137,7 @@ export default function OffreInformations() {
   const billing = offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const discount = offer.discount || "50%";
-  const machineImg = getMachineImage(offer.modelName);
+  const machineImg = offer.imageUrl;
 
   const bestEmail = client.billingEmail || client.bestEmail || client.installEmail || "";
   const bestPhone = client.installPhone || client.billingPhone || "";

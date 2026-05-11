@@ -244,7 +244,7 @@ export default function OffreConfirmer() {
   const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
   const billingTotal = monthly && billingTax ? monthly + billingTax : (offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36);
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
-  const machineImg = getMachineImage(offer.modelName);
+  const machineImg = offer.imageUrl;
   const installPrices: Record<string, string> = { auto: "0,00 €", phone: "75,00 €", onsite: "198,00 €" };
   const email = overrideEmail || client.bestEmail || client.installEmail || client.billingEmail || "";
 
