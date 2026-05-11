@@ -39,7 +39,7 @@ export default function PbisIndex() {
       </section>
 
       <div className="relative px-4">
-        <div className="-mt-6 mx-auto max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
+        <div className="-mt-12 mx-auto max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
           {features.map(({ Icon, title, sub }, i) => (
             <Fragment key={title}>
               {i > 0 && <div className="w-px h-[71px] bg-white/20 shrink-0" />}
