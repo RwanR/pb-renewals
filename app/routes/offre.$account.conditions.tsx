@@ -45,7 +45,7 @@ export default function ConditionsGenerales() {
           </p>
 
           <p>
-            En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des Conditions Générales (version FR-Elease 04-26) disponibles à l'adresse (<a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-cta)", textDecoration: "underline" }}>pb.com/fr/cc</a>) et les accepter, y compris la clause attributive de juridiction (l'article 25).
+            En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des Conditions Générales (version Elease V1.0) disponibles à l'adresse (<a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-cta)", textDecoration: "underline" }}>pb.com/fr/cc</a>) et les accepter, y compris la clause attributive de juridiction (l'article 25).
           </p>
 
           <p style={{ color: "var(--pb-cta)" }}>
@@ -54,9 +54,9 @@ export default function ConditionsGenerales() {
           </p>
 
           <p>
-            <a href="https://www.pitneybowes.com/fr/legal.html" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>
-              Voir les conditions de location détaillées sur pitneybowes.com
-            </a>
+          <a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>
+            Voir les conditions de location détaillées sur pb.com
+          </a>
           </p>
         </div>
 

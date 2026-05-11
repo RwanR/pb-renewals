@@ -395,7 +395,7 @@ export default function OffreConfirmer() {
             <label style={{ display: "flex", gap: "12px", alignItems: "flex-start", cursor: "pointer", padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px" }}>
               <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px", marginTop: "2px", flexShrink: 0 }} />
               <span style={{ fontSize: "14px", color: "var(--pb-text)", lineHeight: "20px" }}>
-                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href="https://pb.com/fr/cc" target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease V1.0) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
+                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease V1.0) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
               </span>
             </label>
 
