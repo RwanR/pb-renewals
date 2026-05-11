@@ -1,18 +1,31 @@
 import { Outlet } from "react-router";
 
+const footerLinks = [
+  { href: "https://www.pitneybowes.com/fr/mentionslegales.html", label: "Mentions légales" },
+  { href: "https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html", label: "Protection des données" },
+  { href: "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-9001-certificate-europe-en.pdf", label: "ISO9001" },
+  { href: "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-27001-certificate-france.pdf", label: "ISO27001" },
+  { href: "#", label: "Cookies" },
+];
+
 export default function PbisLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <header className="border-b border-neutral-200 h-20 flex items-center justify-center">
-        <span className="text-xl font-medium text-neutral-800">pitney bowes</span>
+    <div className="min-h-screen flex flex-col bg-white font-inter">
+      <header className="border-b border-neutral-200 h-20 flex items-center justify-center bg-white">
+        <img src="/images/pb-logo.png" alt="Pitney Bowes" className="h-10 w-auto" />
       </header>
 
       <main className="flex-1">
         <Outlet />
       </main>
 
-      <footer className="border-t border-neutral-200 py-6 text-center text-sm text-neutral-500">
-        ©1996–{new Date().getFullYear()} Pitney Bowes Inc. Tous droits réservés.
+      <footer className="px-4 pt-12 pb-12 text-center text-xs text-neutral-500">
+        <p>©1996-{new Date().getFullYear()} Pitney Bowes Inc. Tous droits réservés.</p>
+        <div className="mt-1 flex flex-wrap justify-center gap-3">
+          {footerLinks.map(link => (
+            <a key={link.label} href={link.href} target="_blank" rel="noopener" className="underline">{link.label}</a>
+          ))}
+        </div>
       </footer>
     </div>
   );
