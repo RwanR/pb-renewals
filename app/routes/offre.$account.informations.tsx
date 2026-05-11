@@ -212,7 +212,7 @@ export default function OffreInformations() {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <FieldReadonly label="Raison sociale du donneur d'ordre" value={client.customerName} />
               <FieldReadonly label="SIRET" value={client.siret || ""} />
-              <FieldEditable label="Email" name="email" value={bestEmail} icon={<MailIcon />} type="email" />
+              <FieldEditable label="E-mail" name="email" value={bestEmail} icon={<MailIcon />} type="email" />
               <FieldEditable label="Téléphone" name="phone" value={bestPhone} icon={<PhoneIcon />} type="tel" />
             </div>
 
