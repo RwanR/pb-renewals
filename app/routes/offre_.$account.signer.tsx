@@ -122,17 +122,6 @@ export default function OffreSigner() {
         </div>
       </div>
 
-      <div style={{
-        padding: "10px 24px",
-        background: "#e8f4fd",
-        borderBottom: "1px solid #cce5f6",
-        textAlign: "center",
-        fontSize: "14px",
-        color: "#404040",
-      }}>
-        Cliquez sur le bouton <strong>SIGNER</strong> en bas à droite du document pour apposer votre signature
-      </div>
-
       <iframe
         referrerPolicy="strict-origin-when-cross-origin"
         src={`${signerUrl}${(signerUrl as string).includes('?') ? '&' : '?'}nocache=${Date.now()}`}
