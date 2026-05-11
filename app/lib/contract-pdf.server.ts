@@ -209,7 +209,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
     ${client.leaseNumber ? `<div class="info-row"><span class="info-label">Ancien contrat</span><span class="info-value">${client.leaseNumber}</span></div>` : ""}
-    ${acceptance.purchaseOrderNumber ? `<div class="info-row"><span class="info-label">Bon de commande interne</span><span class="info-value">${acceptance.purchaseOrderNumber}</span></div>` : ""}
+    <div class="info-row"><span class="info-label">Bon de commande interne</span><span class="info-value">${acceptance.purchaseOrderNumber || "—"}</span></div>
   </div>
 </div>
 
@@ -274,7 +274,7 @@ function generateContractHTML(data: ContractData): string {
     <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName}</div></div>
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName}</div></div>
     <div class="sig-field"><span class="label">E-mail</span><div class="value">${acceptance.signatoryEmail}</div></div>
-    <div class="sig-field"><span class="label">Référence interne de commande</span><div class="value">${acceptance.purchaseOrderNumber || "—"}</div></div>
+    <div class="sig-field"><span class="label">Bon de commande interne</span><div class="value">${acceptance.purchaseOrderNumber || "—"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>
 </div>
