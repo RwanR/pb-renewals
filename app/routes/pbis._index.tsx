@@ -72,16 +72,17 @@ export default function PbisIndex() {
           </button>
         </div>
 
-        <div className="flex flex-col items-center gap-8 mt-4">
-          <button type="button" onClick={() => setAboutOpen(!aboutOpen)} className="flex items-center gap-2 text-[#005cb1] cursor-pointer">
+        <div className="flex flex-col items-center mt-4 w-full">
+        <button type="button" onClick={() => setAboutOpen(!aboutOpen)} className="flex items-center gap-2 text-[#005cb1] cursor-pointer mb-8">
             <span className="font-precision text-xl leading-6 tracking-[-0.3px]">À propos de Pitney Bowes</span>
             {aboutOpen ? <Minus className="w-6 h-6" strokeWidth={1.5} /> : <Plus className="w-6 h-6" strokeWidth={1.5} />}
-          </button>
-          {aboutOpen && (
-            <p className="max-w-[600px] text-sm leading-5 text-neutral-950 text-center">
-              Visualiser une version lisible (PDF) pour toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi.
+        </button>
+
+        <div className={`grid w-full max-w-[600px] transition-all duration-300 ease-in-out ${aboutOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+            <p className="overflow-hidden text-sm leading-5 text-neutral-950 text-center">
+            Visualiser une version lisible (PDF) pour toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi.
             </p>
-          )}
+        </div>
         </div>
       </div>
     </>
