@@ -165,7 +165,7 @@ export default function OffreInformations() {
           </span>
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
-          <p style={{ fontSize: "14px", color: "var(--pb-text)", textAlign: "right" }}>
+          <p className="pb-discount-line">
             {discount} de réduction la première année
           </p>
         </div>
