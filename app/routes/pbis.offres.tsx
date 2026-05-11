@@ -1,0 +1,172 @@
+import type { Route } from "./+types/pbis.offres";
+import { Check, X } from "lucide-react";
+import { Fragment } from "react";
+
+export function meta({}: Route.MetaArgs) {
+  return [{ title: "Nos offres — PBIS" }];
+}
+
+type Offer = {
+  badge: string;
+  badgeBg: string;
+  title: string;
+  description: string;
+  features: { included: boolean; text: string }[];
+  slot?: string;
+  price: string;
+  priceSuffix: string;
+  ctaLabel: string;
+  ctaBg: string;
+  borderColor: string;
+  highlighted?: boolean;
+};
+
+const offers: Offer[] = [
+  {
+    badge: "Factures fournisseurs",
+    badgeBg: "#d7008f",
+    title: "PBIS Start",
+    description: "L'offre idéale pour vous conformer rapidement à la facturation fournisseurs",
+    features: [
+      { included: true, text: "Inscription à l'Annuaire de l'Etat" },
+      { included: true, text: "Réception des factures en pdf par e-mail" },
+      { included: true, text: "Conformité en 2 clics" },
+      { included: false, text: "N'inclut pas vos factures client" },
+    ],
+    slot: "1000 factures fournisseurs par an incluses\nEngagement 12 mois",
+    price: "15,00",
+    priceSuffix: "€ HT / mois",
+    ctaLabel: "Souscrire en ligne",
+    ctaBg: "#d7008f",
+    borderColor: "#6c278b",
+    highlighted: true,
+  },
+  {
+    badge: "Factures clients et fournisseurs",
+    badgeBg: "#0092db",
+    title: "PBIS Essentiel",
+    description: "L'offre complète pour digitaliser vos factures clients et fournisseurs",
+    features: [
+      { included: true, text: "Toutes les fonctionnalités PBIS Start" },
+      { included: true, text: "Facturation clients conforme" },
+      { included: true, text: "Optimisation de vos processus métiers" },
+      { included: true, text: "Accompagnement de démarrage" },
+      { included: false, text: "Pas de personnalisations métier" },
+    ],
+    price: "à partir de 40,00",
+    priceSuffix: "€ HT / mois",
+    ctaLabel: "Nous contacter",
+    ctaBg: "#0092db",
+    borderColor: "#d4d4d4",
+  },
+  {
+    badge: "Sur mesure",
+    badgeBg: "#9a44a1",
+    title: "PBIS Flex",
+    description: "L'offre sur mesure pour répondre à vos besoins métier, avec un accompagnement dédié",
+    features: [
+      { included: true, text: "Toutes les fonctionnalités PBIS Essentiel" },
+      { included: true, text: "Personnalisations métier" },
+      { included: true, text: "Connexion ERP" },
+      { included: true, text: "100% des cas d'usage" },
+      { included: true, text: "Conformité internationale" },
+      { included: true, text: "Chef de projet dédié" },
+    ],
+    price: "Sur devis",
+    priceSuffix: "",
+    ctaLabel: "Nous contacter",
+    ctaBg: "#9a44a1",
+    borderColor: "#d4d4d4",
+  },
+];
+
+function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: number }) {
+  return (
+    <div className="flex gap-1 items-center justify-center">
+      {Array.from({ length: totalSteps }).map((_, i) => {
+        const step = i + 1;
+        const isActive = step === activeStep;
+        return (
+          <Fragment key={step}>
+            {i > 0 && <div className="w-2.5 h-px bg-[#d4d4d4]" />}
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isActive ? 'bg-[#171717] text-white' : 'bg-[#d4d4d4] text-[#737373]'}`}>
+              {step}
+            </div>
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function OfferCard({ offer }: { offer: Offer }) {
+  return (
+    <div className="relative flex-1 bg-white rounded-2xl p-6 flex flex-col gap-4 h-[453px] overflow-hidden" style={{ border: `${offer.highlighted ? '2px' : '1px'} solid ${offer.borderColor}` }}>
+      <div>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: offer.badgeBg }}>
+          {offer.badge}
+        </span>
+      </div>
+
+      <h2 className="font-precision text-3xl leading-9 tracking-[-0.5px] text-neutral-950">
+        {offer.title}
+      </h2>
+
+      <p className="text-sm leading-5 text-neutral-950">{offer.description}</p>
+
+      <div className="flex flex-col">
+        {offer.features.map((feature, i) => (
+          <div key={i} className="flex gap-2 items-center py-1">
+            {feature.included ? (
+              <Check className="w-6 h-6 shrink-0 text-neutral-950" strokeWidth={1.5} />
+            ) : (
+              <X className="w-6 h-6 shrink-0 text-neutral-950" strokeWidth={1.5} />
+            )}
+            <p className="flex-1 text-sm leading-5 text-neutral-950">{feature.text}</p>
+          </div>
+        ))}
+      </div>
+
+      {offer.slot && (
+        <p className="text-xs leading-4 text-[#737373] whitespace-pre-line">{offer.slot}</p>
+      )}
+
+      <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-4">
+        <div className="flex gap-1 items-baseline py-1">
+          <span className="font-medium text-lg leading-[27px] text-neutral-950">{offer.price}</span>
+          {offer.priceSuffix && (
+            <span className="text-sm leading-5 text-[#737373]">{offer.priceSuffix}</span>
+          )}
+        </div>
+        <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: offer.ctaBg }}>
+          {offer.ctaLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function PbisOffres() {
+  return (
+    <div className="font-inter">
+      <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
+        <Stepper activeStep={1} totalSteps={4} />
+        <h1 className="font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-center text-neutral-950">
+          Nos offres facturation électronique
+        </h1>
+      </div>
+
+      <div className="text-center pb-10 px-4">
+        <p className="text-sm leading-5 text-[#737373]">
+          Choisissez votre abonnement parmi nos 3 offres PBIS
+        </p>
+      </div>
+
+      <div className="flex gap-6 items-start px-8 pb-16 max-w-7xl mx-auto">
+        {offers.map((offer) => (
+          <OfferCard key={offer.title} offer={offer} />
+        ))}
+      </div>
+    </div>
+  );
+}
