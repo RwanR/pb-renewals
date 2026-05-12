@@ -84,7 +84,7 @@ export default function OffreOptions() {
           </span>
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
-         <p className="pb-discount-line">{offer.discount || "50%"} de réduction la première année</p>
+         <p className="pb-discount-line" style={{ textAlign: "right" }}>{offer.discount || "50%"} de réduction la première année</p>
         </div>
       </div>
 
