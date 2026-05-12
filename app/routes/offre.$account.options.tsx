@@ -70,7 +70,7 @@ export default function OffreOptions() {
     <div>
       {/* Header contrat */}
       <div style={{ borderBottom: "1px solid var(--pb-border)" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px 32px", background: "var(--pb-muted-bg)" }}>
+        <div className="pb-info-header" style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px 32px", background: "var(--pb-muted-bg)" }}>
           {machineImg && (
             <div style={{ width: "50px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <img src={machineImg} alt={offer.modelName || ""} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
@@ -78,7 +78,7 @@ export default function OffreOptions() {
             </div>
           )}
           <span style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)", whiteSpace: "nowrap" }}>{offer.modelName}</span>
-          <span style={{ flex: 1 }} />
+          <span className="pb-info-header-spacer" style={{ flex: 1 }} />
           <span style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)", textAlign: "right", whiteSpace: "nowrap" }}>
             {monthly ? formatCurrency(monthly) : "—"} € HT par mois sur {term}
           </span>

@@ -211,5 +211,7 @@ body {\
   .pb-confirmer-recap-content { width: 100%; }\
   .pb-confirmer-ctas { flex-wrap: wrap !important; }\
   .pb-confirmer-cta-sign { flex: 1 1 100% !important; order: 2 !important; }\
+  .pb-info-header { justify-content: center !important; }\
+  .pb-info-header-spacer { display: none !important; }\
 }\
 ";
