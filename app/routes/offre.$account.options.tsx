@@ -128,21 +128,21 @@ export default function OffreOptions() {
                         <input type="radio" name="installOption" value="auto" checked={installOption === "auto"} onChange={() => setInstallOption("auto")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Auto-installation</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>0 € HT</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)", minWidth: "max-content" }}>0 € HT</span>
                     </label>
                     <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "phone" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <input type="radio" name="installOption" value="phone" checked={installOption === "phone"} onChange={() => setInstallOption("phone")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation assistée en ligne</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>75 € HT*</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)", minWidth: "max-content" }}>75 € HT*</span>
                     </label>
                     <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: installOption === "onsite" ? "2px solid #171717" : "1px solid var(--pb-border)", borderRadius: "10px", cursor: "pointer", background: "white" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <input type="radio" name="installOption" value="onsite" checked={installOption === "onsite"} onChange={() => setInstallOption("onsite")} style={{ accentColor: "#171717" }} />
                         <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Installation sur site par un technicien</span>
                       </div>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)" }}>198 € HT*</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--pb-text)", minWidth: "max-content" }}>198 € HT*</span>
                     </label>
                   </div>
                   <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>*Facturation unique et séparée</p>
