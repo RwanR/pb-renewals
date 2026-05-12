@@ -309,16 +309,22 @@ export default function OffreConfirmer() {
                   <span style={{ color: "var(--pb-text-muted)" }}>Installation HT**</span>
                   <span style={{ fontWeight: 600, color: "var(--pb-text)" }}>{installPrices[installOption] || "—"}</span>
                 </div>
-                <p style={{ fontSize: "12px", color: "var(--pb-text-muted)" }}>**Facturation unique et séparée</p>
               </>
             )}
           </div>
         </div>
 
         {/* Notes de bas de récap */}
-        <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", lineHeight: "16px", marginBottom: "40px" }}>
-          *Hors majoration annuelle de l'article 9 des conditions générales. Les 12 premiers mois seront minorés de {offer.discount || "50%"}.
-        </p>
+        <div style={{ marginBottom: "40px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", lineHeight: "16px" }}>
+            *Hors majoration annuelle de l'article 9 des conditions générales. Les 12 premiers mois seront minorés de {offer.discount || "50%"}.
+          </p>
+          {installOption && installOption !== "auto" && (
+            <p style={{ fontSize: "12px", color: "var(--pb-text-muted)", lineHeight: "16px" }}>
+              **Facturation unique et séparée
+            </p>
+          )}
+        </div>
 
         {/* Signatory form */}
         <Form method="post" reloadDocument onSubmit={() => setIsSubmitting(true)}>
@@ -395,7 +401,7 @@ export default function OffreConfirmer() {
             <label style={{ display: "flex", gap: "12px", alignItems: "flex-start", cursor: "pointer", padding: "12px 16px", border: "1px solid var(--pb-border)", borderRadius: "8px" }}>
               <input type="checkbox" name="acceptCGV" required style={{ accentColor: "#171717", width: "16px", height: "16px", marginTop: "2px", flexShrink: 0 }} />
               <span style={{ fontSize: "14px", color: "var(--pb-text)", lineHeight: "20px" }}>
-                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease V1.0) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
+                En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des <a href={`/offre/${client.accountNumber}/conditions`} target="_blank" rel="noopener" style={{ color: "var(--pb-text)", textDecoration: "underline" }}>Conditions Générales</a> (version Elease V1.0) disponibles à l'adresse (pb.com/fr/cc) et les accepter, y compris la clause attributive de juridiction (l'article 25). Le signataire reconnait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
               </span>
             </label>
 

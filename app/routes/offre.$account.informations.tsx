@@ -230,15 +230,17 @@ export default function OffreInformations() {
               </div>
             </div>
 
-            {/* Adresse facturation différente */}
+            {/* Données de facturation */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
-                Adresse de facturation différente
+                Données de facturation
               </p>
+              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={client.billingEmail || ""} icon={<MailIcon />} type="email" />
               <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
                 <input type="checkbox" checked={showBilling} onChange={function(e) { setShowBilling(e.target.checked); }} style={{
                   width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
                 }} />
+                <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Adresse postale de facturation si différente</span>
               </label>
               {!showBilling && (
                 <>

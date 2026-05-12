@@ -262,7 +262,7 @@ function generateContractHTML(data: ContractData): string {
 </div>
 
 <div class="legal">
-  <p>Tous les montants s'entendent hors TVA légale. Le loyer initial est un loyer mensuel. En signant ce contrat, le Locataire reconnait avoir pris connaissance de l'article 9 des conditions générales. Ainsi, les factures suivantes seront établies sur la base du loyer annuel initial et de la fréquence de facturation, majorés de cet article.</p>
+  <p>Tous les montants s'entendent hors TVA légale. Le loyer initial est un loyer mensuel. En signant ce contrat, le Locataire reconnait avoir pris connaissance de l'article 9 des conditions générales. Ainsi, les factures suivantes seront établies sur la base du loyer annuel initial, de la fréquence de facturation et des conditions de paiement initiales, majorées de cet article.</p>
   <p>La commande du Locataire vaut demande irrévocable de location, selon le mode et délai de paiement habituels. Le Locataire accepte de subordonner l'entrée en vigueur du contrat à l'acceptation par le service Crédit de Pitney Bowes (article 2 des CGL).</p>
   <p>Les Conditions Générales de Location (version ${CONTRACT_VERSION}) sont consultables à l'adresse <a href="https://pb.com/fr/cc">pb.com/fr/cc</a> et acceptées par le Locataire, y compris la clause attributive de juridiction (article 25).</p>
   <p>Contact : <a href="mailto:fr-elease@pb.com">fr-elease@pb.com</a></p>
