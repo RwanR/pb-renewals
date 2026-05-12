@@ -23,6 +23,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const billingPostcode = url.searchParams.get("billingPostcode") || "";
   const billingCity = url.searchParams.get("billingCity") || "";
   const billingDifferent = url.searchParams.get("billingDifferent") === "1";
+  const billingEmail = url.searchParams.get("billingEmail") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -36,7 +37,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const hasOptions = client.offers[0].installAvailable;
 
-  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, hasOptions };
+  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail, hasOptions };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -62,6 +63,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const billingStreet = (formData.get("billingStreet") as string)?.trim();
   const billingPostcode = (formData.get("billingPostcode") as string)?.trim();
   const billingCity = (formData.get("billingCity") as string)?.trim();
+  const billingEmail = (formData.get("billingEmail") as string)?.trim();
 
   const errors: Record<string, string> = {};
   const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]{2,}$/;
@@ -126,17 +128,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
     },
   });
 
-  // Update client billing address if modified
+  // Update client billing data
+  const billingUpdate: any = {};
+  if (billingEmail) billingUpdate.billingEmail = billingEmail;
   if (billingDifferent) {
-    await prisma.client.update({
-      where: { accountNumber },
-      data: {
-        billingAddress1: billingAddress1 || undefined,
-        billingStreet: billingStreet || undefined,
-        billingPostcode: billingPostcode || undefined,
-        billingCity: billingCity || undefined,
-      },
-    });
+    if (billingAddress1) billingUpdate.billingAddress1 = billingAddress1;
+    if (billingStreet) billingUpdate.billingStreet = billingStreet;
+    if (billingPostcode) billingUpdate.billingPostcode = billingPostcode;
+    if (billingCity) billingUpdate.billingCity = billingCity;
+  }
+  if (Object.keys(billingUpdate).length > 0) {
+    await prisma.client.update({ where: { accountNumber }, data: billingUpdate });
   }
 
   // Re-fetch client with updated billing address for PDF generation
@@ -224,7 +226,7 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, hasOptions } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderRef, setOrderRef] = useState(actionData?.values?.orderRef as string ?? "");
@@ -337,6 +339,7 @@ export default function OffreConfirmer() {
           <input type="hidden" name="billingPostcode" value={billingPostcode} />
           <input type="hidden" name="billingCity" value={billingCity} />
           <input type="hidden" name="billingDifferent" value={billingDifferent ? "1" : "0"} />
+          <input type="hidden" name="billingEmail" value={billingEmail} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
