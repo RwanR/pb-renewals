@@ -38,7 +38,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
     prisma.acceptance.findMany({
       where: { adobeSignStatus: "signed" },
       select: {
-        client: { select: { currentModel: true } },
+        offerPosition: true,
+        clientAccountNumber: true,
+        client: {
+          select: {
+            offers: {
+              select: {
+                offerPosition: true,
+                modelName: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.acceptance.findMany({
@@ -76,7 +87,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Model breakdown
   const modelCounts: Record<string, number> = {};
   acceptancesByModel.forEach((a) => {
-    const model = a.client.currentModel || "Inconnu";
+    const offer = a.client.offers.find((o) => o.offerPosition === a.offerPosition);
+    let model = offer?.modelName || "Inconnu";
+    if (a.offerPosition === 2) {
+      model = `${model} (reconduit)`;
+    }
     modelCounts[model] = (modelCounts[model] || 0) + 1;
   });
 
