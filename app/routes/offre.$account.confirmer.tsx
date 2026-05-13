@@ -187,20 +187,6 @@ function formatCurrency(amount: number | null): string {
   return amount.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function getMachineImage(model: string | null): string | null {
-  if (!model) return null;
-  const images: Record<string, string> = {
-    "SendPro C Lite": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
-    "SendPro C": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
-    "DM400": "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/legacy/images/international/common/products/gms/digital-franking-machines/dm400c/dm400-box-left--proddetail_large.jpg",
-    "DM50/55": "https://www.pitneybowes.com/content/dam/pitneybowes/Support/dm55_s1.jpg",
-    "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
-    "DM220": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
-  };
-  for (const key of Object.keys(images)) { if (model.includes(key)) return images[key]; }
-  return null;
-}
-
 const UserIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#737373" strokeWidth="1.2"/><path d="M3 14C3 11.5 5 10 8 10s5 1.5 5 4" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>;
 const MailIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M1 4.5L8 9L15 4.5" stroke="#737373" strokeWidth="1.2"/></svg>;
 const DocIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M6 5H10M6 8H10M6 11H8" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>;

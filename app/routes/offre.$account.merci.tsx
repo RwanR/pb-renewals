@@ -23,20 +23,6 @@ function formatCurrency(amount: number | null): string {
   return amount.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function getMachineImage(model: string | null): string | null {
-  if (!model) return null;
-  const images: Record<string, string> = {
-    "SendPro C Lite": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
-    "SendPro C": "https://www.pitneybowes.com/content/dam/pitneybowes/uk/en/shipping-and-mailing/franking/sendpro/sendpro-c-plus/21-sendtech-05913-fr-acquisition-sendpro-c-pdp-update.jpg.image.558.jpg",
-    "DM400": "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/legacy/images/international/common/products/gms/digital-franking-machines/dm400c/dm400-box-left--proddetail_large.jpg",
-    "DM50/55": "https://www.pitneybowes.com/content/dam/pitneybowes/Support/dm55_s1.jpg",
-    "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
-    "DM220": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
-  };
-  for (const key of Object.keys(images)) { if (model.includes(key)) return images[key]; }
-  return null;
-}
-
 export default function OffreMerci() {
   const { client, acceptance, offer } = useLoaderData<typeof loader>();
 
@@ -45,7 +31,7 @@ export default function OffreMerci() {
   const billingTax = offer?.billingTax60 ?? offer?.billingTax48 ?? offer?.billingTax36 ?? null;
   const billingTotal = monthly && billingTax ? monthly + billingTax : (offer?.billingTotal60 ?? offer?.billingTotal48 ?? offer?.billingTotal36 ?? null);
   const term = (offer?.monthly60 ?? offer?.billing60) ? "60 mois" : (offer?.monthly48 ?? offer?.billing48) ? "48 mois" : "36 mois";
-  const machineImg = offer ? getMachineImage(offer.modelName) : null;
+  const machineImg = offer?.imageUrl || null;
 
   return (
     <div className="pb-main">
