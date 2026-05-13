@@ -64,6 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const monthly = offer ? (offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36) : null;
       const billing = monthly ? monthly * 12 : null;
       const accountNumber = acceptance.clientAccountNumber;
+      const logoUrl = `${process.env.APP_URL || "https://pb-renewals-production.up.railway.app"}/images/pb-logo.png`;
 
       // Email notification au commercial
       if (client.ownerEmail) {
@@ -83,11 +84,11 @@ export async function action({ request }: ActionFunctionArgs) {
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
             to: "emmanuel.mur@pb.com", // TODO: remettre client.ownerEmail après recette
-            subject: `[PB Renewals] Contrat signé – ${client.customerName} (${accountNumber})`,
+            subject: `[PB Renewals] Contrat signé - ${client.customerName} (${accountNumber})`,
             html: `
               <h2>Contrat signé</h2>
               <p><strong>Client :</strong> ${client.customerName} (${accountNumber})</p>
-              <p><strong>Offre :</strong> ${offer?.modelName || "—"} — ${acceptance.offerPosition === 1 ? "Upgrade" : "Reconduction"}</p>
+              <p><strong>Offre :</strong> ${offer?.modelName || "—"} - ${acceptance.offerPosition === 1 ? "Upgrade" : "Reconduction"}</p>
               <p><strong>Durée :</strong> ${term}</p>
               <p><strong>Loyer mensuel HT :</strong> ${monthlyStr} €</p>
               ${acceptance.installOptionSelected ? `<p><strong>Installation :</strong> ${installLabels[acceptance.installOptionSelected] || acceptance.installOptionSelected}</p>` : ""}
@@ -104,7 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
           console.error(`[YOUSIGN WEBHOOK] Email to commercial failed:`, err);
         }
       } else {
-        console.log(`[YOUSIGN WEBHOOK] No ownerEmail for ${accountNumber} — skipping notification`);
+        console.log(`[YOUSIGN WEBHOOK] No ownerEmail for ${accountNumber} - skipping notification`);
       }
 
       // Email au signataire avec le contrat signé
@@ -119,21 +120,12 @@ export async function action({ request }: ActionFunctionArgs) {
           const billingTotal = monthlyVal && billingTax ? monthlyVal + billingTax : null;
           const fmt = (n: number | null) => n ? n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
           const isUpgrade = offer?.template === "1";
-          const installLabels: Record<string, string> = { auto: "Auto-installation", phone: "Assistée en ligne (75 € HT)", onsite: "Sur site (198 € HT)" };
-
-          const machineImages: Record<string, string> = {
-            "SendPro C": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
-            "SendPro C Lite": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
-            "DM300": "https://www.pitneybowes.com/content/dam/pitneybowes/germany/de/legacy/images/International/CE/Images/Produkte/Frankiermaschinen/DM300_G6SB0018_rgb_w350xh235pi--prodDetail_Large.jpg",
-            "DM400": "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/legacy/images/international/common/products/gms/digital-franking-machines/dm400c/dm400-box-left--proddetail_large.jpg",
-            "DM220": "https://www.pitneybowes.com/content/dam/support/product-images/dm220-franking-machine.jpg",
-          };
-          const machineImg = Object.entries(machineImages).find(([k]) => offer?.modelName?.includes(k))?.[1] || "";
+          const machineImg = offer?.imageUrl || "";
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
             to: acceptance.signatoryEmail,
-            subject: `Votre contrat Pitney Bowes a été signé — ${client.customerName}`,
+            subject: `Votre contrat Pitney Bowes a été signé - ${client.customerName}`,
             html: `
             <!DOCTYPE html>
             <html lang="fr">
@@ -148,7 +140,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
                     <!-- Logo -->
                     <tr><td align="center" style="padding: 32px 24px 16px;">
-                      <img src="https://pb-renewals-production.up.railway.app/images/pb-logo.png" alt="Pitney Bowes" width="160" style="display:block;" />
+                      <img src="${logoUrl}" alt="Pitney Bowes" width="160" style="display:block;" />
                     </td></tr>
 
                     <!-- Title -->
@@ -206,7 +198,7 @@ export async function action({ request }: ActionFunctionArgs) {
                     <!-- Footer -->
                     <tr><td style="padding: 16px 24px; background:#f8f9fa; border-top:1px solid #e5e7eb;">
                       <p style="margin:0; font-size:11px; color:#9ca3af; text-align:center;">
-                        Pitney Bowes France SAS — 5 Rue Francis de Pressensé, 93456 La Plaine Saint-Denis<br/>
+                        Pitney Bowes France SAS - 5 Rue Francis de Pressensé, 93456 La Plaine Saint-Denis<br/>
                         <a href="https://www.pitneybowes.com/fr" style="color:#9ca3af;">pitneybowes.com/fr</a>
                       </p>
                     </td></tr>
@@ -259,7 +251,7 @@ export async function action({ request }: ActionFunctionArgs) {
           console.error(`[YOUSIGN WEBHOOK] Draft order creation failed:`, err);
         }
       } else {
-        console.log(`[YOUSIGN WEBHOOK] No Shopify Customer ID for ${accountNumber} — skipping draft order`);
+        console.log(`[YOUSIGN WEBHOOK] No Shopify Customer ID for ${accountNumber} - skipping draft order`);
       }
 
       // Update Customer metafields with signature data
