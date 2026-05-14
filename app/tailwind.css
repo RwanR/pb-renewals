@@ -4,35 +4,32 @@
 @import "@fontsource-variable/inter";
 
 @font-face {
-    font-family: "Precision Sans";
-    src: url("/fonts/precision-sans/PrecisionSans_W_Lt.woff") format("woff");
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Precision Sans';
+  src: url('/fonts/PrecisionSans_W_Lt.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
-
 @font-face {
-    font-family: "Precision Sans";
-    src: url("/fonts/precision-sans/PrecisionSans_W_Rg.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Precision Sans';
+  src: url('/fonts/PrecisionSans_W_Rg.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
-
 @font-face {
-    font-family: "Precision Sans";
-    src: url("/fonts/precision-sans/PrecisionSans_W_Md.woff") format("woff");
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Precision Sans';
+  src: url('/fonts/PrecisionSans_W_Md.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
 }
-
 @font-face {
-    font-family: "Precision Sans";
-    src: url("/fonts/precision-sans/PrecisionSans_W_Bd.woff") format("woff");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Precision Sans';
+  src: url('/fonts/PrecisionSans_W_Bd.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 @custom-variant dark (&:is(.dark *));
