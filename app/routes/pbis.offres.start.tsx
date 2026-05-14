@@ -52,7 +52,7 @@ export default function PbisOffresStart() {
       </div>
 
       <div className="flex gap-6 items-start px-[72px] pb-16 pt-10 max-w-7xl mx-auto">
-        <div className="flex-1 flex flex-col gap-6">
+        <div className="flex-1 min-w-0 flex flex-col gap-6">
           <h2 className="font-precision text-3xl leading-9 tracking-[-0.5px] text-neutral-950">
             Continuez de recevoir vos factures fournisseurs par e-mail après le 1er Septembre
           </h2>
@@ -93,45 +93,47 @@ export default function PbisOffresStart() {
           </div>
         </div>
 
-        <div className="w-[363px] flex flex-col gap-8 sticky top-4">
-          <div className="bg-neutral-50 border-2 border-[#6c278b] rounded-xl p-4 flex flex-col gap-3">
-            <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
-            <div className="flex gap-3 items-center">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">Votre choix</span>
-              <span className="flex-1 font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-neutral-950">PBIS Start</span>
-            </div>
-            <div className="flex gap-1 items-baseline">
-              <span className="font-medium text-sm leading-5 text-neutral-950">15,00</span>
-              <span className="text-xs leading-4 text-[#737373]">€ HT / mois</span>
-              <div className="flex-1" />
-              <span className="text-xs leading-4 text-[#737373]">12 mois</span>
-            </div>
-            <div className="h-px bg-neutral-200" />
-            <p className="text-xs leading-4 text-[#737373]">1000 factures fournisseurs/an incluses</p>
-          </div>
-
-          <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
-            <h3 className="font-precision text-xl leading-6 tracking-[-0.3px] text-neutral-950 pb-2">Ce qui est inclus</h3>
-            {includedItems.map(({ Icon, title, sub }) => (
-              <div key={title} className="flex gap-3 items-center">
-                <Icon className="w-5 h-5 shrink-0 text-[#d7008f]" strokeWidth={1.5} />
-                <div className="flex-1 flex flex-col gap-0.5">
-                  <p className="text-sm font-medium leading-5 text-neutral-950">{title}</p>
-                  <p className="text-xs leading-4 text-[#737373]">{sub}</p>
+        <div className="flex-1 min-w-0 flex justify-end">
+          <div className="w-[363px] flex flex-col gap-8 sticky top-4">
+            <div className="bg-neutral-50 border-2 border-[#6c278b] rounded-xl p-4 flex flex-col gap-3">
+                <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
+                <div className="flex gap-3 items-center">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">Votre choix</span>
+                <span className="flex-1 font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-neutral-950">PBIS Start</span>
                 </div>
-              </div>
-            ))}
-          </div>
+                <div className="flex gap-1 items-baseline">
+                <span className="font-medium text-sm leading-5 text-neutral-950">15,00</span>
+                <span className="text-xs leading-4 text-[#737373]">€ HT / mois</span>
+                <div className="flex-1" />
+                <span className="text-xs leading-4 text-[#737373]">12 mois</span>
+                </div>
+                <div className="h-px bg-neutral-200" />
+                <p className="text-xs leading-4 text-[#737373]">1000 factures fournisseurs/an incluses</p>
+            </div>
 
-          <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
-            Souscrire en ligne
-          </button>
+            <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
+                <h3 className="font-precision text-xl leading-6 tracking-[-0.3px] text-neutral-950 pb-2">Ce qui est inclus</h3>
+                {includedItems.map(({ Icon, title, sub }) => (
+                <div key={title} className="flex gap-3 items-center">
+                    <Icon className="w-5 h-5 shrink-0 text-[#d7008f]" strokeWidth={1.5} />
+                    <div className="flex-1 flex flex-col gap-0.5">
+                    <p className="text-sm font-medium leading-5 text-neutral-950">{title}</p>
+                    <p className="text-xs leading-4 text-[#737373]">{sub}</p>
+                    </div>
+                </div>
+                ))}
+            </div>
 
-          <div className="bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex gap-3 items-center">
-            <FileQuestion className="w-5 h-5 shrink-0 text-[#d7008f]" strokeWidth={1.5} />
-            <div className="flex-1 flex flex-col gap-0.5">
-              <p className="text-sm font-medium leading-5 text-neutral-950">Besoin d'aide ?</p>
-              <p className="text-xs leading-4 text-[#737373]">Nous contacter</p>
+            <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+                Souscrire en ligne
+            </button>
+
+            <div className="bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex gap-3 items-center">
+                <FileQuestion className="w-5 h-5 shrink-0 text-[#d7008f]" strokeWidth={1.5} />
+                <div className="flex-1 flex flex-col gap-0.5">
+                <p className="text-sm font-medium leading-5 text-neutral-950">Besoin d'aide ?</p>
+                <p className="text-xs leading-4 text-[#737373]">Nous contacter</p>
+                </div>
             </div>
           </div>
         </div>
