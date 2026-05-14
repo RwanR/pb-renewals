@@ -1,4 +1,4 @@
-import type { Route } from "./+types/pbis.offres";
+import type { Route } from "./+types/pbis.offres._index";
 import { Check, X } from "lucide-react";
 import { Fragment } from "react";
 
