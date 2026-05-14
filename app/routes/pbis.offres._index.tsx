@@ -1,6 +1,7 @@
 import type { Route } from "./+types/pbis.offres._index";
 import { Check, X } from "lucide-react";
 import { Fragment } from "react";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Nos offres — PBIS" }];
@@ -9,6 +10,7 @@ export function meta({}: Route.MetaArgs) {
 type Offer = {
   badge: string;
   badgeBg: string;
+  slug: string;
   title: string;
   description: string;
   features: { included: boolean; text: string }[];
@@ -24,6 +26,7 @@ const offers: Offer[] = [
   {
     badge: "Factures fournisseurs",
     badgeBg: "#d7008f",
+    slug: "start",
     title: "PBIS Start",
     description: "L'offre idéale pour vous conformer rapidement à la facturation fournisseurs",
     features: [
@@ -42,6 +45,7 @@ const offers: Offer[] = [
   {
     badge: "Factures clients et fournisseurs",
     badgeBg: "#0092db",
+    slug: "essentiel",
     title: "PBIS Essentiel",
     description: "L'offre complète pour digitaliser vos factures clients et fournisseurs",
     features: [
@@ -60,6 +64,7 @@ const offers: Offer[] = [
   {
     badge: "Sur mesure",
     badgeBg: "#9a44a1",
+    slug: "flex",
     title: "PBIS Flex",
     description: "L'offre sur mesure pour répondre à vos besoins métier, avec un accompagnement dédié",
     features: [
@@ -135,9 +140,9 @@ function OfferCard({ offer }: { offer: Offer }) {
             <span className="text-sm leading-5 text-[#737373]">{offer.priceSuffix}</span>
           )}
         </div>
-        <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: offer.ctaBg }}>
+        <Link to={`/pbis/offres/${offer.slug}`} className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: offer.ctaBg }}>
           {offer.ctaLabel}
-        </button>
+        </Link>
       </div>
     </div>
   );
