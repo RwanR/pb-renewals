@@ -1,6 +1,7 @@
 import type { Route } from "./+types/pbis._index";
 import { FileText, ShieldCheck, Zap, BarChart3, Calendar, Minus, Plus } from "lucide-react";
 import { Fragment, useState } from "react";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS — Pitney Bowes Invoicing Solutions" }];
@@ -33,10 +34,10 @@ export default function PbisIndex() {
             Avec Pitney Bowes, digitalisez vos factures clients et fournisseurs pour une mise en conformité simple et économique, grâce à des offres adaptées.
           </p>
 
-          <a href="#offres" className="inline-flex items-center gap-4 bg-white border border-neutral-200 rounded-md px-6 py-2 shadow-xl hover:shadow-2xl transition-shadow">
-            <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-24 h-[54px] object-cover" />
-            <span className="text-[#d7008f] font-medium">Découvrir nos offres →</span>
-          </a>
+          <Link to="/pbis/offres" className="inline-flex items-center gap-4 bg-white border border-neutral-200 rounded-md px-6 py-2 shadow-xl hover:shadow-2xl transition-shadow">
+          <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-24 h-[54px] object-cover" />
+          <span className="text-[#d7008f] font-medium">Découvrir nos offres →</span>
+        </Link>
         </div>
       </section>
 
@@ -67,9 +68,9 @@ export default function PbisIndex() {
           <p className="text-sm font-medium leading-5 text-center text-neutral-950">
             Réception obligatoire des e-factures<br />dès septembre 2026
           </p>
-          <button type="button" className="inline-flex items-center gap-2 bg-[#d7008f] text-white rounded-full px-8 py-3 font-medium hover:opacity-90 transition-opacity">
+          <Link to="/pbis/offres" className="inline-flex items-center gap-2 bg-[#d7008f] text-white rounded-full px-8 py-3 font-medium hover:opacity-90 transition-opacity">
             Voir les offres →
-          </button>
+          </Link>
         </div>
 
         <div className="flex flex-col items-center mt-4 w-full">
