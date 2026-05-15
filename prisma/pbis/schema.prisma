@@ -19,41 +19,64 @@ model PbisImportRun {
 }
 
 model PbisClient {
-  id               String  @id @default(cuid())
-  accountNumber    String  @unique
-  companyName      String
-  siret            String?
-  vatNumber        String?
+  shipTo                String   @id                // SHIP_TO (PK)
+  compteClientBillTo    String                      // COMPTE_CLIENT_BILL_TO
+  soldTo                String                      // SOLD_TO
 
-  address1         String?
-  address2         String?
-  city             String?
-  postcode         String?
+  // Identité entreprise
+  companyName           String                      // RAISON_SOCIALE_SOLDTO
+  customerNameShipTo    String?                     // CUSTOMER_NAME_SHIPTO (si différent)
 
-  contactFirstName String?
-  contactLastName  String?
-  contactEmail     String?
-  contactPhone     String?
-  contactPosition  String?
+  // Adresse facturation (SOLD_TO)
+  street                String                      // STREET_NAME_SOLDTO
+  postcode              String                      // POSTCODE_SOLDTO
+  city                  String                      // CITY_SOLDTO
 
-  ownerName        String?
-  ownerEmail       String?
+  // Adresse installation (SHIP_TO, si différente)
+  streetShipTo          String?                     // STREET_NAME_SHIPTO
+  postcodeShipTo        String?                     // POSTCODE_SHIPTO
+  cityShipTo            String?                     // CITY_SHIPTO
 
-  acceptances      PbisAcceptance[]
-  leads            PbisLead[]
-  accessToken      PbisAccessToken?
+  // Identifiants légaux
+  siren                 String                      // SIREN_SHIPTO
+  siret                 String                      // SIRET_SHIPTO
+  vatNumber             String?                     // VAT_NUMBER (vide à l'import, reconstituable)
 
-  importRunId      String?
-  importRun        PbisImportRun?   @relation(fields: [importRunId], references: [id])
+  // Contact principal
+  contactFirstName      String?                     // FIRSTNAME_CONTACT_PRINCIPAL
+  contactLastName       String?                     // LASTNAME_CONTACT_PRINCIPAL
+  contactEmail          String?                     // EMAIL_CONTACT_PRINCIPAL
+  contactPhone          String?                     // PHONE_CONTACT_PRINCIPAL
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  // Données business
+  vendeur               String?                     // VENDEUR
+  employees             Int?                        // EMPLOYEES
+  codeNaf               String?                     // CODE_NAF
+  nafDescription        String?                     // NAF Desc
+  sectionDescription    String?                     // Section Desc
+  plis2024              Int?                        // PLIS_2024
+  plis2025              Int?                        // PLIS_2025
+  flagPaperless         Boolean  @default(false)    // FLAG_PAPERLESS
+
+  // Agrégats contrats MAA (informationnels)
+  contractsCount        Int      @default(1)        // nb de lignes Excel pour ce SHIP_TO
+  totalLoyerAnnual      Float?                      // somme TOTAL_LOYER_ANNUAL des contrats
+
+  // Relations
+  importRunId           String?
+  importRun             PbisImportRun? @relation(fields: [importRunId], references: [id])
+  acceptance            PbisAcceptance?
+  accessToken           PbisAccessToken?
+  leads                 PbisLead[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model PbisAcceptance {
   id                    String     @id @default(cuid())
-  clientId              String
-  client                PbisClient @relation(fields: [clientId], references: [id])
+  clientId              String     @unique
+  client                PbisClient @relation(fields: [clientId], references: [shipTo])
 
   offerCode             String
 
@@ -88,7 +111,7 @@ model PbisAcceptance {
 model PbisLead {
   id                 String      @id @default(cuid())
   clientId           String?
-  client             PbisClient? @relation(fields: [clientId], references: [id])
+  client             PbisClient? @relation(fields: [clientId], references: [shipTo])
 
   offerCode          String
 
@@ -114,7 +137,7 @@ model PbisLead {
 model PbisAccessToken {
   token     String     @id @default(uuid())
   clientId  String     @unique
-  client    PbisClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    PbisClient @relation(fields: [clientId], references: [shipTo], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime   @default(now())
