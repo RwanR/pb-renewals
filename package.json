@@ -27,6 +27,7 @@
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
     "@prisma/client": "^6.16.3",
+    "@prisma/pbis-client": "file:./node_modules/.prisma/pbis-client",
     "@react-router/dev": "^7.12.0",
     "@react-router/fs-routes": "^7.12.0",
     "@react-router/node": "^7.12.0",
