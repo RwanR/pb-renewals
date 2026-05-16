@@ -58,4 +58,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ["@shopify/app-bridge-react"],
   },
+  ssr: {
+    external: [".prisma/pbis-client"],
+  },
 }) satisfies UserConfig;
