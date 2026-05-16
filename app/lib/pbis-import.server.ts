@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { pbisDb } from "../db.pbis.server";
+import pbisDb from "../db.pbis.server";
 
 export type ImportResult = {
   status: "success" | "partial" | "error";
