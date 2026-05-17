@@ -1,7 +1,8 @@
 import type { Route } from "./+types/pbis.start.informations";
 import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Info, Check, type LucideIcon } from "lucide-react";
 import { Fragment } from "react";
-import { Link } from "react-router";
+import { Link, useRouteLoaderData } from "react-router";
+import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
@@ -42,6 +43,13 @@ function Field({ label, icon: Icon, value, placeholder, disabled, type = "text" 
 }
 
 export default function PbisStartInformations() {
+  const layoutData = useRouteLoaderData<typeof pbisLayoutLoader>("routes/pbis");
+  const client = layoutData?.client ?? null;
+
+  // Parcours authentifié : champs entreprise verrouillés (données PB vérifiées).
+  // Parcours anonyme : champs entreprise éditables (le prospect saisit tout).
+  const isAuthenticated = client !== null;
+
   return (
     <div className="font-inter pb-16">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
@@ -55,16 +63,44 @@ export default function PbisStartInformations() {
         {/* Entreprise */}
         <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-4">
           <p className="font-semibold text-xs leading-4 text-neutral-950">ENTREPRISE</p>
-          <Field label="Raison sociale" icon={Building2} value="Commune de Montgailhard" disabled />
-          <Field label="Numéro client" icon={Hash} value="666454-9" disabled />
+          <Field
+            label="Raison sociale"
+            icon={Building2}
+            value={client?.companyName}
+            placeholder="Nom de votre entreprise"
+            disabled={isAuthenticated}
+          />
+          <Field
+            label="Numéro client"
+            icon={Hash}
+            value={client?.shipTo}
+            placeholder="Non renseigné"
+            disabled={isAuthenticated}
+          />
           <div className="flex gap-4">
-            <Field label="SIRET" icon={Hash} value="21090192100015" disabled />
-            <Field label="TVA" icon={Hash} value="21090192100015" disabled />
+            <Field
+              label="SIRET"
+              icon={Hash}
+              value={client?.siret}
+              placeholder="14 chiffres"
+              disabled={isAuthenticated}
+            />
+            <Field
+              label="TVA"
+              icon={Hash}
+              value={client?.vatNumber ?? undefined}
+              placeholder="N° TVA intracommunautaire"
+            />
           </div>
-          <Field label="Adresse de facturation" icon={MapPinned} value="1 Place de la Mairie" />
+          <Field
+            label="Adresse de facturation"
+            icon={MapPinned}
+            value={client?.street}
+            placeholder="Numéro et rue"
+          />
           <div className="flex gap-3">
-            <Field label="Code postal" icon={Mailbox} value="09330" />
-            <Field label="Ville" icon={Building2} value="Montgailhard" />
+            <Field label="Code postal" icon={Mailbox} value={client?.postcode} placeholder="Code postal" />
+            <Field label="Ville" icon={Building2} value={client?.city} placeholder="Ville" />
           </div>
         </div>
 
@@ -75,12 +111,12 @@ export default function PbisStartInformations() {
             <Info className="w-4 h-4 text-[#d7008f]" strokeWidth={1.5} />
           </div>
           <div className="flex gap-3">
-            <Field label="Prénom" icon={CircleUser} value="Jean" />
-            <Field label="Nom" icon={CircleUser} value="Dupont" />
+            <Field label="Prénom" icon={CircleUser} value={client?.contactFirstName ?? undefined} placeholder="Prénom" />
+            <Field label="Nom" icon={CircleUser} value={client?.contactLastName ?? undefined} placeholder="Nom" />
           </div>
           <div className="flex gap-3">
-            <Field label="E-mail de contact" icon={Mail} value="mairemontgailhard@gmail.com" type="email" />
-            <Field label="Téléphone" icon={Smartphone} value="05 61 03 80 04" type="tel" />
+            <Field label="E-mail de contact" icon={Mail} value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" />
+            <Field label="Téléphone" icon={Smartphone} value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
           </div>
         </div>
 
@@ -97,7 +133,7 @@ export default function PbisStartInformations() {
           </div>
           <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
             <Mail className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-            <input type="email" defaultValue="comptagailhard@gmail.com" className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5" />
+            <input type="email" placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
           </div>
         </div>
 
