@@ -1,6 +1,7 @@
 import type { Route } from "./+types/pbis.offres.start";
 import { AtSign, Inbox, FileText, Archive, ListChecks, ClipboardCheck, FileQuestion, Check } from "lucide-react";
 import { Fragment } from "react";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS Start - Détail de l'offre" }];
@@ -124,9 +125,9 @@ export default function PbisOffresStart() {
                 ))}
             </div>
 
-            <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+            <Link to="/pbis/start/informations" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
                 Souscrire en ligne
-            </button>
+            </Link>
 
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex gap-3 items-center">
                 <FileQuestion className="w-5 h-5 shrink-0 text-[#d7008f]" strokeWidth={1.5} />
