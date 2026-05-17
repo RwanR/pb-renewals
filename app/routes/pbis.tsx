@@ -1,4 +1,34 @@
 import { Outlet } from "react-router";
+import type { Route } from "./+types/pbis";
+import { getSessionShipTo } from "~/lib/pbis-session.server";
+import pbisDb from "~/db.pbis.server";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const shipTo = await getSessionShipTo(request);
+
+  if (!shipTo) {
+    return { client: null };
+  }
+
+  const client = await pbisDb.pbisClient.findUnique({
+    where: { shipTo },
+    select: {
+      shipTo: true,
+      companyName: true,
+      siret: true,
+      vatNumber: true,
+      street: true,
+      postcode: true,
+      city: true,
+      contactFirstName: true,
+      contactLastName: true,
+      contactEmail: true,
+      contactPhone: true,
+    },
+  });
+
+  return { client };
+}
 
 const footerLinks = [
   { href: "https://www.pitneybowes.com/fr/mentionslegales.html", label: "Mentions légales" },

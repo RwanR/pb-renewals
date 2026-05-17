@@ -36,7 +36,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   sheet.getColumn("siret").numFmt = "@";
 
   for (const c of clients) {
-    const link = `${appUrl}/pbis/start/informations?token=${c.accessToken?.token}`;
+    const link = `${appUrl}/pbis?token=${c.accessToken?.token}`;
     sheet.addRow({
       shipTo: c.shipTo,
       name: c.companyName,
