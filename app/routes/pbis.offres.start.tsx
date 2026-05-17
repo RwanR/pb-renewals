@@ -85,11 +85,11 @@ export default function PbisOffresStart() {
           <div className="flex flex-col gap-3">
             <p className="text-sm leading-5 text-neutral-950">
               PBIS Start a pour vocation de gérer la facturation fournisseur - nous pouvons toutefois vous accompagner dès aujourd'hui également sur la facturation client avec{" "}
-              <span className="font-medium text-[#0092db]">PBIS Essentiel →</span>
+              <Link to="/pbis/offres/essentiel" className="font-medium text-[#0092db] hover:underline">PBIS Essentiel →</Link>
             </p>
             <p className="text-sm leading-5 text-neutral-950">
               Si votre entreprise a plus de 250 salariés et/ou génère plus de 50M€ de CA annuel, l'offre PBIS Start ne sera pas suffisante car l'obligation d'émission de factures s'applique dès Septembre 2026, nous vous recommandons dans ce cas une offre{" "}
-              <span className="font-medium text-[#9a44a1]">PBIS Flex →</span>
+              <Link to="/pbis/offres/flex" className="font-medium text-[#9a44a1] hover:underline">PBIS Flex →</Link>
             </p>
           </div>
         </div>
