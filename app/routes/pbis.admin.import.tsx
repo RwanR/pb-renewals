@@ -57,6 +57,7 @@ export default function PbisAdminImport({ actionData }: Route.ComponentProps) {
             <li>Lignes traitées : {actionData.result.rowsProcessed}</li>
             <li>Clients uniques (déduplication SHIP_TO) : {actionData.result.uniqueClients}</li>
             <li>Upserted en base : {actionData.result.upserted}</li>
+            <li>Tokens d'accès créés : {actionData.result.tokensCreated}</li>
             <li className="text-xs text-neutral-500 mt-2">Run ID : {actionData.result.importRunId}</li>
           </ul>
           {actionData.result.errors.length > 0 && (

@@ -6,6 +6,7 @@ export type ImportResult = {
   rowsProcessed: number;
   uniqueClients: number;
   upserted: number;
+  tokensCreated: number;
   errors: string[];
   importRunId: string;
 };
@@ -74,6 +75,7 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
       rowsProcessed: 0,
       uniqueClients: 0,
       upserted: 0,
+      tokensCreated: 0,
       errors: [`Colonnes manquantes : ${missing.join(", ")}`],
       importRunId: importRun.id,
     };
@@ -135,9 +137,19 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
     }
   }
 
-  const clients = Array.from(clientsMap.values());
+const clients = Array.from(clientsMap.values());
   let upserted = 0;
   const batchSize = 50;
+
+  // Tokens d'accès existants (réimport : on ne régénère pas)
+  const existingTokens = await pbisDb.pbisAccessToken.findMany({
+    select: { clientId: true },
+  });
+  const tokenClientIds = new Set(existingTokens.map((t) => t.clientId));
+
+  // Expiration des tokens : 12 mois
+  const tokenExpiry = new Date();
+  tokenExpiry.setFullYear(tokenExpiry.getFullYear() + 1);
 
   for (let i = 0; i < clients.length; i += batchSize) {
     const batch = clients.slice(i, i + batchSize);
@@ -159,6 +171,24 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
     });
   }
 
+  // Génération des tokens d'accès pour les clients qui n'en ont pas
+  const clientsNeedingToken = clients.filter(
+    (c) => !tokenClientIds.has(c.shipTo as string)
+  );
+  let tokensCreated = 0;
+
+  for (let i = 0; i < clientsNeedingToken.length; i += batchSize) {
+    const batch = clientsNeedingToken.slice(i, i + batchSize);
+    const result = await pbisDb.pbisAccessToken.createMany({
+      data: batch.map((c) => ({
+        clientId: c.shipTo as string,
+        expiresAt: tokenExpiry,
+      })),
+      skipDuplicates: true,
+    });
+    tokensCreated += result.count;
+  }
+
   const status = parseErrors.length === 0 ? "success" : "partial";
   await pbisDb.pbisImportRun.update({
     where: { id: importRun.id },
@@ -174,6 +204,7 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
     rowsProcessed,
     uniqueClients: clients.length,
     upserted,
+    tokensCreated,
     errors: parseErrors.slice(0, 20),
     importRunId: importRun.id,
   };
