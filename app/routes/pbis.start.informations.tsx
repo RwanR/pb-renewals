@@ -121,14 +121,14 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
   );
 }
 
-function Field({ label, icon: Icon, name, value, placeholder, disabled, type = "text" }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; type?: string }) {
+function Field({ label, icon: Icon, name, value, placeholder, disabled, required, type = "text" }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; required?: boolean; type?: string }) {
   const bg = disabled ? "bg-neutral-100" : "bg-white";
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className={`flex items-center gap-2 ${bg} border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]`}>
         <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
+        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} required={required && !disabled} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
       </div>
     </div>
   );
@@ -162,6 +162,7 @@ export default function PbisStartInformations() {
             value={client?.companyName}
             placeholder="Nom de votre entreprise"
             disabled={isAuthenticated}
+            required
           />
           <Field
             label="Numéro client"
@@ -179,6 +180,7 @@ export default function PbisStartInformations() {
               value={client?.siret}
               placeholder="14 chiffres"
               disabled={isAuthenticated}
+              required
             />
             <Field
               label="TVA"
@@ -194,10 +196,11 @@ export default function PbisStartInformations() {
             name="billingStreet"
             value={client?.street}
             placeholder="Numéro et rue"
+            required
           />
           <div className="flex gap-3">
-            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" />
-            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" />
+            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" required />
+            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" required />
           </div>
         </div>
 
@@ -208,11 +211,11 @@ export default function PbisStartInformations() {
             <Info className="w-4 h-4 text-[#d7008f]" strokeWidth={1.5} />
           </div>
           <div className="flex gap-3">
-            <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={client?.contactFirstName ?? undefined} placeholder="Prénom" />
-            <Field label="Nom" icon={CircleUser} name="contactLastName" value={client?.contactLastName ?? undefined} placeholder="Nom" />
+            <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={client?.contactFirstName ?? undefined} placeholder="Prénom" required />
+            <Field label="Nom" icon={CircleUser} name="contactLastName" value={client?.contactLastName ?? undefined} placeholder="Nom" required />
           </div>
           <div className="flex gap-3">
-            <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" />
+            <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" required />
             <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
           </div>
         </div>
@@ -230,7 +233,7 @@ export default function PbisStartInformations() {
           </div>
           <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
             <Mail className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-            <input name="receptionEmail" type="email" placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+            <input name="receptionEmail" type="email" required placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
           </div>
         </div>
 
