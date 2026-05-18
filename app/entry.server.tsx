@@ -4,7 +4,6 @@ import { ServerRouter, isRouteErrorResponse } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { type EntryContext } from "react-router";
 import { isbot } from "isbot";
-import { addDocumentResponseHeaders } from "./shopify.server";
 
 console.log("NODE_ENV =", process.env.NODE_ENV);
 
@@ -34,7 +33,11 @@ export default async function handleRequest(
     return new Response('Not Found', { status: 404 });
   }
 
-  addDocumentResponseHeaders(request, responseHeaders);
+  if (appName === "renewals") {
+    const { addDocumentResponseHeaders } = await import("./shopify.server");
+    addDocumentResponseHeaders(request, responseHeaders);
+  }
+
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? '')
     ? "onAllReady"
@@ -70,8 +73,6 @@ export default async function handleRequest(
       }
     );
 
-    // Automatically timeout the React renderer after 6 seconds, which ensures
-    // React has enough time to flush down the rejected boundary contents
     setTimeout(abort, streamTimeout + 1000);
   });
 }
