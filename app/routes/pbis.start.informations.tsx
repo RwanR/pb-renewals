@@ -1,11 +1,103 @@
 import type { Route } from "./+types/pbis.start.informations";
 import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Info, Check, type LucideIcon } from "lucide-react";
 import { Fragment } from "react";
-import { Link, useRouteLoaderData } from "react-router";
+import { Form, redirect, useRouteLoaderData } from "react-router";
+import { randomUUID } from "node:crypto";
+import pbisDb from "~/db.pbis.server";
+import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
 import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const f = (key: string) => {
+    const v = formData.get(key);
+    return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+  };
+
+  const companyName = f("companyName");
+  const siret = f("siret");
+  const vatNumber = f("vatNumber");
+  const billingStreet = f("billingStreet");
+  const billingPostcode = f("billingPostcode");
+  const billingCity = f("billingCity");
+  const contactFirstName = f("contactFirstName");
+  const contactLastName = f("contactLastName");
+  const contactEmail = f("contactEmail");
+  const contactPhone = f("contactPhone");
+  const receptionEmail = f("receptionEmail");
+
+  // Résolution du client : session existante ou création à la volée (prospect anonyme)
+  let shipTo = await getSessionShipTo(request);
+
+  if (!shipTo) {
+    // Prospect sans lien : on matérialise un PbisClient avec une PK PROSPECT-<uuid>
+    shipTo = `PROSPECT-${randomUUID()}`;
+    await pbisDb.pbisClient.create({
+      data: {
+        shipTo,
+        compteClientBillTo: shipTo,
+        soldTo: shipTo,
+        companyName: companyName ?? "",
+        street: billingStreet ?? "",
+        postcode: billingPostcode ?? "",
+        city: billingCity ?? "",
+        siren: "",
+        siret: siret ?? "",
+        vatNumber,
+        contactFirstName,
+        contactLastName,
+        contactEmail,
+        contactPhone,
+      },
+    });
+  }
+
+  // Upsert du draft d'acceptance (clientId @unique : upsert, jamais create)
+  await pbisDb.pbisAcceptance.upsert({
+    where: { clientId: shipTo },
+    create: {
+      clientId: shipTo,
+      offerCode: "START",
+      status: "draft",
+      companyName,
+      siret,
+      vatNumber,
+      billingStreet,
+      billingPostcode,
+      billingCity,
+      contactFirstName,
+      contactLastName,
+      contactEmail,
+      contactPhone,
+      receptionEmail,
+    },
+    update: {
+      offerCode: "START",
+      companyName,
+      siret,
+      vatNumber,
+      billingStreet,
+      billingPostcode,
+      billingCity,
+      contactFirstName,
+      contactLastName,
+      contactEmail,
+      contactPhone,
+      receptionEmail,
+    },
+  });
+
+  // Persiste le shipTo en session (utile surtout pour le prospect créé à la volée)
+  const session = await getPbisSession(request);
+  session.set("shipTo", shipTo);
+
+  return redirect("/pbis/start/recapitulatif", {
+    headers: { "Set-Cookie": await commitPbisSession(session) },
+  });
 }
 
 function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
@@ -29,14 +121,14 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
   );
 }
 
-function Field({ label, icon: Icon, value, placeholder, disabled, type = "text" }: { label: string; icon: LucideIcon; value?: string; placeholder?: string; disabled?: boolean; type?: string }) {
+function Field({ label, icon: Icon, name, value, placeholder, disabled, type = "text" }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; type?: string }) {
   const bg = disabled ? "bg-neutral-100" : "bg-white";
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className={`flex items-center gap-2 ${bg} border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]`}>
         <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-        <input type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
+        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
       </div>
     </div>
   );
@@ -51,7 +143,7 @@ export default function PbisStartInformations() {
   const isAuthenticated = client !== null;
 
   return (
-    <div className="font-inter pb-16">
+    <Form method="post" className="font-inter pb-16">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
         <StepperWithCompleted currentStep={3} totalSteps={4} />
         <h1 className="font-precision text-xl leading-6 tracking-[-0.3px] text-center text-neutral-950">
@@ -66,6 +158,7 @@ export default function PbisStartInformations() {
           <Field
             label="Raison sociale"
             icon={Building2}
+            name="companyName"
             value={client?.companyName}
             placeholder="Nom de votre entreprise"
             disabled={isAuthenticated}
@@ -73,6 +166,7 @@ export default function PbisStartInformations() {
           <Field
             label="Numéro client"
             icon={Hash}
+            name="shipTo"
             value={client?.shipTo}
             placeholder="Non renseigné"
             disabled={isAuthenticated}
@@ -81,6 +175,7 @@ export default function PbisStartInformations() {
             <Field
               label="SIRET"
               icon={Hash}
+              name="siret"
               value={client?.siret}
               placeholder="14 chiffres"
               disabled={isAuthenticated}
@@ -88,6 +183,7 @@ export default function PbisStartInformations() {
             <Field
               label="TVA"
               icon={Hash}
+              name="vatNumber"
               value={client?.vatNumber ?? undefined}
               placeholder="N° TVA intracommunautaire"
             />
@@ -95,12 +191,13 @@ export default function PbisStartInformations() {
           <Field
             label="Adresse de facturation"
             icon={MapPinned}
+            name="billingStreet"
             value={client?.street}
             placeholder="Numéro et rue"
           />
           <div className="flex gap-3">
-            <Field label="Code postal" icon={Mailbox} value={client?.postcode} placeholder="Code postal" />
-            <Field label="Ville" icon={Building2} value={client?.city} placeholder="Ville" />
+            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" />
+            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" />
           </div>
         </div>
 
@@ -111,12 +208,12 @@ export default function PbisStartInformations() {
             <Info className="w-4 h-4 text-[#d7008f]" strokeWidth={1.5} />
           </div>
           <div className="flex gap-3">
-            <Field label="Prénom" icon={CircleUser} value={client?.contactFirstName ?? undefined} placeholder="Prénom" />
-            <Field label="Nom" icon={CircleUser} value={client?.contactLastName ?? undefined} placeholder="Nom" />
+            <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={client?.contactFirstName ?? undefined} placeholder="Prénom" />
+            <Field label="Nom" icon={CircleUser} name="contactLastName" value={client?.contactLastName ?? undefined} placeholder="Nom" />
           </div>
           <div className="flex gap-3">
-            <Field label="E-mail de contact" icon={Mail} value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" />
-            <Field label="Téléphone" icon={Smartphone} value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
+            <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" />
+            <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
           </div>
         </div>
 
@@ -133,17 +230,17 @@ export default function PbisStartInformations() {
           </div>
           <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
             <Mail className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-            <input type="email" placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+            <input name="receptionEmail" type="email" placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
           </div>
         </div>
 
         {/* CTA */}
         <div className="pt-4">
-          <Link to="/pbis/start/recapitulatif" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+          <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
             Continuer vers le récapitulatif
-          </Link>
+          </button>
         </div>
       </div>
-    </div>
+    </Form>
   );
 }
