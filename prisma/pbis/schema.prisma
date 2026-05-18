@@ -80,13 +80,35 @@ model PbisAcceptance {
 
   offerCode             String
 
-  signatoryFirstName    String
-  signatoryLastName     String
-  signatoryEmail        String
+  // Snapshot entreprise (figé au moment de la commande)
+  companyName           String?
+  siret                 String?
+  vatNumber             String?
+
+  // Snapshot facturation
+  billingStreet         String?
+  billingPostcode       String?
+  billingCity           String?
+
+  // Snapshot contact principal
+  contactFirstName      String?
+  contactLastName       String?
+  contactEmail          String?
+  contactPhone          String?
+
+  // Paramètre de souscription
+  receptionEmail        String?
+  orderReference        String?
+
+  // Signataire
+  signatoryFirstName    String?
+  signatoryLastName     String?
+  signatoryEmail        String?
   signatoryFunction     String?
   signatoryPower        String?
 
   cgvAcceptedAt         DateTime?
+  privacyAcceptedAt     DateTime?
 
   yousignProcedureId    String?
   yousignStatus         String?
@@ -101,11 +123,14 @@ model PbisAcceptance {
   paymentStatus         String?
   paidAt                DateTime?
 
+  status                String     @default("draft")
+
   ipAddress             String?
   userAgent             String?    @db.Text
 
   acceptedAt            DateTime   @default(now())
   signedAt              DateTime?
+  updatedAt             DateTime   @updatedAt
 }
 
 model PbisLead {
