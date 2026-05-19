@@ -28,9 +28,9 @@ const offers: Offer[] = [
     badgeBg: "#d7008f",
     slug: "start",
     title: "PBIS Start",
-    description: "L'offre idéale pour vous conformer rapidement à la facturation fournisseurs",
+    description: "L'offre idéale pour vous conformer rapidement aux obligations de la facturation fournisseurs",
     features: [
-      { included: true, text: "Inscription à l'Annuaire de l'Etat" },
+      { included: true, text: "Inscription à l'Annuaire de l'État" },
       { included: true, text: "Réception des factures en pdf par e-mail" },
       { included: true, text: "Conformité en 2 clics" },
       { included: false, text: "N'inclut pas vos factures client" },
@@ -39,7 +39,7 @@ const offers: Offer[] = [
     price: "15,00",
     priceSuffix: "€ HT / mois",
     ctaLabel: "Souscrire en ligne",
-    ctaBg: "#d7008f",
+    ctaBg: "#CF0989",
     accentColor: "#6c278b",
   },
   {
@@ -58,7 +58,7 @@ const offers: Offer[] = [
     price: "à partir de 40,00",
     priceSuffix: "€ HT / mois",
     ctaLabel: "Nous contacter",
-    ctaBg: "#0092db",
+    ctaBg: "#009DBF",
     accentColor: "#0092db",
   },
   {
@@ -78,7 +78,7 @@ const offers: Offer[] = [
     price: "Sur devis",
     priceSuffix: "",
     ctaLabel: "Nous contacter",
-    ctaBg: "#9a44a1",
+    ctaBg: "#00B140",
     accentColor: "#9a44a1",
   },
 ];
