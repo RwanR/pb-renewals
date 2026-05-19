@@ -55,31 +55,32 @@ export default function PbisIndex() {
 
   return (
     <>
-      <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
-        <img src="/images/pbis-hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/55" />
-        <div className="relative h-full flex flex-col items-center justify-center gap-4 px-8 text-center">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">
-            Loi de finances
-          </span>
-
-          <h1 className="font-precision text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
-            La facture électronique simplement.<br />Sans attendre.
-          </h1>
-
-          <p className="text-base leading-6 text-white max-w-[618px]">
-            Avec Pitney Bowes, digitalisez vos factures clients et fournisseurs pour une mise en conformité simple et économique, grâce à des offres adaptées.
-          </p>
-
-          <Link to="/pbis/offres" className="inline-flex items-center gap-4 bg-white border border-neutral-200 rounded-md px-6 py-2 shadow-xl hover:shadow-2xl transition-shadow">
-          <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-24 h-[54px] object-cover" />
-          <span className="text-[#d7008f] font-medium">Découvrir nos offres →</span>
-        </Link>
-        </div>
-      </section>
-
       <div className="relative">
-        <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-10 w-[calc(100%-2rem)] max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
+        <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
+          <img src="/images/pbis-hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/55" />
+          <div className="relative h-full flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">
+              Loi de finances
+            </span>
+
+            <h1 className="font-precision text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
+              La facture électronique simplement.<br />Sans attendre.
+            </h1>
+
+            <p className="text-base leading-6 text-white max-w-[618px]">
+              Avec Pitney Bowes, digitalisez vos factures clients et fournisseurs pour une mise en conformité simple et économique, grâce à des offres adaptées.
+            </p>
+
+            <Link to="/pbis/offres" className="inline-flex items-center gap-4 bg-white border border-neutral-200 rounded-md px-6 py-2 shadow-xl hover:shadow-2xl transition-shadow">
+              <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-24 h-[54px] object-cover" />
+              <span className="text-[#d7008f] font-medium">Découvrir nos offres →</span>
+            </Link>
+          </div>
+        </section>
+
+        {/* Bandeau features : centré sur la frontière hero/contenu, hauteur indifférente */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[600px] -translate-y-1/2 z-10 w-[calc(100%-2rem)] max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
           {features.map(({ Icon, title, sub }, i) => (
             <Fragment key={title}>
               {i > 0 && <div className="w-px h-[71px] bg-white/20 shrink-0" />}
@@ -93,36 +94,36 @@ export default function PbisIndex() {
             </Fragment>
           ))}
         </div>
-      </div>
 
-      <div id="offres" className="flex flex-col items-center gap-8 pt-44 pb-12 px-4 font-inter">
-        <div className="w-full max-w-[600px] aspect-[600/337] rounded-md bg-[#6297d9] flex flex-col items-center justify-center gap-6 text-white">
-          <Calendar className="w-16 h-16" strokeWidth={1.5} />
-          <p className="text-lg">Facturation électronique</p>
-        </div>
+        <div id="offres" className="flex flex-col items-center gap-8 pt-44 pb-12 px-4 font-inter">
+          <div className="w-full max-w-[600px] aspect-[600/337] rounded-md bg-[#6297d9] flex flex-col items-center justify-center gap-6 text-white">
+            <Calendar className="w-16 h-16" strokeWidth={1.5} />
+            <p className="text-lg">Facturation électronique</p>
+          </div>
 
-        <div className="w-full max-w-[600px] border border-neutral-300 rounded-lg px-5 py-6 flex flex-col items-center gap-3">
-          <p className="text-sm font-medium leading-5 text-center text-neutral-950">
-            Réception obligatoire des e-factures<br />dès septembre 2026
-          </p>
-          <Link to="/pbis/offres" className="inline-flex items-center gap-2 bg-[#d7008f] text-white rounded-full px-8 py-3 font-medium hover:opacity-90 transition-opacity">
-            Voir les offres →
-          </Link>
-        </div>
+          <div className="w-full max-w-[600px] border border-neutral-300 rounded-lg px-5 py-6 flex flex-col items-center gap-3">
+            <p className="text-sm font-medium leading-5 text-center text-neutral-950">
+              Réception obligatoire des e-factures<br />dès septembre 2026
+            </p>
+            <Link to="/pbis/offres" className="inline-flex items-center gap-2 bg-[#d7008f] text-white rounded-full px-8 py-3 font-medium hover:opacity-90 transition-opacity">
+              Voir les offres →
+            </Link>
+          </div>
 
-        <div className="flex flex-col items-center mt-4 w-full">
-        <button type="button" onClick={() => setAboutOpen(!aboutOpen)} className="flex items-center gap-2 text-[#005cb1] cursor-pointer mb-8">
-            <span className="font-precision text-xl leading-6 tracking-[-0.3px]">À propos de Pitney Bowes</span>
-            {aboutOpen ? <Minus className="w-6 h-6" strokeWidth={1.5} /> : <Plus className="w-6 h-6" strokeWidth={1.5} />}
-        </button>
+          <div className="flex flex-col items-center mt-4 w-full">
+            <button type="button" onClick={() => setAboutOpen(!aboutOpen)} className="flex items-center gap-2 text-[#005cb1] cursor-pointer mb-8">
+              <span className="font-precision text-xl leading-6 tracking-[-0.3px]">À propos de Pitney Bowes</span>
+              {aboutOpen ? <Minus className="w-6 h-6" strokeWidth={1.5} /> : <Plus className="w-6 h-6" strokeWidth={1.5} />}
+            </button>
 
-        <div className={`grid w-full max-w-[600px] transition-all duration-300 ease-in-out ${aboutOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden flex flex-col gap-3">
-              {ABOUT_TEXT.map((para, i) => (
-                <p key={i} className="text-sm leading-5 text-neutral-950 text-center">{para}</p>
-              ))}
+            <div className={`grid w-full max-w-[600px] transition-all duration-300 ease-in-out ${aboutOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+              <div className="overflow-hidden flex flex-col gap-3">
+                {ABOUT_TEXT.map((para, i) => (
+                  <p key={i} className="text-sm leading-5 text-neutral-950 text-center">{para}</p>
+                ))}
+              </div>
             </div>
-        </div>
+          </div>
         </div>
       </div>
     </>
