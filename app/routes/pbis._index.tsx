@@ -10,10 +10,17 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const features = [
-  { Icon: FileText, title: "Plateforme Agréée", sub: "Certifiée par la DGFiP" },
-  { Icon: ShieldCheck, title: "Archivage probant", sub: "10 ans" },
+  { Icon: FileText, title: "Plateforme Agréée", sub: "certifiée par la DGFiP" },
+  { Icon: ShieldCheck, title: "Archivage probant", sub: "pendant 10 ans, conforme à la réglementation" },
   { Icon: Zap, title: "Économies", sub: "Jusqu'à 50% d'économie sur le traitement de vos factures" },
-  { Icon: BarChart3, title: "Conformité", sub: "sans disruption de vos process" },
+  { Icon: BarChart3, title: "Conformité", sub: "sans disruption de vos process, dans le cadre de la réglementation sur la facturation électronique" },
+];
+
+const ABOUT_TEXT = [
+  "Pitney Bowes est une entreprise technologique internationale et un acteur historique du traitement documentaire, qui accompagne les entreprises dans l'optimisation de leurs communications et de leurs flux documentaires depuis plus de 100 ans.",
+  "Concepteur, éditeur et intégrateur de solutions, Pitney Bowes répond à l'ensemble des enjeux liés à la gestion documentaire : simplification des processus métiers, réduction des coûts, conformité réglementaire, optimisation de la production, du traitement et de la distribution des courriers et documents, qu'ils soient physiques, numériques ou hybrides.",
+  "Partenaire de confiance des entreprises dans leur transformation numérique, Pitney Bowes les accompagne à chaque étape de leurs projets grâce à des solutions adaptées à leurs enjeux opérationnels et réglementaires.",
+  "À ce titre, sa solution Pitney Bowes Invoice Services est une Plateforme Agréée de facturation électronique clients et fournisseurs, offrant aux entreprises maîtrise, sécurité et flexibilité pour réussir leur transition à leur propre rythme.",
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -44,7 +51,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function PbisIndex() {
-  const [aboutOpen, setAboutOpen] = useState(true);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <>
@@ -56,7 +63,7 @@ export default function PbisIndex() {
           </span>
 
           <h1 className="font-precision text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
-            La facture électronique simplement. Sans attendre.
+            La facture électronique simplement.<br />Sans attendre.
           </h1>
 
           <p className="text-base leading-6 text-white max-w-[618px]">
@@ -109,9 +116,11 @@ export default function PbisIndex() {
         </button>
 
         <div className={`grid w-full max-w-[600px] transition-all duration-300 ease-in-out ${aboutOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-            <p className="overflow-hidden text-sm leading-5 text-neutral-950 text-center">
-            Visualiser une version lisible (PDF) pour toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi.
-            </p>
+            <div className="overflow-hidden flex flex-col gap-3">
+              {ABOUT_TEXT.map((para, i) => (
+                <p key={i} className="text-sm leading-5 text-neutral-950 text-center">{para}</p>
+              ))}
+            </div>
         </div>
         </div>
       </div>
