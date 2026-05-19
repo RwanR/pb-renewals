@@ -25,7 +25,7 @@ type Offer = {
 const offers: Offer[] = [
   {
     badge: "Factures fournisseurs",
-    badgeBg: "#d7008f",
+    badgeBg: "#CF0989",
     slug: "start",
     title: "PBIS Start",
     description: "L'offre idéale pour vous conformer rapidement aux obligations de la facturation fournisseurs",
@@ -44,7 +44,7 @@ const offers: Offer[] = [
   },
   {
     badge: "Factures clients et fournisseurs",
-    badgeBg: "#0092db",
+    badgeBg: "#009DBF",
     slug: "essentiel",
     title: "PBIS Essentiel",
     description: "L'offre complète pour digitaliser vos factures clients et fournisseurs",
@@ -63,7 +63,7 @@ const offers: Offer[] = [
   },
   {
     badge: "Sur mesure",
-    badgeBg: "#9a44a1",
+    badgeBg: "#00B140",
     slug: "flex",
     title: "PBIS Flex",
     description: "L'offre sur mesure pour répondre à vos besoins métier, avec un accompagnement dédié",
