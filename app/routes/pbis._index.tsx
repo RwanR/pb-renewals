@@ -10,10 +10,10 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const features = [
-  { Icon: FileText, title: "Plateforme Agréée", sub: "certifiée par la DGFiP" },
+  { Icon: FileText, title: "Plateforme Agréée", sub: "certifiée par la DGFiP, dans le cadre de la réglementation sur la facturation électronique" },
   { Icon: ShieldCheck, title: "Archivage probant", sub: "pendant 10 ans, conforme à la réglementation" },
   { Icon: Zap, title: "Économies", sub: "Jusqu'à 50% d'économie sur le traitement de vos factures" },
-  { Icon: BarChart3, title: "Conformité", sub: "sans disruption de vos process, dans le cadre de la réglementation sur la facturation électronique" },
+  { Icon: BarChart3, title: "Conformité", sub: "sans disruption de vos process" },
 ];
 
 const ABOUT_TEXT = [
@@ -57,6 +57,7 @@ export default function PbisIndex() {
     <>
       <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
         <img src="/images/pbis-hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/55" />
         <div className="relative h-full flex flex-col items-center justify-center gap-4 px-8 text-center">
           <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">
             Loi de finances
