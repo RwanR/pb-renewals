@@ -78,8 +78,8 @@ export default function PbisIndex() {
         </div>
       </section>
 
-      <div className="relative px-4">
-        <div className="-mt-16 mx-auto max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
+      <div className="relative">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-10 w-[calc(100%-2rem)] max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
           {features.map(({ Icon, title, sub }, i) => (
             <Fragment key={title}>
               {i > 0 && <div className="w-px h-[71px] bg-white/20 shrink-0" />}
@@ -95,7 +95,7 @@ export default function PbisIndex() {
         </div>
       </div>
 
-      <div id="offres" className="flex flex-col items-center gap-8 pt-28 pb-12 px-4 font-inter">
+      <div id="offres" className="flex flex-col items-center gap-8 pt-44 pb-12 px-4 font-inter">
         <div className="w-full max-w-[600px] aspect-[600/337] rounded-md bg-[#6297d9] flex flex-col items-center justify-center gap-6 text-white">
           <Calendar className="w-16 h-16" strokeWidth={1.5} />
           <p className="text-lg">Facturation électronique</p>
