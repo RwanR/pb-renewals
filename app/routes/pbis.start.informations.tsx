@@ -168,7 +168,7 @@ export default function PbisStartInformations() {
             label="Numéro client"
             icon={Hash}
             name="shipTo"
-            value={client?.shipTo}
+            value={client?.compteClientBillTo}
             placeholder="Non renseigné"
             disabled={isAuthenticated}
           />

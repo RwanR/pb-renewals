@@ -14,6 +14,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     where: { shipTo },
     select: {
       shipTo: true,
+      compteClientBillTo: true,
       companyName: true,
       siret: true,
       vatNumber: true,
