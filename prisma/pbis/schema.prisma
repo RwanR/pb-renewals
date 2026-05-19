@@ -106,6 +106,7 @@ model PbisAcceptance {
   signatoryEmail        String?
   signatoryFunction     String?
   signatoryPower        String?
+  signatoryPhone        String?
 
   cgvAcceptedAt         DateTime?
   privacyAcceptedAt     DateTime?
