@@ -172,24 +172,15 @@ export default function PbisStartInformations() {
             placeholder="Non renseigné"
             disabled={isAuthenticated}
           />
-          <div className="flex gap-4">
-            <Field
-              label="SIRET"
-              icon={Hash}
-              name="siret"
-              value={client?.siret}
-              placeholder="14 chiffres"
-              disabled={isAuthenticated}
-              required
-            />
-            <Field
-              label="TVA"
-              icon={Hash}
-              name="vatNumber"
-              value={client?.vatNumber ?? undefined}
-              placeholder="N° TVA intracommunautaire"
-            />
-          </div>
+          <Field
+            label="SIRET"
+            icon={Hash}
+            name="siret"
+            value={client?.siret}
+            placeholder="14 chiffres"
+            disabled={isAuthenticated}
+            required
+          />
           <Field
             label="Adresse de facturation"
             icon={MapPinned}
