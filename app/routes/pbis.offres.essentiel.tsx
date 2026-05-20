@@ -1,6 +1,7 @@
 import type { Route } from "./+types/pbis.offres.essentiel";
 import { AtSign, Inbox, FileText, ClipboardCheck, ArrowBigUp, MailCheck, Archive, ShieldCheck, ListChecks, Mail, TrendingUp, CircleUser, Smartphone, Check } from "lucide-react";
 import { Fragment } from "react";
+import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS Essentiel - Détail de l'offre" }];
@@ -42,6 +43,8 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
 }
 
 export default function PbisOffresEssentiel() {
+  const essentielColor = PBIS_OFFER_COLORS.essentiel;
+
   return (
     <div className="font-inter">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
@@ -65,7 +68,7 @@ export default function PbisOffresEssentiel() {
             {features.map(({ Icon, text }) => (
               <div key={text} className="flex gap-4 items-center py-3 border-b border-neutral-200">
                 <div className="shrink-0 size-8 flex items-center justify-center">
-                  <Icon className="w-7 h-7 text-[#0092db]" strokeWidth={1.5} />
+                  <Icon className="w-7 h-7" style={{ color: essentielColor }} strokeWidth={1.5} />
                 </div>
                 <p className="flex-1 text-sm leading-5 text-neutral-950">{text}</p>
               </div>
@@ -74,14 +77,14 @@ export default function PbisOffresEssentiel() {
 
           <div className="rounded-md p-6 text-white mt-2" style={{ background: "linear-gradient(173deg, rgb(108,39,139) 0%, rgb(169,2,107) 50%, rgb(163,89,11) 100%)" }}>
             <p className="font-precision text-xl leading-6 tracking-[-0.3px]">
-              Lorem texte chapo
+              Echangez avec notre équipe pour démarrer votre transition sans tarder.
             </p>
           </div>
         </div>
 
         <div className="flex-1 min-w-0 flex justify-end">
           <div className="w-[363px] flex flex-col gap-8 sticky top-4">
-            <div className="bg-neutral-50 border-2 border-[#6c278b] rounded-xl p-4 flex flex-col gap-3">
+            <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3" style={{ borderColor: essentielColor }}>
               <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
               <p className="font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-neutral-950">PBIS Essentiel</p>
               <div className="flex gap-1 items-baseline">
@@ -129,7 +132,7 @@ export default function PbisOffresEssentiel() {
 
               <p className="text-xs leading-4 text-[#737373]">* champs obligatoires</p>
 
-              <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#0092db] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+              <button type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: essentielColor }}>
                 Demander à être contacté
               </button>
             </div>
