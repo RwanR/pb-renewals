@@ -95,6 +95,7 @@ model PbisAcceptance {
   contactLastName       String?
   contactEmail          String?
   contactPhone          String?
+  contactFunction       String?
 
   // Paramètre de souscription
   receptionEmail        String?

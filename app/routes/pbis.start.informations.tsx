@@ -1,15 +1,35 @@
 import type { Route } from "./+types/pbis.start.informations";
-import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Info, Check, type LucideIcon } from "lucide-react";
+import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Briefcase, Info, Check, type LucideIcon } from "lucide-react";
 import { Fragment } from "react";
 import { Form, redirect, useRouteLoaderData } from "react-router";
 import { randomUUID } from "node:crypto";
 import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
+import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
 }
+
+const CONTACT_FUNCTIONS = [
+  "Acheteur",
+  "Contact de facturation",
+  "Contact de livraison",
+  "Décideur",
+  "Directeur des achats",
+  "Directeur des ventes",
+  "Directeur financier",
+  "Directeur marketing",
+  "Directeur services informatique",
+  "Directoire",
+  "DRH",
+  "Influenceur",
+  "Responsable de production",
+  "Responsable qualité",
+  "Secrétaire de la direction",
+  "Utilisateur final",
+];
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
@@ -28,6 +48,7 @@ export async function action({ request }: Route.ActionArgs) {
   const contactLastName = f("contactLastName");
   const contactEmail = f("contactEmail");
   const contactPhone = f("contactPhone");
+  const contactFunction = f("contactFunction");
   const receptionEmail = f("receptionEmail");
 
   // Résolution du client : session existante ou création à la volée (prospect anonyme)
@@ -73,6 +94,7 @@ export async function action({ request }: Route.ActionArgs) {
       contactLastName,
       contactEmail,
       contactPhone,
+      contactFunction,
       receptionEmail,
     },
     update: {
@@ -87,6 +109,7 @@ export async function action({ request }: Route.ActionArgs) {
       contactLastName,
       contactEmail,
       contactPhone,
+      contactFunction,
       receptionEmail,
     },
   });
@@ -134,9 +157,31 @@ function Field({ label, icon: Icon, name, value, placeholder, disabled, required
   );
 }
 
+function FunctionSelect({ value }: { value?: string }) {
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <label className="text-sm font-medium leading-5 text-neutral-950">Fonction</label>
+      <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+        <Briefcase className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
+        <select
+          name="contactFunction"
+          defaultValue={value ?? ""}
+          className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5 cursor-pointer"
+        >
+          <option value="" disabled>Sélectionner une fonction</option>
+          {CONTACT_FUNCTIONS.map((label) => (
+            <option key={label} value={label}>{label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function PbisStartInformations() {
   const layoutData = useRouteLoaderData<typeof pbisLayoutLoader>("routes/pbis");
   const client = layoutData?.client ?? null;
+  const startColor = PBIS_OFFER_COLORS.start;
 
   // Parcours authentifié : champs entreprise verrouillés (données PB vérifiées).
   // Parcours anonyme : champs entreprise éditables (le prospect saisit tout).
@@ -199,7 +244,7 @@ export default function PbisStartInformations() {
         <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
           <div className="flex gap-3 items-center">
             <p className="font-semibold text-xs leading-4 text-neutral-950">CONTACT PRINCIPAL</p>
-            <Info className="w-4 h-4 text-[#d7008f]" strokeWidth={1.5} />
+            <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
           </div>
           <div className="flex gap-3">
             <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={client?.contactFirstName ?? undefined} placeholder="Prénom" required />
@@ -209,14 +254,15 @@ export default function PbisStartInformations() {
             <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" required />
             <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
           </div>
+          <FunctionSelect />
         </div>
 
         {/* E-mail de réception */}
-        <div className="w-[596px] bg-white border border-[#9a44a1] rounded-2xl p-5 flex flex-col gap-3">
+        <div className="w-[596px] bg-white border-2 rounded-2xl p-5 flex flex-col gap-3" style={{ borderColor: startColor }}>
           <div className="flex gap-1 items-center">
             <p className="text-sm font-medium leading-5 text-neutral-950">E-mail de réception de vos factures fournisseurs</p>
             <div className="relative group">
-              <Info className="w-4 h-4 text-[#9a44a1] cursor-help" strokeWidth={1.5} />
+              <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
               <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[200px] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
                 Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS
               </div>
@@ -224,13 +270,13 @@ export default function PbisStartInformations() {
           </div>
           <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
             <Mail className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-            <input name="receptionEmail" type="email" required placeholder="email@entreprise.fr" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+            <input name="receptionEmail" type="email" required placeholder="comptafournisseur@entreprise.com" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
           </div>
         </div>
 
         {/* CTA */}
         <div className="pt-4">
-          <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+          <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
             Continuer vers le récapitulatif
           </button>
         </div>
