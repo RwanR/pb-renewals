@@ -50,7 +50,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     contactLastName: acceptance.contactLastName ?? client?.contactLastName ?? "",
     contactEmail: acceptance.contactEmail ?? client?.contactEmail ?? "",
     contactPhone: acceptance.contactPhone ?? client?.contactPhone ?? "",
-    contactFunction: acceptance.contactFunction ?? "",
     receptionEmail: acceptance.receptionEmail ?? "",
   };
 
@@ -267,10 +266,7 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 defaultValue={contactIsSignatory ? contactFullName : undefined}
                 key={`name-${contactIsSignatory}`}
               />
-              <SignatoryFunctionSelect
-                contactIsSignatory={contactIsSignatory}
-                defaultValue={contactIsSignatory ? recap.contactFunction : undefined}
-              />
+              <SignatoryFunctionSelect contactIsSignatory={contactIsSignatory} />
             </div>
             <div className="flex gap-3">
               <SignField
