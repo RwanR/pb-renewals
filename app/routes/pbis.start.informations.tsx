@@ -5,31 +5,12 @@ import { Form, redirect, useRouteLoaderData } from "react-router";
 import { randomUUID } from "node:crypto";
 import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
-import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
+import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
 import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
 }
-
-const CONTACT_FUNCTIONS = [
-  "Acheteur",
-  "Contact de facturation",
-  "Contact de livraison",
-  "Décideur",
-  "Directeur des achats",
-  "Directeur des ventes",
-  "Directeur financier",
-  "Directeur marketing",
-  "Directeur services informatique",
-  "Directoire",
-  "DRH",
-  "Influenceur",
-  "Responsable de production",
-  "Responsable qualité",
-  "Secrétaire de la direction",
-  "Utilisateur final",
-];
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

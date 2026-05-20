@@ -1,9 +1,10 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
-import { Check, CircleUser, Smartphone, Mail, Info } from "lucide-react";
+import { Check, CircleUser, Smartphone, Mail, Briefcase, Info } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Form, redirect } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
+import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signez votre contrat - PBIS Start" }];
@@ -13,7 +14,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   const shipTo = await getSessionShipTo(request);
 
   if (!shipTo) {
-    // Pas de parcours en cours : retour à la landing
     return redirect("/pbis");
   }
 
@@ -22,7 +22,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   });
 
   if (!acceptance) {
-    // Aucun draft : le client n'a pas rempli l'étape informations
     return redirect("/pbis/start/informations");
   }
 
@@ -41,8 +40,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     },
   });
 
-  // Le snapshot acceptance peut avoir des champs null (champs verrouillés non soumis
-  // en parcours authentifié) : on complète avec les données du client.
   const recap = {
     companyName: acceptance.companyName ?? client?.companyName ?? "",
     siret: acceptance.siret ?? client?.siret ?? "",
@@ -79,7 +76,6 @@ export async function action({ request }: Route.ActionArgs) {
   const cgvAccepted = formData.get("cgvAccepted") === "on";
   const privacyAccepted = formData.get("privacyAccepted") === "on";
 
-  // Découpe nom/prénom depuis le champ unique "Nom et prénom"
   let signatoryFirstName: string | null = null;
   let signatoryLastName: string | null = null;
   if (signatoryName) {
@@ -105,8 +101,7 @@ export async function action({ request }: Route.ActionArgs) {
     },
   });
 
-  // TODO: déclenchement Yousign (intégration à venir).
-  // Pour l'instant on redirige vers la page de confirmation.
+  // TODO: déclenchement Yousign + email confirmation signature au signataire
   return redirect("/pbis/start/confirmation");
 }
 
@@ -152,9 +147,33 @@ function SignField({ label, name, icon: Icon, type = "text", defaultValue, requi
   );
 }
 
+function SignatoryFunctionSelect({ defaultValue, contactIsSignatory }: { defaultValue?: string; contactIsSignatory: boolean }) {
+  return (
+    <div className="flex flex-col gap-1 flex-1 min-w-0">
+      <label className="text-sm font-medium leading-5 text-neutral-950">Fonction *</label>
+      <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+        <Briefcase className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
+        <select
+          name="signatoryFunction"
+          defaultValue={defaultValue ?? ""}
+          required
+          className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5 cursor-pointer"
+          key={`fn-${contactIsSignatory}`}
+        >
+          <option value="" disabled>Sélectionner une fonction</option>
+          {CONTACT_FUNCTIONS.map((label) => (
+            <option key={label} value={label}>{label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentProps) {
   const { recap } = loaderData;
   const [contactIsSignatory, setContactIsSignatory] = useState(false);
+  const startColor = PBIS_OFFER_COLORS.start;
 
   const contactFullName = `${recap.contactFirstName} ${recap.contactLastName}`.trim();
 
@@ -171,10 +190,10 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
         {/* Colonne gauche : offre + récap */}
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           {/* Carte offre */}
-          <div className="bg-neutral-50 border-2 border-[#6c278b] rounded-xl p-4 flex flex-col gap-3">
+          <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3" style={{ borderColor: startColor }}>
             <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
             <div className="flex gap-3 items-center">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">Votre choix</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: startColor }}>Votre choix</span>
               <span className="flex-1 font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-neutral-950">PBIS Start</span>
             </div>
             <div className="flex gap-1 items-baseline">
@@ -204,14 +223,17 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">Contact principal</p>
-              <Info className="w-4 h-4 text-[#d7008f]" strokeWidth={1.5} />
+              <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
             </div>
             <RecapRow label="Nom" value={contactFullName} />
             <RecapRow label="E-mail" value={recap.contactEmail} />
             <RecapRow label="Téléphone" value={recap.contactPhone} />
 
             <div className="h-2" />
-            <p className="font-semibold text-xs leading-4 text-neutral-950 py-1">E-mail de réception des factures fournisseurs</p>
+            <div className="flex gap-1 items-center py-1">
+              <p className="font-semibold text-xs leading-4 text-neutral-950">E-mail de réception des factures fournisseurs</p>
+              <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
+            </div>
             <RecapRow label="E-mail" value={recap.receptionEmail} />
           </div>
         </div>
@@ -227,7 +249,8 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 type="checkbox"
                 checked={contactIsSignatory}
                 onChange={(e) => setContactIsSignatory(e.target.checked)}
-                className="w-4 h-4 accent-[#d7008f]"
+                className="w-4 h-4"
+                style={{ accentColor: startColor }}
               />
               <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est le signataire</span>
             </label>
@@ -243,7 +266,7 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 defaultValue={contactIsSignatory ? contactFullName : undefined}
                 key={`name-${contactIsSignatory}`}
               />
-              <SignField label="Fonction *" name="signatoryFunction" required key={`fn-${contactIsSignatory}`} />
+              <SignatoryFunctionSelect contactIsSignatory={contactIsSignatory} />
             </div>
             <div className="flex gap-3">
               <SignField
@@ -273,19 +296,19 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
           {/* Cases légales */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-4 flex flex-col gap-2">
             <label className="flex gap-4 items-center py-1 cursor-pointer">
-              <input type="checkbox" name="habilitationAccepted" required className="w-4 h-4 shrink-0 accent-[#d7008f]" />
+              <input type="checkbox" name="habilitationAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="font-semibold text-xs leading-4 text-neutral-950">
-                Le signataire connait être habilité à ratifier le contrat au nom et pour le compte du Locataire.
+                Le signataire reconnait être habilité à ratifier le contrat au nom et pour le compte de l'Abonné.
               </span>
             </label>
             <label className="flex gap-4 items-center py-1 cursor-pointer">
-              <input type="checkbox" name="cgvAccepted" required className="w-4 h-4 shrink-0 accent-[#d7008f]" />
+              <input type="checkbox" name="cgvAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="text-xs leading-4 text-neutral-950">
                 J'accepte les <span className="font-semibold underline">CGV et Conditions Particulières</span> du contrat PBIS Start.
               </span>
             </label>
             <label className="flex gap-4 items-center py-1 cursor-pointer">
-              <input type="checkbox" name="privacyAccepted" required className="w-4 h-4 shrink-0 accent-[#d7008f]" />
+              <input type="checkbox" name="privacyAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="text-xs leading-4 text-neutral-950">
                 J'accepte le traitement de mes données (<span className="font-semibold underline">Politique de confidentialité</span>).
               </span>
@@ -293,10 +316,10 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
           </div>
 
           <p className="text-xs leading-4 text-[#404040]">
-            En signant le présent contrat, le Locataire manifeste avoir pris connaissance des conditions du présent contrat de location et des Conditions Générales (version FR-Elease 02-24) disponibles à l'adresse (<span className="underline">pb.com/fr/cc</span>) et les accepter, y compris la clause attributive de juridiction (l'article 25).
+            En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<span className="underline">pb.com/fr/servicessolutions</span>) et les accepter, y compris la clause attributive de juridiction.
           </p>
 
-          <button type="submit" className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#d7008f] text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity">
+          <button type="submit" className="w-full inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
             Signer le contrat
           </button>
         </div>
