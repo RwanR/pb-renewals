@@ -1,10 +1,10 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
-import { Check, CircleUser, Smartphone, Mail, Briefcase, Info } from "lucide-react";
+import { Check, CircleUser, Smartphone, Mail, Info } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Form, redirect } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
-import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
+import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signez votre contrat - PBIS Start" }];
@@ -147,29 +147,6 @@ function SignField({ label, name, icon: Icon, type = "text", defaultValue, requi
   );
 }
 
-function SignatoryFunctionSelect({ defaultValue, contactIsSignatory }: { defaultValue?: string; contactIsSignatory: boolean }) {
-  return (
-    <div className="flex flex-col gap-1 flex-1 min-w-0">
-      <label className="text-sm font-medium leading-5 text-neutral-950">Fonction *</label>
-      <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-        <Briefcase className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-        <select
-          name="signatoryFunction"
-          defaultValue={defaultValue ?? ""}
-          required
-          className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5 cursor-pointer"
-          key={`fn-${contactIsSignatory}`}
-        >
-          <option value="" disabled>Sélectionner une fonction</option>
-          {CONTACT_FUNCTIONS.map((label) => (
-            <option key={label} value={label}>{label}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-}
-
 export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentProps) {
   const { recap } = loaderData;
   const [contactIsSignatory, setContactIsSignatory] = useState(false);
@@ -266,7 +243,7 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 defaultValue={contactIsSignatory ? contactFullName : undefined}
                 key={`name-${contactIsSignatory}`}
               />
-              <SignatoryFunctionSelect contactIsSignatory={contactIsSignatory} />
+              <SignField label="Fonction *" name="signatoryFunction" required key={`fn-${contactIsSignatory}`} />
             </div>
             <div className="flex gap-3">
               <SignField
