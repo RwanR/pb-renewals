@@ -258,6 +258,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       contactPhone: clean(get(row, "CONTACTPHONE")),
       activationDate: toDate(get(row, "ACTIVATIONDATE")),
       paymentTerms: clean(get(row, "PAYMENT_TERMS")),
+      emailReceptionFacture:   clean(get(row, "EMAIL_RECEPTION_FACTURE")),
       pieceCountLast12m: toInt(get(row, "TOTALPIECECOUNTLAST12MONTHS")),
       resetValueLast12m: toInt(get(row, "TOTALRESETVALUELAST12MONTHS")),
       // C4C export fields
@@ -274,7 +275,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       billingAccountNumberC4C: clean(get(row, "BILLINGACCOUNTNUMBER_C4C")),
       payerAccountNumberC4C:   clean(get(row, "PAYERACCOUNTNUMBER_C4C")),
       ownerId:                 clean(get(row, "OWNERID")),
-      contactId:               clean(get(row, "CONTACT_ID")),
+      contactId:               clean(get(row, "CONTACTID")),
       salesOffice:             clean(get(row, "SALES_OFFICE")),
       salesGroup:              clean(get(row, "SALES_GROUP")),
       currentPaymentFrequency: clean(get(row, "CURRENTPAYMENTFREQUENCY")),

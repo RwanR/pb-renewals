@@ -54,16 +54,6 @@ function generateContractHTML(data: ContractData): string {
     .filter(Boolean)
     .join(", ");
 
-  const contactEmail =
-    acceptance.overrideEmail ||
-    client.bestEmail ||
-    client.installEmail ||
-    client.billingEmail ||
-    "";
-
-  const contactPhone =
-    acceptance.overridePhone || client.installPhone || client.billingPhone || "";
-
   // Equipment lines — differ by offer type
   const equipmentLines: { code: string; description: string; monthly: string }[] = [];
 
@@ -198,8 +188,6 @@ function generateContractHTML(data: ContractData): string {
     <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${installAddress}</span></div>
     <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${client.soldToCompanyRegistrationNumber || client.siret || "—"}</span></div>
     <div class="info-row"><span class="info-label">TVA</span><span class="info-value">${client.vatNumber || "—"}</span></div>
-    <div class="info-row"><span class="info-label">Contact</span><span class="info-value">${contactEmail}</span></div>
-    <div class="info-row"><span class="info-label">Téléphone</span><span class="info-value">${contactPhone}</span></div>
   </div>
   <div class="info-box">
     <h3>Facturation</h3>

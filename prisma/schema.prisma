@@ -112,6 +112,7 @@ model Client {
   
   activationDate                  DateTime?
   paymentTerms                    String?
+  emailReceptionFacture           String?   // EMAIL_RECEPTION_FACTURE
 
   // Champs C4C export
   categoryContract          String?  // CATEGORY_CONTRACT (MIGRATED)
@@ -130,7 +131,7 @@ model Client {
   payerAccountNumberC4C     String?
 
   ownerId                   String?  // OWNERID
-  contactId                 String?  // CONTACT_ID
+  contactId                 String?  // CONTACTID
   salesOffice               String?  // SALES_OFFICE (FR10/FR20)
   salesGroup                String?  // SALES_GROUP (F13/F23)
   currentPaymentFrequency   String?
@@ -265,6 +266,8 @@ model Acceptance {
 
   purchaseOrderNumber       String?
   billingAddressDifferent   Boolean  @default(false)
+
+  @@index([signedAt, adobeSignStatus])  // pour la séquentialisation export
 }
 
 model Refusal {
