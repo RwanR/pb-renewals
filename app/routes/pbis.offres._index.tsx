@@ -2,15 +2,17 @@ import type { Route } from "./+types/pbis.offres._index";
 import { Check, X } from "lucide-react";
 import { Fragment } from "react";
 import { Link } from "react-router";
+import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Nos offres — PBIS" }];
 }
 
+type OfferSlug = keyof typeof PBIS_OFFER_COLORS;
+
 type Offer = {
   badge: string;
-  badgeBg: string;
-  slug: string;
+  slug: OfferSlug;
   title: string;
   description: string;
   features: { included: boolean; text: string }[];
@@ -18,14 +20,11 @@ type Offer = {
   price: string;
   priceSuffix: string;
   ctaLabel: string;
-  ctaBg: string;
-  accentColor: string;
 };
 
 const offers: Offer[] = [
   {
     badge: "Factures fournisseurs",
-    badgeBg: "#CF0989",
     slug: "start",
     title: "PBIS Start",
     description: "L'offre idéale pour vous conformer rapidement aux obligations de la facturation fournisseurs",
@@ -39,12 +38,9 @@ const offers: Offer[] = [
     price: "15,00",
     priceSuffix: "€ HT / mois",
     ctaLabel: "Souscrire en ligne",
-    ctaBg: "#CF0989",
-    accentColor: "#6c278b",
   },
   {
     badge: "Factures clients et fournisseurs",
-    badgeBg: "#009DBF",
     slug: "essentiel",
     title: "PBIS Essentiel",
     description: "L'offre complète pour digitaliser vos factures clients et fournisseurs",
@@ -58,12 +54,9 @@ const offers: Offer[] = [
     price: "à partir de 40,00",
     priceSuffix: "€ HT / mois",
     ctaLabel: "Nous contacter",
-    ctaBg: "#009DBF",
-    accentColor: "#0092db",
   },
   {
     badge: "Sur mesure",
-    badgeBg: "#00B140",
     slug: "flex",
     title: "PBIS Flex",
     description: "L'offre sur mesure pour répondre à vos besoins métier, avec un accompagnement dédié",
@@ -78,8 +71,6 @@ const offers: Offer[] = [
     price: "Sur devis",
     priceSuffix: "",
     ctaLabel: "Nous contacter",
-    ctaBg: "#00B140",
-    accentColor: "#9a44a1",
   },
 ];
 
@@ -103,10 +94,11 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 }
 
 function OfferCard({ offer }: { offer: Offer }) {
+  const color = PBIS_OFFER_COLORS[offer.slug];
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": offer.accentColor } as React.CSSProperties}>
+    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": color } as React.CSSProperties}>
       <div>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: offer.badgeBg }}>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: color }}>
           {offer.badge}
         </span>
       </div>
@@ -140,7 +132,7 @@ function OfferCard({ offer }: { offer: Offer }) {
             <span className="text-sm leading-5 text-[#737373]">{offer.priceSuffix}</span>
           )}
         </div>
-        <Link to={`/pbis/offres/${offer.slug}`} className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: offer.ctaBg }}>
+        <Link to={`/pbis/offres/${offer.slug}`} className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: color }}>
           {offer.ctaLabel}
         </Link>
       </div>
