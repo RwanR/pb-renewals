@@ -122,9 +122,6 @@ export default function OffreInformations() {
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const discount = offer.discount || "50%";
   const machineImg = offer.imageUrl;
-
-  const bestEmail = client.billingEmail || client.bestEmail || client.installEmail || "";
-  const bestPhone = client.installPhone || client.billingPhone || "";
   const [showBilling, setShowBilling] = useState(false);
 
   return (
@@ -196,8 +193,6 @@ export default function OffreInformations() {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <FieldReadonly label="Raison sociale du donneur d'ordre" value={client.customerName} />
               <FieldReadonly label="SIRET" value={client.siret || ""} />
-              <FieldEditable label="E-mail" name="email" value={bestEmail} icon={<MailIcon />} type="email" />
-              <FieldEditable label="Téléphone" name="phone" value={bestPhone} icon={<PhoneIcon />} type="tel" />
             </div>
 
             {/* Adresse d'installation */}
@@ -207,8 +202,8 @@ export default function OffreInformations() {
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 <FieldReadonly label="Raison sociale de l'installé" value={client.customerName} />
-                <FieldReadonly label="Adresse 1" value={client.installAddress1 || ""} />
-                <FieldReadonly label="Adresse 2" value={client.installStreet || ""} />
+                <FieldReadonly label="Adresse" value={client.installAddress1 || ""} />
+                <FieldReadonly label="Complément d'adresse" value={client.installStreet || ""} />
                 <FieldReadonly label="Code postal" value={client.installPostcode || ""} />
                 <FieldReadonly label="Ville" value={client.installCity || ""} />
               </div>
@@ -237,8 +232,8 @@ export default function OffreInformations() {
               {showBilling ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
-                  <FieldEditable label="Adresse 1" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Adresse 2" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Adresse" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Complément d'adresse" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
                   <FieldEditable label="Code postal" name="billingPostcode" value={client.billingPostcode || ""} icon={<MailboxIcon />} />
                   <FieldEditable label="Ville" name="billingCity" value={client.billingCity || ""} icon={<BuildingIcon />} />
                 </div>
