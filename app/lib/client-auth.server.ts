@@ -22,10 +22,11 @@ export async function validateToken(token: string): Promise<string | null> {
   });
 
   if (!accessToken) return null;
-  // null expiresAt = no expiration
-  if (accessToken.expiresAt && accessToken.expiresAt < new Date()) return null;
+  // Note: expiresAt is checked in requireClientAccess (redirects to /expiree).
+  // We deliberately accept expired tokens here so the session is created
+  // and the user is redirected to a proper expiration page instead of the
+  // generic "invalid token" message.
 
-  // Mark as used
   await prisma.accessToken.update({
     where: { token },
     data: { usedAt: new Date() },
