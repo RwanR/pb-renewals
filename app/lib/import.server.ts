@@ -252,7 +252,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       ownerTerritoryCode: clean(get(row, "OWNERTERRITORYCODE")),
       badPayerFlag: false,
       regulated: false,
-      offerExpirationDate: clean(get(row, "OFFEREXPIRATIONDATE")),
       soldToCustomerName: clean(get(row, "SOLDTOCUSTOMERNAME")),
       soldToCompanyRegistrationNumber: clean(get(row, "SOLDTOCOMPANYREGISTRATIONNUMBER")),
       contactPhone: clean(get(row, "CONTACTPHONE")),

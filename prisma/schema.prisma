@@ -87,8 +87,6 @@ model Client {
   badPayerFlag        Boolean  @default(false)
   regulated           Boolean  @default(false)
 
-  offerExpirationDate String?
-
   pieceCountLast12m   Int?
   resetValueLast12m   Int?
 
@@ -285,7 +283,7 @@ model AccessToken {
   token                 String   @id @default(uuid())
   clientAccountNumber   String   @unique
   client                Client   @relation(fields: [clientAccountNumber], references: [accountNumber], onDelete: Cascade)
-  expiresAt             DateTime
+  expiresAt             DateTime?
   usedAt                DateTime?
   createdAt             DateTime @default(now())
 }

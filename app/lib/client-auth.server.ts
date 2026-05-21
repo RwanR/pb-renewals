@@ -22,7 +22,8 @@ export async function validateToken(token: string): Promise<string | null> {
   });
 
   if (!accessToken) return null;
-  if (accessToken.expiresAt < new Date()) return null;
+  // null expiresAt = no expiration
+  if (accessToken.expiresAt && accessToken.expiresAt < new Date()) return null;
 
   // Mark as used
   await prisma.accessToken.update({
@@ -92,7 +93,10 @@ export async function requireClient(request: Request): Promise<string> {
 }
 
 /**
- * Require that the session matches the requested account
+ * Require that the session matches the requested account.
+ * Also blocks access to the offer flow if the access token has expired
+ * AND the client has neither signed nor refused.
+ * The /expiree route is the only allowed destination for an expired offer.
  */
 export async function requireClientAccess(
   request: Request,
@@ -102,5 +106,32 @@ export async function requireClientAccess(
   if (accountNumber !== requestedAccount) {
     throw redirect("/offre");
   }
+
+  // Skip expiration check on the expiree route itself (avoid redirect loop)
+  const url = new URL(request.url);
+  if (url.pathname.endsWith("/expiree")) {
+    return accountNumber;
+  }
+
+  const client = await prisma.client.findUnique({
+    where: { accountNumber: requestedAccount },
+    select: {
+      accessToken: { select: { expiresAt: true } },
+      acceptance: { select: { adobeSignStatus: true } },
+      refusal: { select: { id: true } },
+    },
+  });
+
+  if (client) {
+    const isSigned = client.acceptance?.adobeSignStatus === "signed";
+    const isRefused = !!client.refusal;
+    const expiresAt = client.accessToken?.expiresAt ?? null;
+    const isExpired = expiresAt !== null && expiresAt < new Date();
+
+    if (isExpired && !isSigned && !isRefused) {
+      throw redirect(`/offre/${requestedAccount}/expiree`);
+    }
+  }
+
   return accountNumber;
 }
