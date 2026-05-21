@@ -17,6 +17,8 @@ const ADDRESS_MAX = 255;
 const ZIP_MAX = 50;
 const TAG_MAX = 40;
 
+const WARNING_PHONE_OMITTED = "Phone omitted (duplicate)";
+
 interface ShopifySession {
   shop: string;
   accessToken: string;
@@ -211,13 +213,14 @@ export interface SyncResult {
   customerId: string | null;
   error: string | null;
   errorType: SyncErrorType | null;
+  warning: string | null;
 }
 
 /**
  * Create or update a Shopify Customer for a PB client.
  *
  * Error handling:
- * - "Phone has already been taken" → retry without phone (customer created, phone dropped)
+ * - "Phone has already been taken" → retry without phone (customer created, phone dropped → WARNING)
  * - "Email has already been taken" → skip, return error (email is required to retrieve customer later)
  * - Other validation errors → skip, return error
  *
@@ -232,7 +235,7 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
   const { accountNumber, email } = data;
 
   if (!email) {
-    return { customerId: null, error: "No email", errorType: "no_email" };
+    return { customerId: null, error: "No email", errorType: "no_email", warning: null };
   }
 
   try {
@@ -280,6 +283,7 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
       const input = { ...baseInput, id: existingCustomer.id };
       let result = await shopifyGraphQL(CUSTOMER_UPDATE_MUTATION, { input });
       let userErrors = result.customerUpdate?.userErrors || [];
+      let warning: string | null = null;
 
       // Retry without phone if duplicate
       if (userErrors.length > 0 && isPhoneDuplicateError(userErrors)) {
@@ -287,16 +291,19 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
         const { phone: _omit, ...inputNoPhone } = input;
         result = await shopifyGraphQL(CUSTOMER_UPDATE_MUTATION, { input: inputNoPhone });
         userErrors = result.customerUpdate?.userErrors || [];
+        if (userErrors.length === 0) {
+          warning = WARNING_PHONE_OMITTED;
+        }
       }
 
       if (userErrors.length > 0) {
         const msg = summarizeErrors(userErrors);
         console.error(`[SHOPIFY] Customer update errors for ${accountNumber}: ${msg}`);
-        return { customerId: existingCustomer.id, error: msg, errorType: "validation" };
+        return { customerId: existingCustomer.id, error: msg, errorType: "validation", warning: null };
       }
 
-      console.log(`[SHOPIFY] Updated customer ${accountNumber}: ${existingCustomer.id}`);
-      return { customerId: existingCustomer.id, error: null, errorType: null };
+      console.log(`[SHOPIFY] Updated customer ${accountNumber}: ${existingCustomer.id}${warning ? " (phone omitted)" : ""}`);
+      return { customerId: existingCustomer.id, error: null, errorType: null, warning };
     }
 
     // ─── CREATE PATH ────────────────────────────────────────
@@ -313,7 +320,7 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
       if (userErrors.length === 0) {
         const customerId = result.customerCreate?.customer?.id;
         console.log(`[SHOPIFY] Created customer ${accountNumber}: ${customerId} (without phone, duplicate)`);
-        return { customerId, error: null, errorType: null };
+        return { customerId, error: null, errorType: null, warning: WARNING_PHONE_OMITTED };
       }
     }
 
@@ -323,16 +330,16 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
       const errorType: SyncErrorType = isEmailDuplicateError(userErrors)
         ? "email_duplicate"
         : "validation";
-      return { customerId: null, error: msg, errorType };
+      return { customerId: null, error: msg, errorType, warning: null };
     }
 
     const customerId = result.customerCreate?.customer?.id;
     console.log(`[SHOPIFY] Created customer ${accountNumber}: ${customerId}`);
-    return { customerId, error: null, errorType: null };
+    return { customerId, error: null, errorType: null, warning: null };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[SHOPIFY] Failed to sync customer ${accountNumber}:`, msg);
-    return { customerId: null, error: msg, errorType: "transport" };
+    return { customerId: null, error: msg, errorType: "transport", warning: null };
   }
 }
 
@@ -340,6 +347,7 @@ export interface SyncReport {
   synced: number;
   skipped: number;
   errors: number;
+  warnings: number;
   errorDetails: Array<{
     accountNumber: string;
     customerName: string | null;
@@ -347,11 +355,17 @@ export interface SyncReport {
     error: string;
     errorType: SyncErrorType;
   }>;
+  warningDetails: Array<{
+    accountNumber: string;
+    customerName: string | null;
+    email: string | null;
+    warning: string;
+  }>;
 }
 
 /**
  * Sync all clients with emails to Shopify (async, in chunks).
- * Persists per-client error in Client.shopifySyncError (cleared on success).
+ * Persists per-client error/warning in Client.shopifySyncError / Client.shopifySyncWarning.
  */
 export async function syncAllCustomersToShopify(importRunId: string): Promise<SyncReport> {
   const clients = await prisma.client.findMany({
@@ -385,7 +399,9 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
   let synced = 0;
   let skipped = 0;
   let errors = 0;
+  let warnings = 0;
   const errorDetails: SyncReport["errorDetails"] = [];
+  const warningDetails: SyncReport["warningDetails"] = [];
   const CHUNK_SIZE = 3;
 
   for (let i = 0; i < clients.length; i += CHUNK_SIZE) {
@@ -443,13 +459,26 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
             shopifyCustomerId: result.customerId,
             shopifySyncHash: hash,
             shopifySyncError: null,
+            shopifySyncWarning: result.warning,
           },
         });
         synced++;
+        if (result.warning) {
+          warnings++;
+          warningDetails.push({
+            accountNumber: client.accountNumber,
+            customerName: client.customerName,
+            email,
+            warning: result.warning,
+          });
+        }
       } else {
         await prisma.client.update({
           where: { accountNumber: client.accountNumber },
-          data: { shopifySyncError: result.error },
+          data: {
+            shopifySyncError: result.error,
+            shopifySyncWarning: null,
+          },
         });
         errors++;
         errorDetails.push({
@@ -467,7 +496,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
     }
   }
 
-  console.log(`[SHOPIFY] Sync complete: ${synced} synced, ${skipped} skipped (no change), ${errors} errors`);
+  console.log(`[SHOPIFY] Sync complete: ${synced} synced (${warnings} with warning), ${skipped} skipped (no change), ${errors} errors`);
   if (errors > 0) {
     const byType: Record<string, number> = {};
     for (const e of errorDetails) byType[e.errorType] = (byType[e.errorType] || 0) + 1;
@@ -476,8 +505,13 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
       console.log(`[SHOPIFY] Error: ${e.accountNumber} (${e.errorType}) — ${e.error}`);
     }
   }
+  if (warnings > 0) {
+    for (const w of warningDetails) {
+      console.log(`[SHOPIFY] Warning: ${w.accountNumber} — ${w.warning}`);
+    }
+  }
 
-  return { synced, skipped, errors, errorDetails };
+  return { synced, skipped, errors, warnings, errorDetails, warningDetails };
 }
 
 // ─── DRAFT ORDER CREATION ──────────────────────────────────────────

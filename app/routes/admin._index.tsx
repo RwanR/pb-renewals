@@ -22,6 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     lastImport,
     lastC4CExport,
     shopifySyncErrors,
+    shopifySyncWarnings,
     shopifySyncedCount,
     shopifyTotalWithEmail,
   ] = await Promise.all([
@@ -90,6 +91,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
       select: { accountNumber: true, customerName: true, shopifySyncError: true },
       orderBy: { customerName: "asc" },
     }),
+    prisma.client.findMany({
+      where: { archived: false, shopifySyncWarning: { not: null } },
+      select: { accountNumber: true, customerName: true, shopifySyncWarning: true },
+      orderBy: { customerName: "asc" },
+    }),
     prisma.client.count({
       where: { archived: false, shopifyCustomerId: { not: null }, bestEmail: { not: null } },
     }),
@@ -137,6 +143,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     lastC4CExport,
     shopifySync: {
       syncErrors: shopifySyncErrors,
+      syncWarnings: shopifySyncWarnings,
       syncedCount: shopifySyncedCount,
       totalWithEmail: shopifyTotalWithEmail,
     },
@@ -156,17 +163,39 @@ const reasonLabels: Record<string, string> = {
   autre: "Autre",
 };
 
-function formatSyncError(err: string | null): string {
-  if (!err) return "Erreur inconnue";
-  if (/phone.*already been taken/i.test(err)) return "Téléphone déjà utilisé par un autre compte";
-  if (/email.*already been taken/i.test(err)) return "Email déjà utilisé par un autre compte";
-  if (/no email/i.test(err)) return "Pas d'email";
-  return err.slice(0, 100);
+function formatSyncMessage(msg: string | null): string {
+  if (!msg) return "—";
+  if (/phone omitted/i.test(msg)) return "Client créé sans téléphone (doublon)";
+  if (/phone.*already been taken/i.test(msg)) return "Téléphone déjà utilisé par un autre compte";
+  if (/email.*already been taken/i.test(msg)) return "Email déjà utilisé par un autre compte";
+  if (/no email/i.test(msg)) return "Pas d'email";
+  return msg.slice(0, 100);
 }
 
 export default function AdminDashboard() {
   const data = useLoaderData<typeof loader>();
-  const syncOk = data.shopifySync.syncErrors.length === 0;
+
+  const errorCount = data.shopifySync.syncErrors.length;
+  const warningCount = data.shopifySync.syncWarnings.length;
+
+  // Encart color: orange si erreur, jaune si warning seul, vert sinon
+  const syncSeverity: "ok" | "warning" | "error" =
+    errorCount > 0 ? "error" : warningCount > 0 ? "warning" : "ok";
+
+  const syncStyles = {
+    ok: { bg: "#ECFDF5", border: "#A7F3D0", accent: "#059669", icon: "✓" },
+    warning: { bg: "#FEFCE8", border: "#FDE68A", accent: "#CA8A04", icon: "⚠" },
+    error: { bg: "#FEF3C7", border: "#FCD34D", accent: "#D97706", icon: "⚠" },
+  }[syncSeverity];
+
+  const syncSummary = (() => {
+    const base = `${data.shopifySync.syncedCount} / ${data.shopifySync.totalWithEmail} clients synchronisés`;
+    if (errorCount === 0 && warningCount === 0) return base;
+    const parts: string[] = [];
+    if (errorCount > 0) parts.push(`${errorCount} ${errorCount > 1 ? "erreurs" : "erreur"}`);
+    if (warningCount > 0) parts.push(`${warningCount} ${warningCount > 1 ? "avertissements" : "avertissement"}`);
+    return `${base} (${parts.join(", ")})`;
+  })();
 
   return (
     <div>
@@ -197,33 +226,47 @@ export default function AdminDashboard() {
 
       {/* Shopify sync status */}
       <div style={{
-        background: syncOk ? "#ECFDF5" : "#FEF3C7",
-        border: `1px solid ${syncOk ? "#A7F3D0" : "#FCD34D"}`,
+        background: syncStyles.bg,
+        border: `1px solid ${syncStyles.border}`,
         borderRadius: "8px",
         padding: "20px",
         marginBottom: "32px",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
           <span style={{ fontSize: "16px", fontWeight: 600 }}>Synchronisation Shopify</span>
-          <span style={{
-            fontSize: "14px",
-            color: syncOk ? "#059669" : "#D97706",
-            fontWeight: 500,
-          }}>
-            {syncOk ? "✓" : "⚠"} {data.shopifySync.syncedCount} / {data.shopifySync.totalWithEmail} clients synchronisés
+          <span style={{ fontSize: "14px", color: syncStyles.accent, fontWeight: 500 }}>
+            {syncStyles.icon} {syncSummary}
           </span>
         </div>
-        {!syncOk && (
+
+        {errorCount > 0 && (
           <div style={{ marginTop: "16px" }}>
             <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#92400E" }}>
-              {data.shopifySync.syncErrors.length} {data.shopifySync.syncErrors.length > 1 ? "erreurs" : "erreur"} :
+              {errorCount > 1 ? "Erreurs" : "Erreur"} :
             </div>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
               {data.shopifySync.syncErrors.map((e) => (
                 <li key={e.accountNumber} style={{ fontSize: "13px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "baseline" }}>
                   <span style={{ fontFamily: "monospace", color: "#6B7280" }}>{e.accountNumber}</span>
                   <span style={{ color: "#1a1a1a" }}>{e.customerName || "—"}</span>
-                  <span style={{ color: "#B91C1C" }}>— {formatSyncError(e.shopifySyncError)}</span>
+                  <span style={{ color: "#B91C1C" }}>— {formatSyncMessage(e.shopifySyncError)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {warningCount > 0 && (
+          <div style={{ marginTop: errorCount > 0 ? "16px" : "16px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#854D0E" }}>
+              {warningCount > 1 ? "Avertissements" : "Avertissement"} :
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+              {data.shopifySync.syncWarnings.map((w) => (
+                <li key={w.accountNumber} style={{ fontSize: "13px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "baseline" }}>
+                  <span style={{ fontFamily: "monospace", color: "#6B7280" }}>{w.accountNumber}</span>
+                  <span style={{ color: "#1a1a1a" }}>{w.customerName || "—"}</span>
+                  <span style={{ color: "#A16207" }}>— {formatSyncMessage(w.shopifySyncWarning)}</span>
                 </li>
               ))}
             </ul>
