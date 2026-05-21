@@ -1,6 +1,6 @@
 /**
  * Shopify Admin API — standalone client (outside iframe context)
- * 
+ *
  * Reads the offline session token from Prisma Session table
  * Uses GraphQL Admin API for:
  * - Customer creation at import
@@ -11,14 +11,74 @@ import prisma from "~/db.server";
 
 const API_VERSION = "2026-04";
 
+// Shopify field limits (defensive truncation to avoid customerCreate errors)
+const NAME_MAX = 255;
+const ADDRESS_MAX = 255;
+const ZIP_MAX = 50;
+const TAG_MAX = 40;
+
 interface ShopifySession {
   shop: string;
   accessToken: string;
 }
 
+// ─── HELPERS ───────────────────────────────────────────────────────
+
+function truncate(s: string | null | undefined, max: number): string | undefined {
+  if (!s) return undefined;
+  const trimmed = s.trim();
+  if (!trimmed) return undefined;
+  return trimmed.length > max ? trimmed.slice(0, max).trim() : trimmed;
+}
+
 /**
- * Get the offline Shopify session from DB
+ * Sanitize phone for Shopify Admin API.
+ * Shopify accepts E.164 and tolerant national formats (e.g. "01 60 92 41 44").
+ * We strip junk chars and require at least 5 digits, else return undefined.
  */
+function sanitizePhone(phone: string | null | undefined): string | undefined {
+  if (!phone) return undefined;
+  const cleaned = phone.replace(/[^\d+\s().\-]/g, "").trim();
+  const digits = cleaned.replace(/\D/g, "");
+  if (digits.length < 5) return undefined;
+  return cleaned;
+}
+
+function truncateTag(tag: string): string {
+  return tag.length > TAG_MAX ? tag.slice(0, TAG_MAX) : tag;
+}
+
+function hasFieldError(
+  userErrors: any[],
+  field: string,
+  messageRegex: RegExp
+): boolean {
+  return userErrors?.some(
+    (e: any) =>
+      Array.isArray(e.field) &&
+      e.field.includes(field) &&
+      messageRegex.test(e.message || "")
+  );
+}
+
+const isPhoneDuplicateError = (errs: any[]) =>
+  hasFieldError(errs, "phone", /already been taken/i);
+
+const isEmailDuplicateError = (errs: any[]) =>
+  hasFieldError(errs, "email", /already been taken/i);
+
+function summarizeErrors(userErrors: any[]): string {
+  if (!userErrors?.length) return "Unknown error";
+  return userErrors
+    .map(
+      (e: any) =>
+        `${Array.isArray(e.field) ? e.field.join(".") : e.field || "?"}: ${e.message}`
+    )
+    .join(" | ");
+}
+
+// ─── SESSION ───────────────────────────────────────────────────────
+
 async function getOfflineSession(): Promise<ShopifySession> {
   const session = await prisma.session.findFirst({
     where: { isOnline: false, accessToken: { not: null } },
@@ -32,10 +92,6 @@ async function getOfflineSession(): Promise<ShopifySession> {
   return { shop: session.shop, accessToken: session.accessToken };
 }
 
-/**
- * Execute a Shopify Admin GraphQL query
- */
-// NOUVEAU
 async function shopifyGraphQL(query: string, variables: Record<string, any> = {}, retries = 3): Promise<any> {
   const { shop, accessToken } = await getOfflineSession();
   const url = `https://${shop}/admin/api/${API_VERSION}/graphql.json`;
@@ -143,20 +199,44 @@ interface CustomerData {
   currentPayment?: number | null;
 }
 
+export type SyncErrorType =
+  | "no_email"
+  | "email_duplicate"
+  | "phone_duplicate"
+  | "validation"
+  | "transport"
+  | "other";
+
+export interface SyncResult {
+  customerId: string | null;
+  error: string | null;
+  errorType: SyncErrorType | null;
+}
+
 /**
- * Create or update a Shopify Customer for a PB client
- * Returns the Shopify Customer GID
+ * Create or update a Shopify Customer for a PB client.
+ *
+ * Error handling:
+ * - "Phone has already been taken" → retry without phone (customer created, phone dropped)
+ * - "Email has already been taken" → skip, return error (email is required to retrieve customer later)
+ * - Other validation errors → skip, return error
+ *
+ * Field guards:
+ * - firstName/lastName truncated to 255 chars
+ * - address1/address2/city truncated to 255 chars
+ * - zip truncated to 50 chars
+ * - phone sanitized (junk chars stripped, must have ≥5 digits)
+ * - tags truncated to 40 chars each
  */
-export async function syncCustomerToShopify(data: CustomerData): Promise<string | null> {
+export async function syncCustomerToShopify(data: CustomerData): Promise<SyncResult> {
   const { accountNumber, email } = data;
-  
+
   if (!email) {
-    console.log(`[SHOPIFY] Skipping customer ${accountNumber} — no email`);
-    return null;
+    return { customerId: null, error: "No email", errorType: "no_email" };
   }
 
   try {
-    // Check if customer already exists
+    // Check if customer already exists by email (exact match search)
     const searchResult = await shopifyGraphQL(CUSTOMER_SEARCH_QUERY, {
       query: `email:${email}`,
     });
@@ -171,60 +251,109 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<string 
     ];
 
     const nameParts = data.customerName?.split(" ") || [];
-    const firstName = data.firstName || nameParts[0] || "Client";
-    const lastName = data.lastName || nameParts.slice(1).join(" ") || accountNumber;
+    const firstName = truncate(data.firstName || nameParts[0] || "Client", NAME_MAX)!;
+    const lastName = truncate(data.lastName || nameParts.slice(1).join(" ") || accountNumber, NAME_MAX)!;
+    const phone = sanitizePhone(data.phone);
 
-    const input: any = {
+    const baseInput: any = {
       email,
       firstName,
       lastName,
-      phone: data.phone || undefined,
-      tags: ["pb-renewals", `account-${accountNumber}`],
+      tags: [truncateTag("pb-renewals"), truncateTag(`account-${accountNumber}`)],
       metafields,
     };
 
+    if (phone) baseInput.phone = phone;
+
     if (data.address1 || data.city) {
-      input.addresses = [{
-        address1: data.address1 || "",
-        address2: data.address2 || "",
-        city: data.city || "",
-        zip: data.zip || "",
+      baseInput.addresses = [{
+        address1: truncate(data.address1, ADDRESS_MAX) || "",
+        address2: truncate(data.address2, ADDRESS_MAX) || "",
+        city: truncate(data.city, ADDRESS_MAX) || "",
+        zip: truncate(data.zip, ZIP_MAX) || "",
         country: data.country || "FR",
       }];
     }
 
+    // ─── UPDATE PATH ────────────────────────────────────────
     if (existingCustomer) {
-      // Update
-      input.id = existingCustomer.id;
-      const result = await shopifyGraphQL(CUSTOMER_UPDATE_MUTATION, { input });
-      if (result.customerUpdate?.userErrors?.length) {
-        console.error(`[SHOPIFY] Customer update errors for ${accountNumber}:`, result.customerUpdate.userErrors);
-        return existingCustomer.id;
+      const input = { ...baseInput, id: existingCustomer.id };
+      let result = await shopifyGraphQL(CUSTOMER_UPDATE_MUTATION, { input });
+      let userErrors = result.customerUpdate?.userErrors || [];
+
+      // Retry without phone if duplicate
+      if (userErrors.length > 0 && isPhoneDuplicateError(userErrors)) {
+        console.warn(`[SHOPIFY] Phone duplicate on update for ${accountNumber}, retrying without phone`);
+        const { phone: _omit, ...inputNoPhone } = input;
+        result = await shopifyGraphQL(CUSTOMER_UPDATE_MUTATION, { input: inputNoPhone });
+        userErrors = result.customerUpdate?.userErrors || [];
       }
+
+      if (userErrors.length > 0) {
+        const msg = summarizeErrors(userErrors);
+        console.error(`[SHOPIFY] Customer update errors for ${accountNumber}: ${msg}`);
+        return { customerId: existingCustomer.id, error: msg, errorType: "validation" };
+      }
+
       console.log(`[SHOPIFY] Updated customer ${accountNumber}: ${existingCustomer.id}`);
-      return existingCustomer.id;
-    } else {
-      // Create
-      const result = await shopifyGraphQL(CUSTOMER_CREATE_MUTATION, { input });
-      if (result.customerCreate?.userErrors?.length) {
-        console.error(`[SHOPIFY] Customer create errors for ${accountNumber}:`, result.customerCreate.userErrors);
-        return null;
-      }
-      const customerId = result.customerCreate?.customer?.id;
-      console.log(`[SHOPIFY] Created customer ${accountNumber}: ${customerId}`);
-      return customerId;
+      return { customerId: existingCustomer.id, error: null, errorType: null };
     }
+
+    // ─── CREATE PATH ────────────────────────────────────────
+    let result = await shopifyGraphQL(CUSTOMER_CREATE_MUTATION, { input: baseInput });
+    let userErrors = result.customerCreate?.userErrors || [];
+
+    // Retry without phone if duplicate
+    if (userErrors.length > 0 && isPhoneDuplicateError(userErrors)) {
+      console.warn(`[SHOPIFY] Phone duplicate on create for ${accountNumber}, retrying without phone`);
+      const { phone: _omit, ...inputNoPhone } = baseInput;
+      result = await shopifyGraphQL(CUSTOMER_CREATE_MUTATION, { input: inputNoPhone });
+      userErrors = result.customerCreate?.userErrors || [];
+
+      if (userErrors.length === 0) {
+        const customerId = result.customerCreate?.customer?.id;
+        console.log(`[SHOPIFY] Created customer ${accountNumber}: ${customerId} (without phone, duplicate)`);
+        return { customerId, error: null, errorType: null };
+      }
+    }
+
+    if (userErrors.length > 0) {
+      const msg = summarizeErrors(userErrors);
+      console.error(`[SHOPIFY] Customer create errors for ${accountNumber}: ${msg}`);
+      const errorType: SyncErrorType = isEmailDuplicateError(userErrors)
+        ? "email_duplicate"
+        : "validation";
+      return { customerId: null, error: msg, errorType };
+    }
+
+    const customerId = result.customerCreate?.customer?.id;
+    console.log(`[SHOPIFY] Created customer ${accountNumber}: ${customerId}`);
+    return { customerId, error: null, errorType: null };
   } catch (err) {
-    console.error(`[SHOPIFY] Failed to sync customer ${accountNumber}:`, err);
-    return null;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[SHOPIFY] Failed to sync customer ${accountNumber}:`, msg);
+    return { customerId: null, error: msg, errorType: "transport" };
   }
 }
 
+export interface SyncReport {
+  synced: number;
+  skipped: number;
+  errors: number;
+  errorDetails: Array<{
+    accountNumber: string;
+    customerName: string | null;
+    email: string | null;
+    error: string;
+    errorType: SyncErrorType;
+  }>;
+}
+
 /**
- * Sync all clients with emails to Shopify (async, in chunks)
- * Only syncs clients that are new or whose data changed since last sync.
+ * Sync all clients with emails to Shopify (async, in chunks).
+ * Persists per-client error in Client.shopifySyncError (cleared on success).
  */
-export async function syncAllCustomersToShopify(importRunId: string): Promise<{ synced: number; skipped: number; errors: number }> {
+export async function syncAllCustomersToShopify(importRunId: string): Promise<SyncReport> {
   const clients = await prisma.client.findMany({
     where: {
       importRunId,
@@ -256,6 +385,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
   let synced = 0;
   let skipped = 0;
   let errors = 0;
+  const errorDetails: SyncReport["errorDetails"] = [];
   const CHUNK_SIZE = 3;
 
   for (let i = 0; i < clients.length; i += CHUNK_SIZE) {
@@ -268,7 +398,6 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
         return;
       }
 
-      // Compute hash of Shopify-relevant fields
       const hashSource = [
         client.customerName,
         email,
@@ -286,13 +415,12 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
 
       const hash = Buffer.from(hashSource).toString("base64");
 
-      // Skip if already synced with same data
       if (client.shopifyCustomerId && client.shopifySyncHash === hash) {
         skipped++;
         return;
       }
 
-      const customerId = await syncCustomerToShopify({
+      const result = await syncCustomerToShopify({
         accountNumber: client.accountNumber,
         customerName: client.customerName,
         email,
@@ -308,14 +436,29 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
         currentPayment: client.currentEquipmentPayment,
       });
 
-      if (customerId) {
+      if (result.customerId) {
         await prisma.client.update({
           where: { accountNumber: client.accountNumber },
-          data: { shopifyCustomerId: customerId, shopifySyncHash: hash },
+          data: {
+            shopifyCustomerId: result.customerId,
+            shopifySyncHash: hash,
+            shopifySyncError: null,
+          },
         });
         synced++;
       } else {
+        await prisma.client.update({
+          where: { accountNumber: client.accountNumber },
+          data: { shopifySyncError: result.error },
+        });
         errors++;
+        errorDetails.push({
+          accountNumber: client.accountNumber,
+          customerName: client.customerName,
+          email,
+          error: result.error || "Unknown",
+          errorType: result.errorType || "other",
+        });
       }
     }));
 
@@ -325,7 +468,16 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<{ 
   }
 
   console.log(`[SHOPIFY] Sync complete: ${synced} synced, ${skipped} skipped (no change), ${errors} errors`);
-  return { synced, skipped, errors };
+  if (errors > 0) {
+    const byType: Record<string, number> = {};
+    for (const e of errorDetails) byType[e.errorType] = (byType[e.errorType] || 0) + 1;
+    console.log(`[SHOPIFY] Error breakdown:`, byType);
+    for (const e of errorDetails) {
+      console.log(`[SHOPIFY] Error: ${e.accountNumber} (${e.errorType}) — ${e.error}`);
+    }
+  }
+
+  return { synced, skipped, errors, errorDetails };
 }
 
 // ─── DRAFT ORDER CREATION ──────────────────────────────────────────
@@ -367,7 +519,6 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
   try {
     const lineItems: any[] = [];
 
-    // Main line item — equipment rental (lookup variant from DB)
     const variantId = await getVariantId(modelName, term);
 
     if (variantId) {
@@ -387,7 +538,6 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
       });
     }
 
-    // Installation line item (if selected and not free)
     if (installOption && installPrice && installPrice > 0) {
       const installLabels: Record<string, string> = {
         phone: "Installation assistée en ligne",
@@ -404,8 +554,8 @@ export async function createDraftOrder(data: DraftOrderData): Promise<string | n
     const input: any = {
       customerId: shopifyCustomerId,
       lineItems,
-      tags: ["pb-renewals", `account-${accountNumber}`, `term-${term}m`],
-      note: `Contrat PB Renewals — ${accountNumber}\nSignataire: ${signatoryName}\nDurée: ${term} mois\nInstallation: ${installOption || "aucune"}`,
+      tags: [truncateTag("pb-renewals"), truncateTag(`account-${accountNumber}`), truncateTag(`term-${term}m`)],
+      note: `Contrat PB Renewals — ${accountNumber}\nSignataire: ${signatoryName}\nDurée: ${term} mois\nInstallation: ${installOption || "aucune"}`.slice(0, 5000),
       shippingAddress: undefined,
     };
 
@@ -451,9 +601,6 @@ const METAFIELD_DEFINITIONS = [
   { name: "Date signature", namespace: "pb_renewals", key: "signed_at", type: "single_line_text_field" },
 ];
 
-/**
- * Create all PB Renewals metafield definitions on the Customer resource (one-time setup)
- */
 export async function createMetafieldDefinitions(): Promise<{ created: number; errors: string[] }> {
   let created = 0;
   const errors: string[] = [];
@@ -503,9 +650,6 @@ const CUSTOMER_UPDATE_METAFIELDS = `
   }
 `;
 
-/**
- * Update Customer metafields after contract signature
- */
 export async function updateCustomerAfterSignature(params: {
   shopifyCustomerId: string;
   accountNumber: string;
@@ -542,9 +686,6 @@ export async function updateCustomerAfterSignature(params: {
   }
 }
 
-/**
- * Update Customer info when client modifies email/phone/address
- */
 export async function updateCustomerInfo(params: {
   shopifyCustomerId: string;
   email?: string;
@@ -559,14 +700,31 @@ export async function updateCustomerInfo(params: {
   try {
     const input: any = { id: shopifyCustomerId };
     if (email) input.email = email;
-    if (phone) input.phone = phone;
+    const cleanPhone = sanitizePhone(phone);
+    if (cleanPhone) input.phone = cleanPhone;
     if (address1 || city) {
-      input.addresses = [{ address1: address1 || "", address2: address2 || "", city: city || "", zip: zip || "", country: "FR" }];
+      input.addresses = [{
+        address1: truncate(address1, ADDRESS_MAX) || "",
+        address2: truncate(address2, ADDRESS_MAX) || "",
+        city: truncate(city, ADDRESS_MAX) || "",
+        zip: truncate(zip, ZIP_MAX) || "",
+        country: "FR",
+      }];
     }
 
-    const result = await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, { input });
-    if (result.customerUpdate?.userErrors?.length) {
-      console.error(`[SHOPIFY] Customer info update errors:`, result.customerUpdate.userErrors);
+    let result = await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, { input });
+    let userErrors = result.customerUpdate?.userErrors || [];
+
+    // Retry without phone if duplicate
+    if (userErrors.length > 0 && isPhoneDuplicateError(userErrors)) {
+      console.warn(`[SHOPIFY] Phone duplicate on updateCustomerInfo, retrying without phone`);
+      const { phone: _omit, ...inputNoPhone } = input;
+      result = await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, { input: inputNoPhone });
+      userErrors = result.customerUpdate?.userErrors || [];
+    }
+
+    if (userErrors.length > 0) {
+      console.error(`[SHOPIFY] Customer info update errors:`, userErrors);
     } else {
       console.log(`[SHOPIFY] Updated customer info for ${shopifyCustomerId}`);
     }
@@ -612,13 +770,7 @@ const PRODUCT_VARIANT_BULK_UPDATE_MUTATION = `
   }
 `;
 
-/**
- * Ensure Shopify products exist for all model+term pairs found in offers.
- * Called during import, after parsing.
- * Creates products if missing, stores variant IDs in ShopifyProduct table.
- */
 export async function ensureShopifyProducts(offers: Array<{ modelName: string | null; term: string }>): Promise<{ created: number; existing: number; errors: string[] }> {
-  // Collect unique model+term pairs
   const pairs = new Map<string, { modelName: string; term: string }>();
   for (const offer of offers) {
     if (!offer.modelName) continue;
@@ -634,7 +786,6 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
 
   for (const [, { modelName, term }] of pairs) {
     try {
-      // Check if already in DB
       const exists = await prisma.shopifyProduct.findUnique({
         where: { modelName_term: { modelName, term } },
       });
@@ -644,13 +795,12 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
         continue;
       }
 
-      // Create product in Shopify (API 2026-04)
       const result = await shopifyGraphQL(PRODUCT_CREATE_MUTATION, {
         product: {
           title: `${modelName} — Location ${term} mois`,
           productType: "Location maintenance",
           vendor: "Pitney Bowes",
-          tags: ["pb-renewals", `term-${term}m`],
+          tags: [truncateTag("pb-renewals"), truncateTag(`term-${term}m`)],
         },
       });
 
@@ -669,7 +819,6 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
         continue;
       }
 
-      // Update default variant price
       await shopifyGraphQL(PRODUCT_VARIANT_BULK_UPDATE_MUTATION, {
         productId: product.id,
         variants: [{ id: defaultVariantId, price: 0 }],
@@ -677,7 +826,6 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
 
       const variantId = defaultVariantId;
 
-      // Store in DB
       await prisma.shopifyProduct.create({
         data: {
           modelName,
@@ -700,9 +848,6 @@ export async function ensureShopifyProducts(offers: Array<{ modelName: string | 
   return { created, existing, errors };
 }
 
-/**
- * Get variant ID for a model+term pair from DB
- */
 export async function getVariantId(modelName: string, term: string): Promise<string | null> {
   const product = await prisma.shopifyProduct.findUnique({
     where: { modelName_term: { modelName, term } },
@@ -711,9 +856,6 @@ export async function getVariantId(modelName: string, term: string): Promise<str
   return product?.shopifyVariantId ?? null;
 }
 
-/**
- * Update Customer metafields after signature
- */
 export async function updateCustomerSignatureMetafields(params: {
   shopifyCustomerId: string;
   offerSelected: string;
@@ -752,15 +894,12 @@ export async function updateCustomerSignatureMetafields(params: {
   }
 }
 
-/**
- * Mark a Shopify Customer as archived (tag + metafield)
- */
 export async function archiveCustomerInShopify(shopifyCustomerId: string, accountNumber: string): Promise<void> {
   try {
     await shopifyGraphQL(CUSTOMER_UPDATE_METAFIELDS, {
       input: {
         id: shopifyCustomerId,
-        tags: ["pb-renewals", `account-${accountNumber}`, "archived"],
+        tags: [truncateTag("pb-renewals"), truncateTag(`account-${accountNumber}`), truncateTag("archived")],
         metafields: [
           { namespace: "pb_renewals", key: "status", value: "archived", type: "single_line_text_field" },
         ],
