@@ -23,7 +23,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
   const importRuns = await prisma.importRun.findMany({ orderBy: { importedAt: "desc" }, take: 5 });
   const stats = {
-    clientCount: await prisma.client.count(),
+    clientCount: await prisma.client.count({ where: { archived: false } }),
     offerCount: await prisma.offer.count(),
   };
   return { importRuns, stats };

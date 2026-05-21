@@ -20,7 +20,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     recentAcceptances,
     recentRefusals,
     lastImport,
-    lastC4CExport, 
+    lastC4CExport,
+    shopifySyncErrors,
+    shopifySyncedCount,
+    shopifyTotalWithEmail,
   ] = await Promise.all([
     prisma.client.count({ where: { archived: false } }),
     prisma.client.count({ where: { archived: false, NOT: { bestEmail: null } } }),
@@ -82,6 +85,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
       orderBy: { exportDate: "desc" },
       select: { exportDate: true, acceptanceCount: true, generatedAt: true },
     }),
+    prisma.client.findMany({
+      where: { archived: false, shopifySyncError: { not: null } },
+      select: { accountNumber: true, customerName: true, shopifySyncError: true },
+      orderBy: { customerName: "asc" },
+    }),
+    prisma.client.count({
+      where: { archived: false, shopifyCustomerId: { not: null }, bestEmail: { not: null } },
+    }),
+    prisma.client.count({
+      where: { archived: false, bestEmail: { not: null } },
+    }),
   ]);
 
   // Model breakdown
@@ -121,6 +135,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     recentRefusals,
     lastImport,
     lastC4CExport,
+    shopifySync: {
+      syncErrors: shopifySyncErrors,
+      syncedCount: shopifySyncedCount,
+      totalWithEmail: shopifyTotalWithEmail,
+    },
   };
 }
 
@@ -137,8 +156,17 @@ const reasonLabels: Record<string, string> = {
   autre: "Autre",
 };
 
+function formatSyncError(err: string | null): string {
+  if (!err) return "Erreur inconnue";
+  if (/phone.*already been taken/i.test(err)) return "Téléphone déjà utilisé par un autre compte";
+  if (/email.*already been taken/i.test(err)) return "Email déjà utilisé par un autre compte";
+  if (/no email/i.test(err)) return "Pas d'email";
+  return err.slice(0, 100);
+}
+
 export default function AdminDashboard() {
   const data = useLoaderData<typeof loader>();
+  const syncOk = data.shopifySync.syncErrors.length === 0;
 
   return (
     <div>
@@ -165,6 +193,42 @@ export default function AdminDashboard() {
         <KpiCard label="Sans email" value={data.clientsWithoutEmail} color="#D97706" />
         <KpiCard label="Offre 1 (upgrade)" value={data.offer1Signed} sub="signés" />
         <KpiCard label="Offre 2 (reconduction)" value={data.offer2Signed} sub="signés" />
+      </div>
+
+      {/* Shopify sync status */}
+      <div style={{
+        background: syncOk ? "#ECFDF5" : "#FEF3C7",
+        border: `1px solid ${syncOk ? "#A7F3D0" : "#FCD34D"}`,
+        borderRadius: "8px",
+        padding: "20px",
+        marginBottom: "32px",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+          <span style={{ fontSize: "16px", fontWeight: 600 }}>Synchronisation Shopify</span>
+          <span style={{
+            fontSize: "14px",
+            color: syncOk ? "#059669" : "#D97706",
+            fontWeight: 500,
+          }}>
+            {syncOk ? "✓" : "⚠"} {data.shopifySync.syncedCount} / {data.shopifySync.totalWithEmail} clients synchronisés
+          </span>
+        </div>
+        {!syncOk && (
+          <div style={{ marginTop: "16px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: "#92400E" }}>
+              {data.shopifySync.syncErrors.length} {data.shopifySync.syncErrors.length > 1 ? "erreurs" : "erreur"} :
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+              {data.shopifySync.syncErrors.map((e) => (
+                <li key={e.accountNumber} style={{ fontSize: "13px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "baseline" }}>
+                  <span style={{ fontFamily: "monospace", color: "#6B7280" }}>{e.accountNumber}</span>
+                  <span style={{ color: "#1a1a1a" }}>{e.customerName || "—"}</span>
+                  <span style={{ color: "#B91C1C" }}>— {formatSyncError(e.shopifySyncError)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Model breakdown + Actions */}
