@@ -50,6 +50,14 @@ function truncateTag(tag: string): string {
   return tag.length > TAG_MAX ? tag.slice(0, TAG_MAX) : tag;
 }
 
+/**
+ * Format a Date as YYYY-MM-DD for Shopify metafield type "date".
+ */
+function formatDateOnly(d: Date | null | undefined): string | null {
+  if (!d) return null;
+  return d.toISOString().split("T")[0];
+}
+
 function hasFieldError(
   userErrors: any[],
   field: string,
@@ -199,6 +207,7 @@ interface CustomerData {
   currentModel?: string | null;
   leaseNumber?: string | null;
   currentPayment?: number | null;
+  offerExpiresAt?: Date | null;
 }
 
 export type SyncErrorType =
@@ -246,11 +255,14 @@ export async function syncCustomerToShopify(data: CustomerData): Promise<SyncRes
 
     const existingCustomer = searchResult.customers?.edges?.[0]?.node;
 
+    const offerExpiresAtStr = formatDateOnly(data.offerExpiresAt);
+
     const metafields = [
       { namespace: "pb_renewals", key: "account_number", value: accountNumber, type: "single_line_text_field" },
       ...(data.leaseNumber ? [{ namespace: "pb_renewals", key: "lease_number", value: data.leaseNumber, type: "single_line_text_field" }] : []),
       ...(data.currentModel ? [{ namespace: "pb_renewals", key: "current_model", value: data.currentModel, type: "single_line_text_field" }] : []),
       ...(data.currentPayment ? [{ namespace: "pb_renewals", key: "current_payment", value: String(data.currentPayment), type: "number_decimal" }] : []),
+      ...(offerExpiresAtStr ? [{ namespace: "pb_renewals", key: "offer_expires_at", value: offerExpiresAtStr, type: "date" }] : []),
     ];
 
     const nameParts = data.customerName?.split(" ") || [];
@@ -391,6 +403,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
       currentEquipmentPayment: true,
       shopifyCustomerId: true,
       shopifySyncHash: true,
+      accessToken: { select: { expiresAt: true } },
     },
   });
 
@@ -414,6 +427,8 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
         return;
       }
 
+      const offerExpiresAt = client.accessToken?.expiresAt ?? null;
+
       const hashSource = [
         client.customerName,
         email,
@@ -427,6 +442,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
         client.currentModel,
         client.leaseNumber,
         client.currentEquipmentPayment,
+        offerExpiresAt?.toISOString() ?? null,
       ].join("|");
 
       const hash = Buffer.from(hashSource).toString("base64");
@@ -450,6 +466,7 @@ export async function syncAllCustomersToShopify(importRunId: string): Promise<Sy
         currentModel: client.currentModel,
         leaseNumber: client.leaseNumber,
         currentPayment: client.currentEquipmentPayment,
+        offerExpiresAt,
       });
 
       if (result.customerId) {
@@ -627,6 +644,7 @@ const METAFIELD_DEFINITIONS = [
   { name: "N° de contrat", namespace: "pb_renewals", key: "lease_number", type: "single_line_text_field" },
   { name: "Machine actuelle", namespace: "pb_renewals", key: "current_model", type: "single_line_text_field" },
   { name: "Loyer annuel HT", namespace: "pb_renewals", key: "current_payment", type: "number_decimal" },
+  { name: "Date d'expiration offre", namespace: "pb_renewals", key: "offer_expires_at", type: "date" },
   { name: "Statut", namespace: "pb_renewals", key: "status", type: "single_line_text_field" },
   { name: "Offre choisie", namespace: "pb_renewals", key: "offer_selected", type: "single_line_text_field" },
   { name: "Durée", namespace: "pb_renewals", key: "term_selected", type: "single_line_text_field" },
