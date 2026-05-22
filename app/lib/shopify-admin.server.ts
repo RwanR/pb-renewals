@@ -672,7 +672,7 @@ export async function createMetafieldDefinitions(): Promise<{ created: number; e
 
       if (result.metafieldDefinitionCreate?.userErrors?.length) {
         const errMsg = result.metafieldDefinitionCreate.userErrors.map((e: any) => e.message).join(", ");
-        if (errMsg.includes("already exists")) {
+        if (errMsg.includes("already exists") || errMsg.includes("in use")) {
           console.log(`[SHOPIFY] Metafield definition ${def.namespace}.${def.key} already exists`);
         } else {
           errors.push(`${def.key}: ${errMsg}`);
