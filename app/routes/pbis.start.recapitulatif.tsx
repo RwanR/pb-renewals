@@ -87,7 +87,8 @@ export async function action({ request }: Route.ActionArgs) {
 
   const now = new Date();
 
-  await pbisDb.pbisAcceptance.update({
+  // 1. Update acceptance avec données signataire + status "signing"
+  const acceptance = await pbisDb.pbisAcceptance.update({
     where: { clientId: shipTo },
     data: {
       signatoryFirstName,
@@ -99,11 +100,63 @@ export async function action({ request }: Route.ActionArgs) {
       cgvAcceptedAt: cgvAccepted ? now : null,
       privacyAcceptedAt: privacyAccepted ? now : null,
       status: "signing",
+      ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || null,
+      userAgent: request.headers.get("user-agent") || null,
     },
   });
 
-  // TODO: déclenchement Yousign + email confirmation signature au signataire
-  return redirect("/pbis/start/confirmation");
+  // Garde-fou : si déjà signé, redirect direct
+  if (acceptance.signedAt) {
+    return redirect("/pbis/start/confirmation");
+  }
+
+  // 2. Fetch client pour génération PDF
+  const client = await pbisDb.pbisClient.findUnique({ where: { shipTo } });
+  if (!client) {
+    return redirect("/pbis");
+  }
+
+  // 3. Génère le PDF du contrat
+  console.log(`[PBIS SIGN] Generating PDF for ${shipTo}`);
+  let pdfBuffer: Buffer;
+  try {
+    const { generateContractPDFPbis } = await import("~/lib/contract-pdf-pbis.server");
+    pdfBuffer = await generateContractPDFPbis({ client, acceptance });
+    console.log(`[PBIS SIGN] PDF generated (${pdfBuffer.length} bytes)`);
+  } catch (err) {
+    console.error(`[PBIS SIGN] PDF generation failed:`, err);
+    return redirect("/pbis/start/recapitulatif");
+  }
+
+  // 4. Crée la procédure Yousign + redirige vers la page d'iframe
+  try {
+    const { createSignatureRequest } = await import("~/lib/yousign.server");
+    const { signatureRequestId, signerUrl } = await createSignatureRequest({
+      pdfBuffer,
+      pdfFilename: `contrat-pbis-start-${shipTo}.pdf`,
+      signerFirstName: signatoryFirstName || "",
+      signerLastName: signatoryLastName || "",
+      signerEmail: signatoryEmail || "",
+      signerPhone: signatoryPhone || undefined,
+      accountNumber: shipTo,
+      contractLabel: "PBIS Start",   // <-- ajout
+    });
+
+    await pbisDb.pbisAcceptance.update({
+      where: { id: acceptance.id },
+      data: {
+        yousignProcedureId: signatureRequestId,
+        yousignStatus: "sent",
+        signedPdfUrl: signerUrl, // stockage temporaire du signerUrl, remplacé par yousign:// après webhook
+      },
+    });
+
+    console.log(`[PBIS SIGN] Yousign procedure created: ${signatureRequestId}`);
+    return redirect("/pbis/start/signer");
+  } catch (err) {
+    console.error(`[PBIS SIGN] Yousign API failed:`, err);
+    return redirect("/pbis/start/recapitulatif");
+  }
 }
 
 function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {

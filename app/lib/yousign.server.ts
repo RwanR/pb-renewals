@@ -38,6 +38,7 @@ async function yousignFetch(path: string, options: RequestInit = {}): Promise<an
 /**
  * Create a signature request, upload PDF, add signer, activate, and return the signing URL.
  */
+// Type de createSignatureRequest, ajouter contractLabel
 export async function createSignatureRequest(params: {
   pdfBuffer: Buffer;
   pdfFilename: string;
@@ -46,6 +47,7 @@ export async function createSignatureRequest(params: {
   signerEmail: string;
   signerPhone?: string;
   accountNumber: string;
+  contractLabel?: string;   // <-- ajout
 }): Promise<{
   signatureRequestId: string;
   signerUrl: string;
@@ -66,7 +68,7 @@ export async function createSignatureRequest(params: {
   const signatureRequest = await yousignFetch("/signature_requests", {
     method: "POST",
     body: JSON.stringify({
-      name: `Contrat PB Renewals - ${accountNumber}`,
+      name: `Contrat ${params.contractLabel ?? "PB Renewals"} - ${params.accountNumber}`,
       delivery_mode: "none",
       timezone: "Europe/Paris",
       ordered_signers: false,
