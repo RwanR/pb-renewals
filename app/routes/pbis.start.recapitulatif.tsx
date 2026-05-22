@@ -1,7 +1,7 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
-import { Check, CircleUser, Smartphone, Mail, Info } from "lucide-react";
+import { Check, CircleUser, Smartphone, Mail, Briefcase, Info, Loader2 } from "lucide-react";
 import { Fragment, useState } from "react";
-import { Form, redirect } from "react-router";
+import { Form, redirect, useNavigation } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
@@ -206,6 +206,9 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
   const [contactIsSignatory, setContactIsSignatory] = useState(false);
   const startColor = PBIS_OFFER_COLORS.start;
 
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
+
   const contactFullName = `${recap.contactFirstName} ${recap.contactLastName}`.trim();
 
   return (
@@ -351,8 +354,20 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
             En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<span className="underline">pb.com/fr/servicessolutions</span>) et les accepter, y compris la clause attributive de juridiction.
           </p>
 
-          <button type="submit" className="w-full inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
-            Signer le contrat
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-80" 
+            style={{ backgroundColor: startColor }}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2.5} />
+                Préparation de votre contrat...
+              </>
+            ) : (
+              "Signer le contrat"
+            )}
           </button>
         </div>
       </div>
