@@ -55,9 +55,7 @@ function cleanName(val: unknown): string | null {
   const s = clean(val);
   if (!s) return null;
   if (s.length < 2) return null;
-  // Doit contenir au moins une lettre latine (incluant accents)
   if (!/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(s)) return null;
-  // Rejeter placeholders explicites
   if (/^(N\/A|nc|null|none|inconnu|unknown)$/i.test(s)) return null;
   return s;
 }
@@ -212,6 +210,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   const offers: any[] = [];
   let clientsWithEmail = 0;
   let clientsWithoutEmail = 0;
+  const clientExpirationMap = new Map<string, Date | null>();
 
   updateJob(jobId, { message: "Analyse des lignes..." });
 
@@ -258,7 +257,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       billingEmail: null,
       bestEmail: contactEmail,
       contactFirstName: cleanName(get(row, "CONTACTFIRSTNAME")),
-      contactLastName:  cleanName(get(row, "CONTACTLASTNAME")),
+      contactLastName: cleanName(get(row, "CONTACTLASTNAME")),
       contactPosition: null,
       siret: clean(get(row, "INSTALLCOMPANYREGISTRATIONNUMBER")),
       vatNumber: clean(get(row, "INSTALLVAT")),
@@ -273,28 +272,30 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       contactPhone: clean(get(row, "CONTACTPHONE")),
       activationDate: toDate(get(row, "ACTIVATIONDATE")),
       paymentTerms: clean(get(row, "PAYMENT_TERMS")),
-      emailReceptionFacture:   clean(get(row, "EMAIL_RECEPTION_FACTURE")),
+      emailReceptionFacture: clean(get(row, "EMAIL_RECEPTION_FACTURE")),
       pieceCountLast12m: toInt(get(row, "TOTALPIECECOUNTLAST12MONTHS")),
       resetValueLast12m: toInt(get(row, "TOTALRESETVALUELAST12MONTHS")),
       // C4C export fields
-      categoryContract:        clean(get(row, "CATEGORY_CONTRACT")),
-      offerContract:           clean(get(row, "OFFER_CONTRACT")),
-      currentFlammes:          toInt(get(row, "CURRENTFLAMMES")),
-      pcnFlammes:              clean(get(row, "PCN_FLAMMES")),
-      indexationMaterial:      clean(get(row, "INDEXATION_MATERIAL")),
-      echuEchoir:              clean(get(row, "Echu-Echoir")),
-      paymentMethod:           clean(get(row, "PAYMENT_METHOD")),
-      noteContract:            clean(get(row, "NOTE")),
+      categoryContract: clean(get(row, "CATEGORY_CONTRACT")),
+      offerContract: clean(get(row, "OFFER_CONTRACT")),
+      currentFlammes: toInt(get(row, "CURRENTFLAMMES")),
+      pcnFlammes: clean(get(row, "PCN_FLAMMES")),
+      indexationMaterial: clean(get(row, "INDEXATION_MATERIAL")),
+      echuEchoir: clean(get(row, "Echu-Echoir")),
+      paymentMethod: clean(get(row, "PAYMENT_METHOD")),
+      noteContract: clean(get(row, "NOTE")),
       installAccountNumberC4C: clean(get(row, "INSTALLACCOUNTNUMBER_C4C")),
-      soldToAccountNumberC4C:  clean(get(row, "SOLDTOACCOUNTNUMBER_C4C")),
+      soldToAccountNumberC4C: clean(get(row, "SOLDTOACCOUNTNUMBER_C4C")),
       billingAccountNumberC4C: clean(get(row, "BILLINGACCOUNTNUMBER_C4C")),
-      payerAccountNumberC4C:   clean(get(row, "PAYERACCOUNTNUMBER_C4C")),
-      ownerId:                 clean(get(row, "OWNERID")),
-      contactId:               clean(get(row, "CONTACTID")),
-      salesOffice:             clean(get(row, "SALES_OFFICE")),
-      salesGroup:              clean(get(row, "SALES_GROUP")),
+      payerAccountNumberC4C: clean(get(row, "PAYERACCOUNTNUMBER_C4C")),
+      ownerId: clean(get(row, "OWNERID")),
+      contactId: clean(get(row, "CONTACTID")),
+      salesOffice: clean(get(row, "SALES_OFFICE")),
+      salesGroup: clean(get(row, "SALES_GROUP")),
       currentPaymentFrequency: clean(get(row, "CURRENTPAYMENTFREQUENCY")),
     });
+
+    clientExpirationMap.set(accountNumber, toDate(get(row, "OFFEREXPIRATIONDATE")));
 
     // Offer 1
     const offer1Code = clean(get(row, "OFFER1CODE"));
@@ -445,7 +446,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     }
   }
 
-// NOUVEAU
   console.log(`[IMPORT] Parsed ${clients.length} clients, ${offers.length} offers`);
 
   // Ensure Shopify products exist for all model+term pairs
@@ -479,6 +479,7 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   const errors: string[] = [];
   let newClients = 0;
   let updatedClients = 0;
+  const CHUNK = 500;
 
   try {
     // --- Upsert clients one by one ---
@@ -522,7 +523,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     }
 
     // --- Replace offers for all clients in the file ---
-    // Only delete offers for clients that are in this import (not all offers globally)
     updateJob(jobId, { message: "Mise à jour des offres..." });
     const accountNumbers = clients.map((c) => c.accountNumber);
     await prisma.offer.deleteMany({
@@ -530,8 +530,6 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     });
     console.log(`[IMPORT] Deleted offers for ${accountNumbers.length} clients`);
 
-    // Insert new offers in chunks
-    const CHUNK = 500;
     for (let i = 0; i < offers.length; i += CHUNK) {
       const chunk = offers.slice(i, i + CHUNK);
       await prisma.offer.createMany({ data: chunk });
@@ -544,10 +542,12 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       console.log(`[IMPORT] Offers: ${progress} / ${offers.length}`);
     }
 
-    // --- Tokens: create only for clients that don't have one yet ---
+    // --- Tokens: create for new clients, update expiresAt for all from Excel ---
     updateJob(jobId, { message: "Génération des liens d'accès..." });
-    const tokenExpiry = new Date();
-    tokenExpiry.setDate(tokenExpiry.getDate() + 90);
+
+    const DEFAULT_EXPIRY_DAYS = 90;
+    const defaultExpiry = new Date();
+    defaultExpiry.setDate(defaultExpiry.getDate() + DEFAULT_EXPIRY_DAYS);
 
     const clientsNeedingTokens = clients.filter((c) => c.bestEmail);
     const existingTokens = await prisma.accessToken.findMany({
@@ -556,11 +556,12 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     });
     const hasToken = new Set(existingTokens.map((t) => t.clientAccountNumber));
 
+    // Création des nouveaux tokens (expiration = OFFEREXPIRATIONDATE Excel sinon +90j)
     const newTokenData = clientsNeedingTokens
       .filter((c) => !hasToken.has(c.accountNumber))
       .map((c) => ({
         clientAccountNumber: c.accountNumber,
-        expiresAt: tokenExpiry,
+        expiresAt: clientExpirationMap.get(c.accountNumber) ?? defaultExpiry,
       }));
 
     if (newTokenData.length > 0) {
@@ -568,11 +569,32 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
         const chunk = newTokenData.slice(i, i + CHUNK);
         await prisma.accessToken.createMany({ data: chunk });
       }
-      console.log(`[IMPORT] Generated ${newTokenData.length} new access tokens (${hasToken.size} existing preserved)`);
-    } else {
-      console.log(`[IMPORT] All ${hasToken.size} clients already have tokens — none created`);
+      console.log(`[IMPORT] Generated ${newTokenData.length} new access tokens`);
     }
 
+    // Update expiresAt sur TOUS les tokens du fichier (Excel = source de vérité)
+    // Groupé par date pour minimiser les requêtes (en général: 1 seul groupe)
+    const expirationGroups = new Map<number, string[]>();
+    for (const c of clients) {
+      const d = clientExpirationMap.get(c.accountNumber);
+      if (d) {
+        const key = d.getTime();
+        if (!expirationGroups.has(key)) expirationGroups.set(key, []);
+        expirationGroups.get(key)!.push(c.accountNumber);
+      }
+    }
+
+    let updatedTokens = 0;
+    for (const [time, accounts] of expirationGroups) {
+      const result = await prisma.accessToken.updateMany({
+        where: { clientAccountNumber: { in: accounts } },
+        data: { expiresAt: new Date(time) },
+      });
+      updatedTokens += result.count;
+    }
+    if (updatedTokens > 0) {
+      console.log(`[IMPORT] Aligned expiresAt on ${updatedTokens} tokens from OFFEREXPIRATIONDATE`);
+    }
   } catch (err) {
     console.error(`[IMPORT] Import failed:`, err);
     errors.push(err instanceof Error ? err.message : String(err));

@@ -13,9 +13,9 @@ export type AcceptanceWithRelations = Acceptance & {
 };
 
 /**
- * Headers du template C4C "New Elease" (44 colonnes).
- * Ordre EXACT du template Pitney Bowes 20260519.
- * Les libellés contiennent des \n et espaces spécifiques, à respecter strictement.
+ * Headers du template C4C "New Elease" (45 colonnes — V3 du 22/05/2026).
+ * V3 ajoute "Livré_S4" en position 9 (= INSTALLACCOUNTNUMBER brut, format 0031xxxxxxx).
+ * À ne pas confondre avec "Livré (Quote C4C)" en position 5 (= INSTALLACCOUNTNUMBER_C4C, format 2xxxxxxx).
  */
 const HEADERS = [
   "Index",
@@ -26,6 +26,7 @@ const HEADERS = [
   "Facturé (Quote C4C)",
   "Payeur (Quote C4C)",
   "CONTACTID",
+  "Livré_S4",
   "ContactFirstName",
   "ContactLastName",
   "ContactPhone (Formulaire C4C)",
@@ -64,7 +65,7 @@ const HEADERS = [
   "NEW_EMAILFACTURATION(Payer stree4-Street5)",
 ];
 
-/** Format date YYYY-MM-DD pour les colonnes datetime du template */
+/** Format date YYYY-MM-DD en UTC pour éviter les décalages timezone serveur */
 function formatDate(date: Date | null | undefined): string {
   if (!date) return "";
   const y = date.getUTCFullYear();
@@ -75,7 +76,6 @@ function formatDate(date: Date | null | undefined): string {
 
 /**
  * Mapping installation → code produit (INSTALL_P1 / INSTALL_P5 / blank).
- * À VALIDER AVEC BERNADETTE — actuellement aligné sur contract-pdf.server.ts :
  *   phone  = "Installation assistée en ligne" (75 €) → INSTALL_P5
  *   onsite = "Installation sur site"          (198 €) → INSTALL_P1
  *   auto / null → blank
@@ -92,10 +92,13 @@ function getDurationMonths(termSelected: string | null | undefined): string {
   return `${termSelected} mois`;
 }
 
+/** Normalise pour comparaison case-insensitive et trim */
+function norm(s: string | null | undefined): string {
+  return (s || "").trim().toLowerCase();
+}
+
 /**
  * Construit l'Index = "EL" + CURRENTEQUIPMENTMODEL + "_" + N°séquentiel (padding 5 zéros).
- * Le N°séquentiel est basé sur l'ordre global de signature : compte le nombre
- * d'acceptances signées avant celle-ci, +1. Stable d'un export à l'autre.
  */
 function buildIndex(
   acc: AcceptanceWithRelations,
@@ -107,13 +110,13 @@ function buildIndex(
 }
 
 /**
- * Construit une ligne du template C4C à partir d'une acceptance signée
- * et de son client + offre associés.
+ * Construit une ligne du template C4C.
  *
- * Conventions V1 :
- *   - Flag_UPDATECONTACT = N en V1 (champs email/téléphone retirés de la page Vos informations)
- *   - NEW_CONTACT* = vides en V1
- *   - FLAG_UPDATE_EMAILFACTURATION = Y si client.billingEmail (ou acceptance.billingEmail) renseigné
+ * Logique V3 :
+ *   - Flag_UPDATECONTACT = Y si signataire ≠ contact d'origine (firstName/lastName/email)
+ *     → NEW_CONTACT* remplis avec les valeurs signataire
+ *   - Sinon Flag = N, NEW_CONTACT* vides
+ *   - FLAG_UPDATE_EMAILFACTURATION = Y si client.billingEmail renseigné
  *   - Flag_Billing_address_different = Y/N selon acceptance.billingAddressDifferent
  */
 function buildRow(
@@ -132,8 +135,16 @@ function buildRow(
   const billingDifferent = acc.billingAddressDifferent;
 
   // FLAG_UPDATE_EMAILFACTURATION : Y si l'email facturation a été saisi/modifié
-  const billingEmailSaisi = client.billingEmail || "";
-  const flagUpdateEmailFact = billingEmailSaisi ? "Y" : "N";
+const billingEmailSaisi = client.billingEmail || "";
+const billingEmailOrig = client.emailReceptionFacture || "";
+const billingEmailChanged = norm(billingEmailSaisi) !== norm(billingEmailOrig);
+const flagUpdateEmailFact = billingEmailChanged ? "Y" : "N";
+
+  // Flag_UPDATECONTACT : Y si signataire ≠ contact d'origine
+  const contactChanged =
+    norm(acc.signatoryFirstName) !== norm(client.contactFirstName) ||
+    norm(acc.signatoryLastName) !== norm(client.contactLastName) ||
+    norm(acc.signatoryEmail) !== norm(client.bestEmail);
 
   return [
     // 1. Index = EL + model + _ + sequence
@@ -152,85 +163,85 @@ function buildRow(
     client.payerAccountNumberC4C || "",
     // 8. CONTACTID
     client.contactId || "",
-    // 9. ContactFirstName
+    // 9. Livré_S4 (INSTALLACCOUNTNUMBER brut, format 0031xxxxxxx) — V3
+    client.accountNumber,
+    // 10. ContactFirstName
     client.contactFirstName || "",
-    // 10. ContactLastName
+    // 11. ContactLastName
     client.contactLastName || "",
-    // 11. ContactPhone
+    // 12. ContactPhone
     client.contactPhone || "",
-    // 12. ContactEmail
+    // 13. ContactEmail
     client.bestEmail || "",
-    // 13. Payer Street4-Street5 = EMAIL_RECEPTION_FACTURE d'origine
+    // 14. Payer Street4-Street5 = EMAIL_RECEPTION_FACTURE d'origine
     client.emailReceptionFacture || "",
-    // 14. Agence commerciale
+    // 15. Agence commerciale
     client.salesOffice || "",
-    // 15. Groupe de vendeurs
+    // 16. Groupe de vendeurs
     client.salesGroup || "",
-    // 16. Motif de la commande
+    // 17. Motif de la commande
     offer.orderReason || "",
-    // 17. Date de signature
+    // 18. Date de signature
     formatDate(acc.signedAt),
-    // 18. Responsable
+    // 19. Responsable
     client.ownerName || "",
-    // 19. Note interne (déjà pré-concaténée dans la base)
+    // 20. Note interne (déjà pré-concaténée dans la base)
     client.noteContract || "",
-    // 20. Durée en mois
+    // 21. Durée en mois
     getDurationMonths(acc.termSelected),
-    // 21. Fréquence de facturation (hard-coded selon Jemina : Yearly)
+    // 22. Fréquence de facturation (hard-coded : Yearly)
     "Yearly",
-    // 22. terme echoir / echu
+    // 23. terme echoir / echu
     client.echuEchoir || "",
-    // 23. Purchase Order no.
+    // 24. Purchase Order no.
     acc.purchaseOrderNumber || "",
-    // 24. Date demandée
+    // 25. Date demandée
     formatDate(client.activationDate),
-    // 25. Mode pmt
+    // 26. Mode pmt
     client.paymentMethod || "",
-    // 26. PCN (= PCN_FLAMMES, valeur brute)
+    // 27. PCN (= PCN_FLAMMES, valeur brute)
     client.pcnFlammes || "",
-    // 27. Code produit 1
+    // 28. Code produit 1
     offer.modelPcn || "",
-    // 28. Code produit 2
+    // 29. Code produit 2
     offer.pcn2 || "",
-    // 29. Code produit 3
+    // 30. Code produit 3
     offer.pcn3 || "",
-    // 30. Code produit 4
+    // 31. Code produit 4
     offer.pcn4 || "",
-    // 31. Code produit 5
+    // 32. Code produit 5
     offer.pcn5 || "",
-    // 32. Code produit 6 (INSTALL_P1 / INSTALL_P5 / blank)
+    // 33. Code produit 6 (INSTALL_P1 / INSTALL_P5 / blank)
     mapInstallCode(acc.installOptionSelected),
-    // 33. Rent amount (ZPR0) / Monthly
+    // 34. Rent amount (ZPR0) / Monthly
     client.currentMonthlyPayment ?? "",
-    // 34. Flag_UPDATECONTACT : N en V1 (champs email/tel retirés de la page Vos informations)
-    "N",
-    // 35. New _CONTACTEMAIL : vide en V1
-    "",
-    // 36. NEW_CONTACTFIRSTNAME : vide en V1
-    "",
-    // 37. NEW_CONTACTLASTNAME : vide en V1
-    "",
-    // 38. Flag_Billing_address_different
+    // 35. Flag_UPDATECONTACT — Y si signataire ≠ contact d'origine
+    contactChanged ? "Y" : "N",
+    // 36. New _CONTACTEMAIL
+    contactChanged ? acc.signatoryEmail : "",
+    // 37. NEW_CONTACTFIRSTNAME
+    contactChanged ? acc.signatoryFirstName : "",
+    // 38. NEW_CONTACTLASTNAME
+    contactChanged ? acc.signatoryLastName : "",
+    // 39. Flag_Billing_address_different
     billingDifferent ? "Y" : "N",
-    // 39. NEW_BILLINGADDRESS1
+    // 40. NEW_BILLINGADDRESS1
     billingDifferent ? client.billingAddress1 || "" : "",
-    // 40. NEW BILLING_STREET
+    // 41. NEW BILLING_STREET
     billingDifferent ? client.billingStreet || "" : "",
-    // 41. NEW_BILLINGPOSTALCODE
+    // 42. NEW_BILLINGPOSTALCODE
     billingDifferent ? client.billingPostcode || "" : "",
-    // 42. NEW_BILLINGCITY
+    // 43. NEW_BILLINGCITY
     billingDifferent ? client.billingCity || "" : "",
-    // 43. FLAG_UPDATE_EMAILFACTURATION
+    // 44. FLAG_UPDATE_EMAILFACTURATION
     flagUpdateEmailFact,
-    // 44. NEW_EMAILFACTURATION = saisie utilisateur (si différente de l'origine)
-    billingEmailSaisi,
+    // 45. NEW_EMAILFACTURATION = saisie utilisateur
+    billingEmailChanged ? billingEmailSaisi : "",
   ];
 }
 
 /**
  * Calcule le numéro séquentiel global pour une acceptance donnée.
- * Compte le nombre d'acceptances signées AVANT (ou en même temps) celle-ci.
- * Stable d'un export à l'autre tant qu'on ne supprime pas d'acceptances.
  */
 async function getSequenceNumber(acc: AcceptanceWithRelations): Promise<number> {
   if (!acc.signedAt) return 0;
@@ -245,7 +256,6 @@ async function getSequenceNumber(acc: AcceptanceWithRelations): Promise<number> 
 
 /**
  * Génère le fichier xlsx C4C à partir d'une liste d'acceptances signées.
- * Le sequence number est calculé via prisma.count() (ordre global de signature).
  */
 export async function generateC4CExport(
   acceptances: AcceptanceWithRelations[]
@@ -262,7 +272,6 @@ export async function generateC4CExport(
   headerRow.alignment = { wrapText: true, vertical: "middle" };
   headerRow.height = 40;
 
-  // Pré-calcul des numéros de séquence en parallèle
   const sequences = await Promise.all(
     acceptances.map((acc) => getSequenceNumber(acc))
   );

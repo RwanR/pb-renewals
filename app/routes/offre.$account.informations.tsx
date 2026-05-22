@@ -214,7 +214,7 @@ export default function OffreInformations() {
               <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
                 Données de facturation
               </p>
-              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={client.billingEmail || ""} icon={<MailIcon />} type="email" />
+              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={client.billingEmail || client.emailReceptionFacture || ""} icon={<MailIcon />} type="email" />
               <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
                 <input type="checkbox" checked={showBilling} onChange={function(e) { setShowBilling(e.target.checked); }} style={{
                   width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
