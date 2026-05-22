@@ -31,8 +31,24 @@ function toDate(val: unknown): Date | null {
   if (val instanceof Date) return val;
   const s = clean(val);
   if (!s) return null;
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
+
+  // ISO YYYY-MM-DD
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) {
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // FR DD/MM/YYYY ou DD-MM-YYYY
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m) {
+    const day = +m[1], month = +m[2], year = +m[3];
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    const d = new Date(Date.UTC(year, month - 1, day));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
 }
 
 function cleanName(val: unknown): string | null {

@@ -20,7 +20,7 @@ function formatCurrency(amount: number | null): string {
 function formatDate(date: Date | string | null): string {
   if (!date) return "—";
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("fr-FR");
+  return d.toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
 
 function generateContractHTML(data: ContractData): string {
@@ -210,7 +210,7 @@ function generateContractHTML(data: ContractData): string {
     </div>
     <div class="condition-item">
       <div class="label">Date d'activation</div>
-      <div class="value">${client.activationDate ? formatDate(client.activationDate) : today}</div>
+      <div class="value">${formatDate(client.activationDate)}</div>
     </div>
     <div class="condition-item">
       <div class="label">Fréquence facturation</div>
