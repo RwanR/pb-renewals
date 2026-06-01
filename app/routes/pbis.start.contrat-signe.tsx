@@ -17,10 +17,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw new Response("Contrat non trouvé", { status: 404 });
   }
 
-  if (!acceptance.signedAt) {
-    throw new Response("Contrat non encore signé", { status: 403 });
-  }
-
   try {
     const pdfBuffer = await downloadSignedDocuments(acceptance.yousignProcedureId);
 

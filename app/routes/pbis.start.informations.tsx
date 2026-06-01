@@ -12,6 +12,23 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
 }
 
+export async function loader({ request }: Route.LoaderArgs) {
+  const shipTo = await getSessionShipTo(request);
+  
+  if (shipTo) {
+    const acceptance = await pbisDb.pbisAcceptance.findUnique({
+      where: { clientId: shipTo },
+      select: { signedAt: true },
+    });
+    
+    if (acceptance?.signedAt) {
+      return redirect("/pbis/start/confirmation");
+    }
+  }
+  
+  return null;
+}
+
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const f = (key: string) => {

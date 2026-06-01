@@ -25,6 +25,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect("/pbis/start/informations");
   }
 
+  if (acceptance.signedAt) {
+    return redirect("/pbis/start/confirmation");
+  }
+
   const client = await pbisDb.pbisClient.findUnique({
     where: { shipTo },
     select: {
