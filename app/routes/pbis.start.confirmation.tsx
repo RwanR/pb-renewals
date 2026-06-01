@@ -19,12 +19,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   if (!acceptance) return redirect("/pbis");
 
-  // Garde-fou : la page n'est accessible qu'une fois le contrat signé
-  if (!acceptance.signedAt) return redirect("/pbis/start/signer");
+  // Garde-fou : accès uniquement si la signature a été initiée.
+  // signedAt peut être null si le webhook Yousign n'a pas encore tapé — on affiche la page sans bloquer.
+  if (!acceptance.yousignProcedureId) {
+    return redirect("/pbis/start/recapitulatif");
+  }
 
-  return {
-    reference: shipTo,
-  };
+  return { reference: shipTo };
 }
 
 export default function PbisStartConfirmation({ loaderData }: Route.ComponentProps) {
