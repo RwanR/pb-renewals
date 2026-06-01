@@ -257,7 +257,7 @@ export default function PbisStartInformations() {
 
         {/* CTA */}
         <div className="pt-4">
-          <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
+          <button type="submit" className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
             Continuer vers le récapitulatif
           </button>
         </div>
