@@ -60,7 +60,7 @@ export async function action({ request }: Route.ActionArgs) {
         try {
           const { Resend } = await import("resend");
           const resend = new Resend(process.env.RESEND_API_KEY);
-          const logoUrl = `${process.env.APP_URL || "https://pb-pbis-production.up.railway.app"}/images/pb-logo.png`;
+          const logoUrl = `${process.env.APP_URL || "https://pbis-production.up.railway.app"}/images/pb-logo.png`;
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
