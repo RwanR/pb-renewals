@@ -202,13 +202,13 @@ function RecapRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SignField({ label, name, icon: Icon, type = "text", defaultValue, required }: { label: string; name: string; icon?: typeof CircleUser; type?: string; defaultValue?: string; required?: boolean }) {
+function SignField({ label, name, icon: Icon, type = "text", defaultValue, required, pattern, title }: { label: string; name: string; icon?: typeof CircleUser; type?: string; defaultValue?: string; required?: boolean; pattern?: string; title?: string }) {
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
         {Icon && <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />}
-        <input name={name} type={type} defaultValue={defaultValue} required={required} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+        <input name={name} type={type} defaultValue={defaultValue} required={required} pattern={pattern} title={title} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
       </div>
     </div>
   );
@@ -311,6 +311,8 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 name="signatoryName"
                 icon={CircleUser}
                 required
+                pattern="\S+\s+\S+(\s+\S+)*"
+                title="Veuillez saisir votre prénom et votre nom (deux mots minimum)"
                 defaultValue={contactIsSignatory ? contactFullName : undefined}
                 key={`name-${contactIsSignatory}`}
               />
@@ -323,6 +325,8 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
                 icon={Smartphone}
                 type="tel"
                 required
+                pattern="(\+33|0)\s?[1-9](\s?\d{2}){4}"
+                title="Format attendu : 0612345678 ou +33 6 12 34 56 78"
                 defaultValue={contactIsSignatory ? recap.contactPhone : undefined}
                 key={`ph-${contactIsSignatory}`}
               />
