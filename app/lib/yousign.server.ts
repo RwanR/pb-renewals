@@ -14,12 +14,6 @@
 
 const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
 const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY || "";
-const APP_URL = process.env.APP_URL || "https://pb-renewals.railway.app";
-
-interface YousignError {
-  type: string;
-  detail: string;
-}
 
 async function yousignFetch(path: string, options: RequestInit = {}): Promise<any> {
   const url = `${YOUSIGN_API_URL}${path}`;

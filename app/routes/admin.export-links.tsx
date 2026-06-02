@@ -22,7 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     orderBy: { accountNumber: "asc" },
   });
 
-  const appUrl = process.env.APP_URL || "https://pb-renewals.railway.app";
+  const appUrl = process.env.APP_URL || "https://monrenouvellement.pb.com";
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Liens");
