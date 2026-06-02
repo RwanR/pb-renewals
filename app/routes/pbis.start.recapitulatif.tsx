@@ -6,6 +6,15 @@ import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
+function normalizePhoneFR(phone: string | null | undefined): string | undefined {
+  if (!phone) return undefined;
+  const cleaned = phone.replace(/[\s.\-()]/g, "");
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("00")) return "+" + cleaned.slice(2);
+  if (cleaned.startsWith("0")) return "+33" + cleaned.slice(1);
+  return "+33" + cleaned;
+}
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Signez votre contrat - PBIS Start" }];
 }
@@ -141,7 +150,7 @@ export async function action({ request }: Route.ActionArgs) {
       signerFirstName: signatoryFirstName || "",
       signerLastName: signatoryLastName || "",
       signerEmail: signatoryEmail || "",
-      signerPhone: signatoryPhone || undefined,
+      signerPhone: normalizePhoneFR(signatoryPhone),
       accountNumber: shipTo,
       contractLabel: "PBIS Start",   // <-- ajout
     });

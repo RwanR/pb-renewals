@@ -64,7 +64,7 @@ export async function action({ request }: Route.ActionArgs) {
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
-            to: "erwann.bocher@gmail.com",
+            to: acceptance.signatoryEmail,
             subject: `Votre contrat Pitney Bowes Invoice Services Start a été signé`,
             html: `
 <!DOCTYPE html>
