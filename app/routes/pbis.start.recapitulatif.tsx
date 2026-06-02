@@ -292,16 +292,16 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
             <p className="font-semibold text-xs leading-4 text-neutral-950 pb-2">SIGNATAIRE AUTORISÉ</p>
 
-            <label className="flex gap-4 items-center py-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={contactIsSignatory}
-                onChange={(e) => setContactIsSignatory(e.target.checked)}
-                className="w-4 h-4"
-                style={{ accentColor: startColor }}
-              />
-              <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est le signataire</span>
-            </label>
+            <label className="flex gap-4 items-center py-1 cursor-not-allowed opacity-50">
+            <input
+              type="checkbox"
+              checked={false}
+              disabled
+              className="w-4 h-4"
+              style={{ accentColor: startColor }}
+            />
+            <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est le signataire</span>
+          </label>
 
             <div className="h-px bg-neutral-200" />
 
