@@ -23,6 +23,14 @@ function formatDate(date: Date | string | null): string {
   return d.toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
 
+function getEquipmentDescription(code: string | null, fallback: string | null): string {
+  if (code) {
+    const m = code.match(/^REMISE_(\d+)/);
+    if (m) return `Remise ${m[1]} % les 12 premiers mois`;
+  }
+  return fallback || "";
+}
+
 function generateContractHTML(data: ContractData): string {
   const { client, offer, acceptance } = data;
   const today = formatDate(new Date());
@@ -60,10 +68,10 @@ function generateContractHTML(data: ContractData): string {
   if (offer.template === "1") {
     // Offre 1 (upgrade) — Machine, PCN2/3, Indexation (PCN4), Flammes (PCN5), Remise, Date effet, AutoInk, Install
     equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
-    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
-    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
-    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
-    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: offer.description5, monthly: "" });
+    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: getEquipmentDescription(offer.pcn2, offer.description2), monthly: "" });
+    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: getEquipmentDescription(offer.pcn3, offer.description3), monthly: "" });
+    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: getEquipmentDescription(offer.pcn4, offer.description4), monthly: "" });
+    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: getEquipmentDescription(offer.pcn5, offer.description5), monthly: "" });
 
     const existingCodes = new Set(equipmentLines.map(l => l.code));
 
@@ -89,10 +97,10 @@ function generateContractHTML(data: ContractData): string {
   } else {
     // Offre 2 (reconduction) — Machine, PCN2/3, Indexation (PCN4), Flammes (PCN5), Remise, Date effet
     equipmentLines.push({ code: offer.modelPcn || "—", description: offer.modelDescription || offer.modelName || "—", monthly: monthly + " €" });
-    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: offer.description2, monthly: "" });
-    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: offer.description3, monthly: "" });
-    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: offer.description4, monthly: "" });
-    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: offer.description5, monthly: "" });
+    if (offer.pcn2 && offer.description2) equipmentLines.push({ code: offer.pcn2, description: getEquipmentDescription(offer.pcn2, offer.description2), monthly: "" });
+    if (offer.pcn3 && offer.description3) equipmentLines.push({ code: offer.pcn3, description: getEquipmentDescription(offer.pcn3, offer.description3), monthly: "" });
+    if (offer.pcn4 && offer.description4) equipmentLines.push({ code: offer.pcn4, description: getEquipmentDescription(offer.pcn4, offer.description4), monthly: "" });
+    if (offer.pcn5 && offer.description5) equipmentLines.push({ code: offer.pcn5, description: getEquipmentDescription(offer.pcn5, offer.description5), monthly: "" });
 
     const existingCodes = new Set(equipmentLines.map(l => l.code));
 
@@ -234,7 +242,7 @@ function generateContractHTML(data: ContractData): string {
         )
         .join("")}
       <tr class="total-row">
-        <td colspan="2" style="text-align:right">Loyer annuel HT (hors remise 1ère année)</td>
+       <td colspan="2" style="text-align:right">Loyer annuel HT (hors remise des 12 premiers mois)</td>
         <td>${formatCurrency(annualHT)} €</td>
       </tr>
       <tr>
