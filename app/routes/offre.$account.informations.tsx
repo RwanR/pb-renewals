@@ -12,13 +12,17 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const installOption = url.searchParams.get("installOption") || "phone";
 
-  // Params from confirmer.tsx (when navigating back)
+  // Params from confirmer.tsx (when navigating back) and forward chain
   const billingEmailParam = url.searchParams.get("billingEmail");
   const billingDifferentParam = url.searchParams.get("billingDifferent") === "1";
   const billingAddress1Param = url.searchParams.get("billingAddress1");
   const billingStreetParam = url.searchParams.get("billingStreet");
   const billingPostcodeParam = url.searchParams.get("billingPostcode");
   const billingCityParam = url.searchParams.get("billingCity");
+  const signatoryFirstNameParam = url.searchParams.get("signatoryFirstName") ?? "";
+  const signatoryLastNameParam = url.searchParams.get("signatoryLastName") ?? "";
+  const signatoryEmailParam = url.searchParams.get("signatoryEmail") ?? "";
+  const orderRefParam = url.searchParams.get("orderRef") ?? "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -44,6 +48,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     client, offer: client.offers[0], offerPosition, installOption, accountNumber, hasOptions,
     billingEmailParam, billingDifferentParam,
     billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
+    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
   };
 }
 
@@ -132,6 +137,7 @@ export default function OffreInformations() {
     client, offer, offerPosition, installOption, accountNumber, hasOptions,
     billingEmailParam, billingDifferentParam,
     billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
+    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
   } = useLoaderData<typeof loader>();
 
   const billing = offer.billing60 ?? offer.billing48 ?? offer.billing36;
@@ -139,6 +145,25 @@ export default function OffreInformations() {
   const discount = offer.discount || "50%";
   const machineImg = offer.imageUrl;
   const [showBilling, setShowBilling] = useState(billingDifferentParam);
+
+  // Build back URL to options (forward all known params)
+  const backParams = new URLSearchParams({
+    offre: String(offerPosition),
+    installOption,
+  });
+  if (billingEmailParam) backParams.set("billingEmail", billingEmailParam);
+  if (billingDifferentParam) backParams.set("billingDifferent", "1");
+  if (billingAddress1Param) backParams.set("billingAddress1", billingAddress1Param);
+  if (billingStreetParam) backParams.set("billingStreet", billingStreetParam);
+  if (billingPostcodeParam) backParams.set("billingPostcode", billingPostcodeParam);
+  if (billingCityParam) backParams.set("billingCity", billingCityParam);
+  if (signatoryFirstNameParam) backParams.set("signatoryFirstName", signatoryFirstNameParam);
+  if (signatoryLastNameParam) backParams.set("signatoryLastName", signatoryLastNameParam);
+  if (signatoryEmailParam) backParams.set("signatoryEmail", signatoryEmailParam);
+  if (orderRefParam) backParams.set("orderRef", orderRefParam);
+  const backUrlOptions = hasOptions
+    ? `/offre/${accountNumber}/options?${backParams.toString()}`
+    : `/offre/${accountNumber}`;
 
   return (
     <div>
@@ -176,7 +201,7 @@ export default function OffreInformations() {
           <div className="pb-step-line" />
           {hasOptions ? (
             <>
-              <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrlOptions} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">3</div>
               <div className="pb-step-line" />
@@ -203,6 +228,11 @@ export default function OffreInformations() {
           <input type="hidden" name="installPostcode" value={client.installPostcode || ""} />
           <input type="hidden" name="installCity" value={client.installCity || ""} />
           <input type="hidden" name="billingDifferent" value={showBilling ? "1" : "0"} />
+          {/* Forward signatory params (set on confirmer) */}
+          {signatoryFirstNameParam && <input type="hidden" name="signatoryFirstName" value={signatoryFirstNameParam} />}
+          {signatoryLastNameParam && <input type="hidden" name="signatoryLastName" value={signatoryLastNameParam} />}
+          {signatoryEmailParam && <input type="hidden" name="signatoryEmail" value={signatoryEmailParam} />}
+          {orderRefParam && <input type="hidden" name="orderRef" value={orderRefParam} />}
 
           <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
             {/* Infos client */}
@@ -258,7 +288,7 @@ export default function OffreInformations() {
 
             {/* CTA */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "48px" }}>
-              <Link to={hasOptions ? `/offre/${accountNumber}/options?offre=${offerPosition}` : `/offre/${accountNumber}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
+              <Link to={backUrlOptions} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </Link>
               <button type="submit" className="pb-btn pb-btn-primary" style={{ padding: "12px 32px", fontSize: "16px" }}>

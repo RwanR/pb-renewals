@@ -24,6 +24,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const billingCity = url.searchParams.get("billingCity") || "";
   const billingDifferent = url.searchParams.get("billingDifferent") === "1";
   const billingEmail = url.searchParams.get("billingEmail") || "";
+  // Signatory params (pre-fill when navigating back from later steps)
+  const signatoryFirstNameParam = url.searchParams.get("signatoryFirstName") || "";
+  const signatoryLastNameParam = url.searchParams.get("signatoryLastName") || "";
+  const signatoryEmailParam = url.searchParams.get("signatoryEmail") || "";
+  const orderRefParam = url.searchParams.get("orderRef") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -37,7 +42,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const hasOptions = client.offers[0].installAvailable;
 
-  return { client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail, hasOptions };
+  return {
+    client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption,
+    overrideEmail, overridePhone,
+    billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail,
+    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
+    hasOptions,
+  };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -212,7 +223,32 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 }
 
 export default function OffreConfirmer() {
-  const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail, hasOptions } = useLoaderData<typeof loader>();
+  const {
+    client, offer, offerPosition, signatureError, autoInk, installOption,
+    overrideEmail, overridePhone,
+    billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail,
+    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
+    hasOptions,
+  } = useLoaderData<typeof loader>();
+
+  const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Priorité useState init : actionData (POST error) > URL param (navigation back) > client default
+  const [orderRef, setOrderRef] = useState((actionData?.values?.orderRef as string) || orderRefParam || "");
+  const [firstName, setFirstName] = useState((actionData?.values?.signatoryFirstName as string) || signatoryFirstNameParam || client.contactFirstName || "");
+  const [lastName, setLastName] = useState((actionData?.values?.signatoryLastName as string) || signatoryLastNameParam || client.contactLastName || "");
+  const [signatoryEmail, setSignatoryEmail] = useState((actionData?.values?.signatoryEmail as string) || signatoryEmailParam || "");
+
+  useEffect(() => {
+    setIsSubmitting(false);
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setIsSubmitting(false);
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  // Build back URL with current signatory state (captures useState values, recalculated each render)
   const backParams = new URLSearchParams({
     offre: String(offerPosition),
     installOption,
@@ -223,21 +259,12 @@ export default function OffreConfirmer() {
   if (billingStreet) backParams.set("billingStreet", billingStreet);
   if (billingPostcode) backParams.set("billingPostcode", billingPostcode);
   if (billingCity) backParams.set("billingCity", billingCity);
-  const backUrl = `/offre/${client.accountNumber}/informations?${backParams.toString()}`;
-  const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderRef, setOrderRef] = useState(actionData?.values?.orderRef as string ?? "");
-  const [firstName, setFirstName] = useState((actionData?.values?.signatoryFirstName as string) ?? client.contactFirstName ?? "");
-  const [lastName, setLastName] = useState((actionData?.values?.signatoryLastName as string) ?? client.contactLastName ?? "");
-  const [signatoryEmail, setSignatoryEmail] = useState((actionData?.values?.signatoryEmail as string) ?? "");
-  useEffect(() => {
-    setIsSubmitting(false);
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) setIsSubmitting(false);
-    };
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, []);
+  if (firstName) backParams.set("signatoryFirstName", firstName);
+  if (lastName) backParams.set("signatoryLastName", lastName);
+  if (signatoryEmail) backParams.set("signatoryEmail", signatoryEmail);
+  if (orderRef) backParams.set("orderRef", orderRef);
+  const backUrlInformations = `/offre/${client.accountNumber}/informations?${backParams.toString()}`;
+  const backUrlOptions = `/offre/${client.accountNumber}/options?${backParams.toString()}`;
 
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
@@ -256,15 +283,15 @@ export default function OffreConfirmer() {
           <div className="pb-step-line" />
           {hasOptions ? (
             <>
-              <Link to={`/offre/${client.accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrlOptions} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
-              <Link to={backUrl} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrlInformations} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">4</div>
             </>
           ) : (
             <>
-              <Link to={backUrl} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrlInformations} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">3</div>
             </>
@@ -414,7 +441,7 @@ export default function OffreConfirmer() {
 
           {/* CTAs */}
           <div className="pb-confirmer-ctas" style={{ display: "flex", gap: "16px", marginTop: "40px", paddingBottom: "40px", alignItems: "center" }}>
-            <Link to={backUrl} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+            <Link to={backUrlInformations} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
             <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}${(signatoryEmail || email) ? `&email=${encodeURIComponent(signatoryEmail || email)}` : ""}${firstName ? `&firstName=${encodeURIComponent(firstName)}` : ""}${lastName ? `&lastName=${encodeURIComponent(lastName)}` : ""}`}
