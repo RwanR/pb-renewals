@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { useState } from "react";
-import { useLoaderData, Form, Link } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
+import { useSessionState } from "~/lib/use-session-state";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -10,19 +10,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
-  const installOption = url.searchParams.get("installOption") || "phone";
-
-  // Params from confirmer.tsx (when navigating back) and forward chain
-  const billingEmailParam = url.searchParams.get("billingEmail");
-  const billingDifferentParam = url.searchParams.get("billingDifferent") === "1";
-  const billingAddress1Param = url.searchParams.get("billingAddress1");
-  const billingStreetParam = url.searchParams.get("billingStreet");
-  const billingPostcodeParam = url.searchParams.get("billingPostcode");
-  const billingCityParam = url.searchParams.get("billingCity");
-  const signatoryFirstNameParam = url.searchParams.get("signatoryFirstName") ?? "";
-  const signatoryLastNameParam = url.searchParams.get("signatoryLastName") ?? "";
-  const signatoryEmailParam = url.searchParams.get("signatoryEmail") ?? "";
-  const orderRefParam = url.searchParams.get("orderRef") ?? "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -44,12 +31,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   const hasOptions = client.offers[0].installAvailable;
-  return {
-    client, offer: client.offers[0], offerPosition, installOption, accountNumber, hasOptions,
-    billingEmailParam, billingDifferentParam,
-    billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
-    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
-  };
+  return { client, offer: client.offers[0], offerPosition, accountNumber, hasOptions };
 }
 
 function formatCurrency(amount: number | null): string {
@@ -79,7 +61,10 @@ function FieldReadonly({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FieldEditable({ label, name, value, icon, type = "text" }: { label: string; name: string; value: string; icon: React.ReactNode; type?: string }) {
+function FieldEditable({ label, name, value, onChange, icon, type = "text" }: {
+  label: string; name: string; value: string; onChange: (v: string) => void;
+  icon: React.ReactNode; type?: string;
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>{label}</label>
@@ -100,7 +85,8 @@ function FieldEditable({ label, name, value, icon, type = "text" }: { label: str
         <input
           name={name}
           type={type}
-          defaultValue={value || ""}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           style={{
             flex: 1,
             border: "none",
@@ -119,9 +105,6 @@ function FieldEditable({ label, name, value, icon, type = "text" }: { label: str
 const MailIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M1 4.5L8 9L15 4.5" stroke="#737373" strokeWidth="1.2"/></svg>
 );
-const PhoneIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="4" y="1" width="8" height="14" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M7 12.5H9" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>
-);
 const MapPinIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6C3.5 9.5 8 14.5 8 14.5S12.5 9.5 12.5 6C12.5 3.5 10.5 1.5 8 1.5Z" stroke="#737373" strokeWidth="1.2"/><circle cx="8" cy="6" r="1.5" stroke="#737373" strokeWidth="1.2"/></svg>
 );
@@ -133,37 +116,23 @@ const BuildingIcon = () => (
 );
 
 export default function OffreInformations() {
-  const {
-    client, offer, offerPosition, installOption, accountNumber, hasOptions,
-    billingEmailParam, billingDifferentParam,
-    billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
-    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
-  } = useLoaderData<typeof loader>();
+  const { client, offer, offerPosition, accountNumber, hasOptions } = useLoaderData<typeof loader>();
 
   const billing = offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const discount = offer.discount || "50%";
   const machineImg = offer.imageUrl;
-  const [showBilling, setShowBilling] = useState(billingDifferentParam);
 
-  // Build back URL to options (forward all known params)
-  const backParams = new URLSearchParams({
-    offre: String(offerPosition),
-    installOption,
-  });
-  if (billingEmailParam) backParams.set("billingEmail", billingEmailParam);
-  if (billingDifferentParam) backParams.set("billingDifferent", "1");
-  if (billingAddress1Param) backParams.set("billingAddress1", billingAddress1Param);
-  if (billingStreetParam) backParams.set("billingStreet", billingStreetParam);
-  if (billingPostcodeParam) backParams.set("billingPostcode", billingPostcodeParam);
-  if (billingCityParam) backParams.set("billingCity", billingCityParam);
-  if (signatoryFirstNameParam) backParams.set("signatoryFirstName", signatoryFirstNameParam);
-  if (signatoryLastNameParam) backParams.set("signatoryLastName", signatoryLastNameParam);
-  if (signatoryEmailParam) backParams.set("signatoryEmail", signatoryEmailParam);
-  if (orderRefParam) backParams.set("orderRef", orderRefParam);
-  const backUrlOptions = hasOptions
-    ? `/offre/${accountNumber}/options?${backParams.toString()}`
-    : `/offre/${accountNumber}`;
+  const scope = `pb-offre-${accountNumber}-${offerPosition}`;
+  const [billingEmail, setBillingEmail] = useSessionState<string>(
+    `${scope}-billingEmail`,
+    client.billingEmail || client.emailReceptionFacture || ""
+  );
+  const [showBilling, setShowBilling] = useSessionState<boolean>(`${scope}-billingDifferent`, false);
+  const [billingAddress1, setBillingAddress1] = useSessionState<string>(`${scope}-billingAddress1`, client.billingAddress1 || "");
+  const [billingStreet, setBillingStreet] = useSessionState<string>(`${scope}-billingStreet`, client.billingStreet || "");
+  const [billingPostcode, setBillingPostcode] = useSessionState<string>(`${scope}-billingPostcode`, client.billingPostcode || "");
+  const [billingCity, setBillingCity] = useSessionState<string>(`${scope}-billingCity`, client.billingCity || "");
 
   return (
     <div>
@@ -201,7 +170,7 @@ export default function OffreInformations() {
           <div className="pb-step-line" />
           {hasOptions ? (
             <>
-              <Link to={backUrlOptions} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={`/offre/${accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">3</div>
               <div className="pb-step-line" />
@@ -220,83 +189,60 @@ export default function OffreInformations() {
           </p>
         </div>
 
-        <Form method="get" action={`/offre/${accountNumber}/confirmer`}>
-          <input type="hidden" name="offre" value={offerPosition} />
-          <input type="hidden" name="installOption" value={installOption} />
-          <input type="hidden" name="installAddress1" value={client.installAddress1 || ""} />
-          <input type="hidden" name="installStreet" value={client.installStreet || ""} />
-          <input type="hidden" name="installPostcode" value={client.installPostcode || ""} />
-          <input type="hidden" name="installCity" value={client.installCity || ""} />
-          <input type="hidden" name="billingDifferent" value={showBilling ? "1" : "0"} />
-          {/* Forward signatory params (set on confirmer) */}
-          {signatoryFirstNameParam && <input type="hidden" name="signatoryFirstName" value={signatoryFirstNameParam} />}
-          {signatoryLastNameParam && <input type="hidden" name="signatoryLastName" value={signatoryLastNameParam} />}
-          {signatoryEmailParam && <input type="hidden" name="signatoryEmail" value={signatoryEmailParam} />}
-          {orderRefParam && <input type="hidden" name="orderRef" value={orderRefParam} />}
+        <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
+          {/* Infos client */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <FieldReadonly label="Raison sociale du donneur d'ordre" value={client.customerName} />
+            <FieldReadonly label="SIRET" value={client.siret || ""} />
+          </div>
 
-          <div style={{ maxWidth: "596px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px", paddingBottom: "40px" }}>
-            {/* Infos client */}
+          {/* Adresse d'installation */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
+              Adresse d'installation
+            </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <FieldReadonly label="Raison sociale du donneur d'ordre" value={client.customerName} />
-              <FieldReadonly label="SIRET" value={client.siret || ""} />
-            </div>
-
-            {/* Adresse d'installation */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
-                Adresse d'installation
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <FieldReadonly label="Raison sociale de l'installé" value={client.customerName} />
-                <FieldReadonly label="Adresse" value={client.installAddress1 || ""} />
-                <FieldReadonly label="Complément d'adresse" value={client.installStreet || ""} />
-                <FieldReadonly label="Code postal" value={client.installPostcode || ""} />
-                <FieldReadonly label="Ville" value={client.installCity || ""} />
-              </div>
-            </div>
-
-            {/* Données de facturation */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
-                Données de facturation
-              </p>
-              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={billingEmailParam ?? client.billingEmail ?? client.emailReceptionFacture ?? ""} icon={<MailIcon />} type="email" />
-              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-                <input type="checkbox" checked={showBilling} onChange={function(e) { setShowBilling(e.target.checked); }} style={{
-                  width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
-                }} />
-                <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Adresse postale de facturation si différente</span>
-              </label>
-              {!showBilling && (
-                <>
-                  <input type="hidden" name="billingAddress1" value={client.billingAddress1 || ""} />
-                  <input type="hidden" name="billingStreet" value={client.billingStreet || ""} />
-                  <input type="hidden" name="billingPostcode" value={client.billingPostcode || ""} />
-                  <input type="hidden" name="billingCity" value={client.billingCity || ""} />
-                </>
-              )}
-              {showBilling ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
-                  <FieldEditable label="Adresse" name="billingAddress1" value={billingAddress1Param ?? client.billingAddress1 ?? ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Complément d'adresse" name="billingStreet" value={billingStreetParam ?? client.billingStreet ?? ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Code postal" name="billingPostcode" value={billingPostcodeParam ?? client.billingPostcode ?? ""} icon={<MailboxIcon />} />
-                  <FieldEditable label="Ville" name="billingCity" value={billingCityParam ?? client.billingCity ?? ""} icon={<BuildingIcon />} />
-                </div>
-              ) : null}
-            </div>
-
-            {/* CTA */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "48px" }}>
-              <Link to={backUrlOptions} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </Link>
-              <button type="submit" className="pb-btn pb-btn-primary" style={{ padding: "12px 32px", fontSize: "16px" }}>
-                Étape suivante
-              </button>
+              <FieldReadonly label="Raison sociale de l'installé" value={client.customerName} />
+              <FieldReadonly label="Adresse" value={client.installAddress1 || ""} />
+              <FieldReadonly label="Complément d'adresse" value={client.installStreet || ""} />
+              <FieldReadonly label="Code postal" value={client.installPostcode || ""} />
+              <FieldReadonly label="Ville" value={client.installCity || ""} />
             </div>
           </div>
-        </Form>
+
+          {/* Données de facturation */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
+              Données de facturation
+            </p>
+            <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={billingEmail} onChange={setBillingEmail} icon={<MailIcon />} type="email" />
+            <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+              <input type="checkbox" checked={showBilling} onChange={(e) => setShowBilling(e.target.checked)} style={{
+                width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
+              }} />
+              <span style={{ fontSize: "14px", color: "var(--pb-text)" }}>Adresse postale de facturation si différente</span>
+            </label>
+            {showBilling ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
+                <FieldEditable label="Adresse" name="billingAddress1" value={billingAddress1} onChange={setBillingAddress1} icon={<MapPinIcon />} />
+                <FieldEditable label="Complément d'adresse" name="billingStreet" value={billingStreet} onChange={setBillingStreet} icon={<MapPinIcon />} />
+                <FieldEditable label="Code postal" name="billingPostcode" value={billingPostcode} onChange={setBillingPostcode} icon={<MailboxIcon />} />
+                <FieldEditable label="Ville" name="billingCity" value={billingCity} onChange={setBillingCity} icon={<BuildingIcon />} />
+              </div>
+            ) : null}
+          </div>
+
+          {/* CTA */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "48px" }}>
+            <Link to={hasOptions ? `/offre/${accountNumber}/options?offre=${offerPosition}` : `/offre/${accountNumber}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </Link>
+            <Link to={`/offre/${accountNumber}/confirmer?offre=${offerPosition}`} className="pb-btn pb-btn-primary" style={{ padding: "12px 32px", fontSize: "16px", textDecoration: "none" }}>
+              Étape suivante
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

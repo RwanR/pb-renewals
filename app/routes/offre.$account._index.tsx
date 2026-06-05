@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { useEffect } from "react";
 import { useLoaderData, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
@@ -47,6 +48,14 @@ function getMachineImage(model: string | null): string | null {
 
 export default function OffreClient() {
   var { client } = useLoaderData<typeof loader>();
+  
+  useEffect(() => {
+    const prefix = `pb-offre-${client.accountNumber}-`;
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith(prefix))
+      .forEach(k => sessionStorage.removeItem(k));
+  }, [client.accountNumber]);
+
   var offer1 = client.offers.find(function(o: any) { return o.offerPosition === 1; });
   var offer2 = client.offers.find(function(o: any) { return o.offerPosition === 2; });
 

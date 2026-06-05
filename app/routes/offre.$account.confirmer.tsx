@@ -3,6 +3,7 @@ import { useLoaderData, useActionData, Form, Link } from "react-router";
 import { useState, useEffect } from "react";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import { generateContractPDF } from "~/lib/contract-pdf.server";
+import { useSessionState } from "~/lib/use-session-state";
 import prisma from "~/db.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -12,23 +13,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const signatureError = url.searchParams.get("error") === "signature";
-  const autoInk = false; // AutoInk supprimé par PB
-  const installOption = offerPosition === 1
-  ? (url.searchParams.get("installOption") || "")
-  : ""; // Offre 2: jamais d'install (règle métier PB)
-  const overrideEmail = url.searchParams.get("email") || "";
-  const overridePhone = url.searchParams.get("phone") || "";
-  const billingAddress1 = url.searchParams.get("billingAddress1") || "";
-  const billingStreet = url.searchParams.get("billingStreet") || "";
-  const billingPostcode = url.searchParams.get("billingPostcode") || "";
-  const billingCity = url.searchParams.get("billingCity") || "";
-  const billingDifferent = url.searchParams.get("billingDifferent") === "1";
-  const billingEmail = url.searchParams.get("billingEmail") || "";
-  // Signatory params (pre-fill when navigating back from later steps)
-  const signatoryFirstNameParam = url.searchParams.get("signatoryFirstName") || "";
-  const signatoryLastNameParam = url.searchParams.get("signatoryLastName") || "";
-  const signatoryEmailParam = url.searchParams.get("signatoryEmail") || "";
-  const orderRefParam = url.searchParams.get("orderRef") || "";
 
   const client = await prisma.client.findUnique({
     where: { accountNumber },
@@ -42,13 +26,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const hasOptions = client.offers[0].installAvailable;
 
-  return {
-    client, offer: client.offers[0], offerPosition, signatureError, autoInk, installOption,
-    overrideEmail, overridePhone,
-    billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail,
-    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
-    hasOptions,
-  };
+  return { client, offer: client.offers[0], offerPosition, signatureError, hasOptions };
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
@@ -202,42 +180,38 @@ const UserIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="non
 const MailIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M1 4.5L8 9L15 4.5" stroke="#737373" strokeWidth="1.2"/></svg>;
 const DocIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="1.5" stroke="#737373" strokeWidth="1.2"/><path d="M6 5H10M6 8H10M6 11H8" stroke="#737373" strokeWidth="1.2" strokeLinecap="round"/></svg>;
 
-function FieldWithIcon({ label, name, defaultValue, icon, type = "text", required = false, error, placeholder }: {
-  label: string; name: string; defaultValue: string; icon: React.ReactNode; type?: string; required?: boolean; error?: string; placeholder?: string;
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--pb-foreground)" }}>{label}</label>
-      <div style={{
-        background: "white", border: error ? "1px solid #DC2626" : "1px solid var(--pb-border)",
-        borderRadius: "8px", padding: "9.5px 16px", display: "flex", alignItems: "center", gap: "12px",
-        minHeight: "40px", boxShadow: "0 1px 2px 0 rgba(0,0,0,0.05)",
-      }}>
-        <div style={{ flexShrink: 0, width: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>{icon}</div>
-        <input name={name} type={type} defaultValue={defaultValue} required={required} placeholder={placeholder}
-          style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: "14px", color: "var(--pb-foreground)" }} />
-      </div>
-      {error && <span style={{ color: "#DC2626", fontSize: "12px" }}>{error}</span>}
-    </div>
-  );
-}
-
 export default function OffreConfirmer() {
-  const {
-    client, offer, offerPosition, signatureError, autoInk, installOption,
-    overrideEmail, overridePhone,
-    billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail,
-    signatoryFirstNameParam, signatoryLastNameParam, signatoryEmailParam, orderRefParam,
-    hasOptions,
-  } = useLoaderData<typeof loader>();
-
+  const { client, offer, offerPosition, signatureError, hasOptions } = useLoaderData<typeof loader>();
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Priorité useState init : actionData (POST error) > URL param (navigation back) > client default
-  const [orderRef, setOrderRef] = useState((actionData?.values?.orderRef as string) || orderRefParam || "");
-  const [firstName, setFirstName] = useState((actionData?.values?.signatoryFirstName as string) || signatoryFirstNameParam || client.contactFirstName || "");
-  const [lastName, setLastName] = useState((actionData?.values?.signatoryLastName as string) || signatoryLastNameParam || client.contactLastName || "");
-  const [signatoryEmail, setSignatoryEmail] = useState((actionData?.values?.signatoryEmail as string) || signatoryEmailParam || "");
+
+  // Read previous steps (sessionStorage, read-only on this page)
+  const scope = `pb-offre-${client.accountNumber}-${offerPosition}`;
+  const [installOption] = useSessionState<string>(`${scope}-installOption`, "");
+  const [billingEmail] = useSessionState<string>(`${scope}-billingEmail`, client.billingEmail || client.emailReceptionFacture || "");
+  const [billingDifferent] = useSessionState<boolean>(`${scope}-billingDifferent`, false);
+  const [billingAddress1] = useSessionState<string>(`${scope}-billingAddress1`, client.billingAddress1 || "");
+  const [billingStreet] = useSessionState<string>(`${scope}-billingStreet`, client.billingStreet || "");
+  const [billingPostcode] = useSessionState<string>(`${scope}-billingPostcode`, client.billingPostcode || "");
+  const [billingCity] = useSessionState<string>(`${scope}-billingCity`, client.billingCity || "");
+
+  // Signatory fields (editable here, persisted to sessionStorage)
+  const [firstName, setFirstName] = useSessionState<string>(
+    `${scope}-signatoryFirstName`,
+    (actionData?.values?.signatoryFirstName as string) || client.contactFirstName || ""
+  );
+  const [lastName, setLastName] = useSessionState<string>(
+    `${scope}-signatoryLastName`,
+    (actionData?.values?.signatoryLastName as string) || client.contactLastName || ""
+  );
+  const [signatoryEmail, setSignatoryEmail] = useSessionState<string>(
+    `${scope}-signatoryEmail`,
+    (actionData?.values?.signatoryEmail as string) || ""
+  );
+  const [orderRef, setOrderRef] = useSessionState<string>(
+    `${scope}-orderRef`,
+    (actionData?.values?.orderRef as string) || ""
+  );
 
   useEffect(() => {
     setIsSubmitting(false);
@@ -248,31 +222,16 @@ export default function OffreConfirmer() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-  // Build back URL with current signatory state (captures useState values, recalculated each render)
-  const backParams = new URLSearchParams({
-    offre: String(offerPosition),
-    installOption,
-    billingEmail,
-    billingDifferent: billingDifferent ? "1" : "0",
-  });
-  if (billingAddress1) backParams.set("billingAddress1", billingAddress1);
-  if (billingStreet) backParams.set("billingStreet", billingStreet);
-  if (billingPostcode) backParams.set("billingPostcode", billingPostcode);
-  if (billingCity) backParams.set("billingCity", billingCity);
-  if (firstName) backParams.set("signatoryFirstName", firstName);
-  if (lastName) backParams.set("signatoryLastName", lastName);
-  if (signatoryEmail) backParams.set("signatoryEmail", signatoryEmail);
-  if (orderRef) backParams.set("orderRef", orderRef);
-  const backUrlInformations = `/offre/${client.accountNumber}/informations?${backParams.toString()}`;
-  const backUrlOptions = `/offre/${client.accountNumber}/options?${backParams.toString()}`;
-
   const monthly = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
   const billingTotal = monthly && billingTax ? monthly + billingTax : (offer.billingTotal60 ?? offer.billingTotal48 ?? offer.billingTotal36);
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const machineImg = offer.imageUrl;
   const installPrices: Record<string, string> = { auto: "0,00 €", phone: "75,00 €", onsite: "198,00 €" };
-  const email = overrideEmail || client.bestEmail || client.installEmail || client.billingEmail || "";
+  const email = client.bestEmail || client.installEmail || client.billingEmail || "";
+
+  const backUrlInformations = `/offre/${client.accountNumber}/informations?offre=${offerPosition}`;
+  const backUrlOptions = `/offre/${client.accountNumber}/options?offre=${offerPosition}`;
 
   return (
     <div className="pb-main">
@@ -356,14 +315,12 @@ export default function OffreConfirmer() {
         <Form method="post" reloadDocument onSubmit={() => setIsSubmitting(true)}>
           <input type="hidden" name="offerPosition" value={offerPosition} />
           <input type="hidden" name="installOption" value={installOption} />
-          <input type="hidden" name="overrideEmail" value={overrideEmail} />
-          <input type="hidden" name="overridePhone" value={overridePhone} />
+          <input type="hidden" name="billingEmail" value={billingEmail} />
+          <input type="hidden" name="billingDifferent" value={billingDifferent ? "1" : "0"} />
           <input type="hidden" name="billingAddress1" value={billingAddress1} />
           <input type="hidden" name="billingStreet" value={billingStreet} />
           <input type="hidden" name="billingPostcode" value={billingPostcode} />
           <input type="hidden" name="billingCity" value={billingCity} />
-          <input type="hidden" name="billingDifferent" value={billingDifferent ? "1" : "0"} />
-          <input type="hidden" name="billingEmail" value={billingEmail} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
