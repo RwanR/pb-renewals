@@ -213,6 +213,17 @@ function FieldWithIcon({ label, name, defaultValue, icon, type = "text", require
 
 export default function OffreConfirmer() {
   const { client, offer, offerPosition, signatureError, autoInk, installOption, overrideEmail, overridePhone, billingAddress1, billingStreet, billingPostcode, billingCity, billingDifferent, billingEmail, hasOptions } = useLoaderData<typeof loader>();
+  const backParams = new URLSearchParams({
+    offre: String(offerPosition),
+    installOption,
+    billingEmail,
+    billingDifferent: billingDifferent ? "1" : "0",
+  });
+  if (billingAddress1) backParams.set("billingAddress1", billingAddress1);
+  if (billingStreet) backParams.set("billingStreet", billingStreet);
+  if (billingPostcode) backParams.set("billingPostcode", billingPostcode);
+  if (billingCity) backParams.set("billingCity", billingCity);
+  const backUrl = `/offre/${client.accountNumber}/informations?${backParams.toString()}`;
   const actionData = useActionData<{ errors?: Record<string, string>; values?: Record<string, string> }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderRef, setOrderRef] = useState(actionData?.values?.orderRef as string ?? "");
@@ -247,13 +258,13 @@ export default function OffreConfirmer() {
             <>
               <Link to={`/offre/${client.accountNumber}/options?offre=${offerPosition}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
-              <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrl} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">4</div>
             </>
           ) : (
             <>
-              <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
+              <Link to={backUrl} className="pb-step" style={{ background: "#00b44a", color: "white", textDecoration: "none", cursor: "pointer" }}>✓</Link>
               <div className="pb-step-line" />
               <div className="pb-step pb-step-active">3</div>
             </>
@@ -403,7 +414,7 @@ export default function OffreConfirmer() {
 
           {/* CTAs */}
           <div className="pb-confirmer-ctas" style={{ display: "flex", gap: "16px", marginTop: "40px", paddingBottom: "40px", alignItems: "center" }}>
-            <Link to={`/offre/${client.accountNumber}/informations?offre=${offerPosition}&installOption=${installOption}`} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+            <Link to={backUrl} style={{ color: "var(--pb-text)", display: "flex", alignItems: "center", flexShrink: 0 }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
             <a href={`/offre/${client.accountNumber}/recap-pdf?offre=${offerPosition}&installOption=${installOption}${orderRef ? `&orderRef=${encodeURIComponent(orderRef)}` : ""}${(signatoryEmail || email) ? `&email=${encodeURIComponent(signatoryEmail || email)}` : ""}${firstName ? `&firstName=${encodeURIComponent(firstName)}` : ""}${lastName ? `&lastName=${encodeURIComponent(lastName)}` : ""}`}

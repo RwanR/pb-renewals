@@ -12,6 +12,14 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const offerPosition = parseInt(url.searchParams.get("offre") || "1");
   const installOption = url.searchParams.get("installOption") || "phone";
 
+  // Params from confirmer.tsx (when navigating back)
+  const billingEmailParam = url.searchParams.get("billingEmail");
+  const billingDifferentParam = url.searchParams.get("billingDifferent") === "1";
+  const billingAddress1Param = url.searchParams.get("billingAddress1");
+  const billingStreetParam = url.searchParams.get("billingStreet");
+  const billingPostcodeParam = url.searchParams.get("billingPostcode");
+  const billingCityParam = url.searchParams.get("billingCity");
+
   const client = await prisma.client.findUnique({
     where: { accountNumber },
     include: {
@@ -32,7 +40,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   const hasOptions = client.offers[0].installAvailable;
-  return { client, offer: client.offers[0], offerPosition, installOption, accountNumber, hasOptions };
+  return {
+    client, offer: client.offers[0], offerPosition, installOption, accountNumber, hasOptions,
+    billingEmailParam, billingDifferentParam,
+    billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
+  };
 }
 
 function formatCurrency(amount: number | null): string {
@@ -116,13 +128,17 @@ const BuildingIcon = () => (
 );
 
 export default function OffreInformations() {
-  const { client, offer, offerPosition, installOption, accountNumber, hasOptions } = useLoaderData<typeof loader>();
+  const {
+    client, offer, offerPosition, installOption, accountNumber, hasOptions,
+    billingEmailParam, billingDifferentParam,
+    billingAddress1Param, billingStreetParam, billingPostcodeParam, billingCityParam,
+  } = useLoaderData<typeof loader>();
 
   const billing = offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const term = (offer.monthly60 ?? offer.billing60) ? "60 mois" : (offer.monthly48 ?? offer.billing48) ? "48 mois" : "36 mois";
   const discount = offer.discount || "50%";
   const machineImg = offer.imageUrl;
-  const [showBilling, setShowBilling] = useState(false);
+  const [showBilling, setShowBilling] = useState(billingDifferentParam);
 
   return (
     <div>
@@ -214,7 +230,7 @@ export default function OffreInformations() {
               <p style={{ fontSize: "20px", fontWeight: 500, color: "var(--pb-text)", letterSpacing: "0.1px" }}>
                 Données de facturation
               </p>
-              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={client.billingEmail || client.emailReceptionFacture || ""} icon={<MailIcon />} type="email" />
+              <FieldEditable label="E-mail de réception des factures" name="billingEmail" value={billingEmailParam ?? client.billingEmail ?? client.emailReceptionFacture ?? ""} icon={<MailIcon />} type="email" />
               <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
                 <input type="checkbox" checked={showBilling} onChange={function(e) { setShowBilling(e.target.checked); }} style={{
                   width: "20px", height: "20px", accentColor: "#005cb1", cursor: "pointer",
@@ -232,10 +248,10 @@ export default function OffreInformations() {
               {showBilling ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <FieldReadonly label="Raison sociale du facturé" value={client.billingCustomerName || client.customerName} />
-                  <FieldEditable label="Adresse" name="billingAddress1" value={client.billingAddress1 || ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Complément d'adresse" name="billingStreet" value={client.billingStreet || ""} icon={<MapPinIcon />} />
-                  <FieldEditable label="Code postal" name="billingPostcode" value={client.billingPostcode || ""} icon={<MailboxIcon />} />
-                  <FieldEditable label="Ville" name="billingCity" value={client.billingCity || ""} icon={<BuildingIcon />} />
+                  <FieldEditable label="Adresse" name="billingAddress1" value={billingAddress1Param ?? client.billingAddress1 ?? ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Complément d'adresse" name="billingStreet" value={billingStreetParam ?? client.billingStreet ?? ""} icon={<MapPinIcon />} />
+                  <FieldEditable label="Code postal" name="billingPostcode" value={billingPostcodeParam ?? client.billingPostcode ?? ""} icon={<MailboxIcon />} />
+                  <FieldEditable label="Ville" name="billingCity" value={billingCityParam ?? client.billingCity ?? ""} icon={<BuildingIcon />} />
                 </div>
               ) : null}
             </div>
