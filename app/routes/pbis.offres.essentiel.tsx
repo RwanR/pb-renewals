@@ -11,13 +11,13 @@ const features = [
   { Icon: AtSign, text: "Inscription à l'Annuaire de l'Administration fiscale" },
   { Icon: Inbox, text: "Réception de toutes les factures tous formats confondus, sur le portail PBIS et sur la boite e-mail de votre choix" },
   { Icon: FileText, text: "OCR pour extraction des données des factures en PDF" },
-  { Icon: ClipboardCheck, text: "Création et envoi de factures clients dans divers formats: PDF, CSV, aux formats de la réforme" },
+  { Icon: ClipboardCheck, text: "Création et envoi de factures clients dans divers formats: PDF, CSV, formats de la réforme" },
   { Icon: ArrowBigUp, text: "Chargement via interface PBIS ou sFTP" },
   { Icon: MailCheck, text: "Envoi multi-canal : Plateforme Agréée, e-mail certifié, Chorus Pro, courrier papier" },
+  { Icon: Mail, text: "Mise à jour des statuts de factures" },
   { Icon: Archive, text: "Archivage légal pendant 10 ans" },
   { Icon: ShieldCheck, text: "Protection contre la fraude" },
   { Icon: ListChecks, text: "Circuit de validation des factures fournisseurs" },
-  { Icon: Mail, text: "Mise à jour des statuts de factures" },
   { Icon: TrendingUp, text: "Indicateurs financiers" },
 ];
 
