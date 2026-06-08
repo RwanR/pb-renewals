@@ -142,14 +142,14 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
   );
 }
 
-function Field({ label, icon: Icon, name, value, placeholder, disabled, required, type = "text" }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; required?: boolean; type?: string }) {
+function Field({ label, icon: Icon, name, value, placeholder, disabled, required, type = "text", autoComplete }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; required?: boolean; type?: string; autoComplete?: string }) {
   const bg = disabled ? "bg-neutral-100" : "bg-white";
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className={`flex items-center gap-2 ${bg} border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]`}>
         <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} required={required && !disabled} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
+        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} required={required && !disabled} autoComplete={autoComplete} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
       </div>
     </div>
   );
@@ -225,16 +225,25 @@ export default function PbisStartInformations() {
             required
           />
           <Field
+            label="Numéro de TVA"
+            icon={Hash}
+            name="vatNumber"
+            value={client?.vatNumber ?? undefined}
+            placeholder="FR + 11 chiffres"
+            disabled={isAuthenticated}
+          />
+          <Field
             label="Adresse de facturation"
             icon={MapPinned}
             name="billingStreet"
             value={client?.street}
             placeholder="Numéro et rue"
+            autoComplete="street-address"
             required
           />
           <div className="flex gap-3">
-            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" required />
-            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" required />
+            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" autoComplete="postal-code" required />
+            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" autoComplete="address-level2" required />
           </div>
         </div>
 
