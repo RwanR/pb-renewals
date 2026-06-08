@@ -138,7 +138,7 @@ export async function action({ request }: Route.ActionArgs) {
     console.log(`[PBIS SIGN] PDF generated (${pdfBuffer.length} bytes)`);
   } catch (err) {
     console.error(`[PBIS SIGN] PDF generation failed:`, err);
-    return redirect("/pbis/start/recapitulatif");
+    return { error: "La génération de votre contrat a échoué. Réessayez dans un instant." };
   }
 
   // 4. Crée la procédure Yousign + redirige vers la page d'iframe
@@ -152,7 +152,7 @@ export async function action({ request }: Route.ActionArgs) {
       signerEmail: signatoryEmail || "",
       signerPhone: normalizePhoneFR(signatoryPhone),
       accountNumber: shipTo,
-      contractLabel: "PBIS Start",   // <-- ajout
+      contractLabel: "PBIS Start",
     });
 
     await pbisDb.pbisAcceptance.update({
@@ -168,7 +168,14 @@ export async function action({ request }: Route.ActionArgs) {
     return redirect("/pbis/start/signer");
   } catch (err) {
     console.error(`[PBIS SIGN] Yousign API failed:`, err);
-    return redirect("/pbis/start/recapitulatif");
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("phone_number")) {
+      return { error: "Le numéro de téléphone du signataire n'est pas reconnu comme un numéro français valide. Corrigez-le et réessayez." };
+    }
+    if (msg.includes("email")) {
+      return { error: "L'adresse e-mail du signataire est invalide. Corrigez-la et réessayez." };
+    }
+    return { error: "La demande de signature n'a pas pu être créée. Vérifiez les informations du signataire et réessayez." };
   }
 }
 
@@ -214,7 +221,7 @@ function SignField({ label, name, icon: Icon, type = "text", defaultValue, requi
   );
 }
 
-export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentProps) {
+export default function PbisStartRecapitulatif({ loaderData, actionData }: Route.ComponentProps) {
   const { recap } = loaderData;
   const [contactIsSignatory, setContactIsSignatory] = useState(false);
   const startColor = PBIS_OFFER_COLORS.start;
@@ -368,6 +375,12 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
           <p className="text-xs leading-4 text-[#404040]">
             En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<a href="https://www.pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer" className="underline">pb.com/fr/servicessolutions</a>) et les accepter, y compris la clause attributive de juridiction.
           </p>
+
+          {actionData?.error && (
+            <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm leading-5 text-red-800">
+              {actionData.error}
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
             <button
