@@ -1,5 +1,6 @@
 import type { Route } from "./+types/pbis.offres.flex";
-import { ShieldUser, ClipboardCheck, ArrowBigUp, Unplug, MailCheck, FileText, ShieldCheck, Archive, ListChecks, Scale, TrendingUp, Globe, CircleUser, Mail, Smartphone, Check } from "lucide-react";
+import { ShieldUser, ClipboardCheck, ArrowBigUp, Unplug, MailCheck, FileText, ShieldCheck, Archive, ListChecks, Scale, TrendingUp, Globe, CircleUser, Mail, Smartphone, Check, ArrowLeft } from "lucide-react";
+import { Link } from "react-router";
 import { Fragment } from "react";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
@@ -56,6 +57,13 @@ export default function PbisOffresFlex() {
         <h1 className="font-precision text-xl leading-6 tracking-[-0.3px] text-center text-neutral-950">
           Détail de l'offre
         </h1>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-[72px] pt-6">
+        <Link to="/pbis/offres" className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors">
+          <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+          Retour aux offres
+        </Link>
       </div>
 
       <div className="flex gap-6 items-start px-[72px] pb-16 pt-10 max-w-7xl mx-auto">
