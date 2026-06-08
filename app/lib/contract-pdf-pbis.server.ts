@@ -9,7 +9,7 @@ interface PbisContractData {
 }
 
 function formatDate(date: Date | string | null): string {
-  if (!date) return "—";
+  if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
@@ -23,10 +23,32 @@ function generateContractHTML(data: PbisContractData): string {
   const miseADispo = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   const miseADispoStr = formatDate(miseADispo);
 
-  const address = [
-    acceptance.billingStreet || client.street,
-    `${acceptance.billingPostcode || client.postcode} ${acceptance.billingCity || client.city}`.trim(),
-  ].filter(Boolean).join(", ");
+  // Données partagées par les trois blocs (Abonné = Utilisation = Facturation
+  // pour un abonnement PBIS Start mono-entité, comme sur les contrats de location PB).
+  const v = {
+    compte: client.compteClientBillTo || "-",
+    raison: acceptance.companyName || client.companyName || "-",
+    adresse: acceptance.billingStreet || client.street || "-",
+    cpVille: `${acceptance.billingPostcode || client.postcode || ""} ${acceptance.billingCity || client.city || ""}`.trim() || "-",
+    siret: acceptance.siret || client.siret || "-",
+    tva: acceptance.vatNumber || client.vatNumber || "-",
+    contact: [acceptance.contactFirstName, acceptance.contactLastName].filter(Boolean).join(" ") || "-",
+    tel: acceptance.contactPhone || client.contactPhone || "-",
+    email: acceptance.contactEmail || client.contactEmail || "-",
+    reception: acceptance.receptionEmail || "-",
+  };
+
+  const blockRows = `
+    <div class="frow"><div class="flabel">Compte Client</div><div class="fvalue">${v.compte}</div></div>
+    <div class="frow"><div class="flabel">Raison Sociale</div><div class="fvalue">${v.raison}</div></div>
+    <div class="frow"><div class="flabel">Adresse Postale</div><div class="fvalue">${v.adresse}</div></div>
+    <div class="frow"><div class="flabel">Code Postal / Ville</div><div class="fvalue">${v.cpVille}</div></div>
+    <div class="frow"><div class="flabel">SIRET</div><div class="fvalue">${v.siret}</div></div>
+    <div class="frow"><div class="flabel">N° TVA</div><div class="fvalue">${v.tva}</div></div>
+    <div class="frow"><div class="flabel">Contact</div><div class="fvalue">${v.contact}</div></div>
+    <div class="frow"><div class="flabel">Téléphone</div><div class="fvalue">${v.tel}</div></div>
+    <div class="frow"><div class="flabel">E-mail</div><div class="fvalue">${v.email}</div></div>
+  `;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -37,47 +59,53 @@ function generateContractHTML(data: PbisContractData): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
 
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #CF0989; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #1D2C6B; }
   .header-left { display: flex; flex-direction: column; gap: 2px; }
   .header-left small { font-size: 6.5pt; color: #666; }
   .header-right { display: flex; align-items: flex-start; gap: 8px; text-align: right; font-size: 7pt; color: #666; }
-  .header-right .version { font-weight: 600; color: #CF0989; font-size: 7.5pt; }
+  .header-right .version { font-weight: 600; color: #1D2C6B; font-size: 7.5pt; }
 
   h1 { font-size: 13pt; font-weight: 700; color: #1a1a1a; text-align: center; margin: 8px 0 4px; }
   .subtitle { text-align: center; font-size: 6.5pt; color: #666; margin-bottom: 8px; }
 
-  .info-box { border: 1.5px solid #CF0989; border-radius: 3px; padding: 6px 8px; margin-bottom: 8px; }
-  .info-box h3 { font-size: 7.5pt; font-weight: 700; color: #CF0989; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.3px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
-  .info-row { display: flex; justify-content: space-between; font-size: 7.5pt; margin-bottom: 1.5px; }
-  .info-label { color: #555; }
-  .info-value { font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+  .blocks { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+  .block { border: 1px solid #cfcfcf; border-radius: 2px; overflow: hidden; }
+  .block-head { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 3px 6px; text-align: center; }
+  .head-abonne { background: #dbe9ff; color: #1D2C6B; }
+  .head-utilisation { background: #d9f2e3; color: #1a7a44; }
+  .head-facturation { background: #ffe8d1; color: #b05a00; }
+  .block-body { padding: 4px 6px; }
+  .frow { display: flex; flex-direction: column; padding: 2px 0; border-bottom: 1px solid #eee; }
+  .frow:last-child { border-bottom: none; }
+  .flabel { font-size: 6pt; color: #777; }
+  .fvalue { font-size: 7pt; font-weight: 600; color: #1a1a1a; word-break: break-word; }
 
-  .conditions { border: 1.5px solid #CF0989; border-radius: 3px; padding: 6px 8px; margin-bottom: 6px; }
-  .conditions h3 { font-size: 7.5pt; font-weight: 700; color: #CF0989; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+  .conditions { border: 1px solid #cfcfcf; border-radius: 2px; padding: 6px 8px; margin-bottom: 6px; }
+  .conditions h3 { font-size: 7.5pt; font-weight: 700; color: #1D2C6B; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
   .conditions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
   .condition-item .label { font-size: 6.5pt; color: #555; }
   .condition-item .value { font-size: 9pt; font-weight: 700; }
 
   table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-  table th { background: #CF0989; color: white; font-size: 6.5pt; padding: 3px 5px; text-align: left; text-transform: uppercase; letter-spacing: 0.3px; }
+  table th { background: #1D2C6B; color: white; font-size: 6.5pt; padding: 3px 5px; text-align: left; text-transform: uppercase; letter-spacing: 0.3px; }
   table th:last-child { text-align: right; }
   table td { font-size: 7.5pt; padding: 2.5px 5px; border-bottom: 1px solid #eee; }
   table td:last-child { text-align: right; font-weight: 600; }
-  .total-row td { border-top: 1.5px solid #CF0989; font-weight: 700; font-size: 8.5pt; padding-top: 4px; }
+  .total-row td { border-top: 1.5px solid #1D2C6B; font-weight: 700; font-size: 8.5pt; padding-top: 4px; }
 
   .legal { margin-top: 6px; font-size: 6pt; color: #555; line-height: 1.25; }
   .legal p { margin-bottom: 3px; }
-  .legal a { color: #CF0989; }
+  .legal a { color: #1D2C6B; }
 
-  .signature-block { margin-top: 6px; border: 1.5px solid #CF0989; border-radius: 3px; padding: 6px 8px; }
-  .signature-block h3 { font-size: 7.5pt; font-weight: 700; color: #CF0989; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+  .signature-block { margin-top: 6px; border: 1px solid #cfcfcf; border-radius: 2px; padding: 6px 8px; }
+  .signature-block h3 { font-size: 7.5pt; font-weight: 700; color: #1D2C6B; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
   .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
   .sig-field { font-size: 7.5pt; }
   .sig-field .label { font-size: 6.5pt; color: #555; }
   .sig-field .value { font-weight: 600; }
   .sig-area { margin-top: 6px; height: 32px; border: 1px dashed #ccc; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 6.5pt; }
 
-  .footer { margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 6pt; color: #999; }
+  .footer { margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; text-align: center; font-size: 6pt; color: #999; }
 </style>
 </head>
 <body>
@@ -87,7 +115,7 @@ function generateContractHTML(data: PbisContractData): string {
     <img src="${PB_LOGO}" alt="Pitney Bowes" style="width:160px; height:55px; display:block; margin-bottom:3px;" />
     <small>5 Rue Francis de Pressensé, Immeuble VOX, CS20012, 93456 La Plaine Saint-Denis Cedex</small>
   </div>
-  <div class="header-right" style="display:flex; align-items:flex-start; gap:8px;">
+  <div class="header-right">
     <div>
       <div class="version">${CONTRACT_VERSION}</div>
       Date : ${today}
@@ -103,15 +131,21 @@ function generateContractHTML(data: PbisContractData): string {
   Entre Pitney Bowes, SAS au capital de 11 789 424,25 €, RCS Bobigny 562 046 235, NAF 7733Z, TVA FR36562046235
 </div>
 
-<div class="info-box">
-  <h3>L'Abonné</h3>
-  <div class="info-row"><span class="info-label">Raison sociale</span><span class="info-value">${acceptance.companyName || client.companyName || "—"}</span></div>
-  <div class="info-row"><span class="info-label">Adresse</span><span class="info-value">${address || "—"}</span></div>
-  <div class="info-row"><span class="info-label">SIRET</span><span class="info-value">${acceptance.siret || client.siret || "—"}</span></div>
-  <div class="info-row"><span class="info-label">Contact principal</span><span class="info-value">${[acceptance.contactFirstName, acceptance.contactLastName].filter(Boolean).join(" ") || "—"}${acceptance.contactFunction ? ` (${acceptance.contactFunction})` : ""}</span></div>
-  <div class="info-row"><span class="info-label">E-mail de contact</span><span class="info-value">${acceptance.contactEmail || "—"}</span></div>
-  <div class="info-row"><span class="info-label">E-mail de réception des factures</span><span class="info-value">${acceptance.receptionEmail || "—"}</span></div>
-  ${acceptance.orderReference ? `<div class="info-row"><span class="info-label">N° de référence interne</span><span class="info-value">${acceptance.orderReference}</span></div>` : ""}
+<div class="blocks">
+  <div class="block">
+    <div class="block-head head-abonne">L'Abonné</div>
+    <div class="block-body">${blockRows}</div>
+  </div>
+  <div class="block">
+    <div class="block-head head-utilisation">Utilisation</div>
+    <div class="block-body">${blockRows}</div>
+  </div>
+  <div class="block">
+    <div class="block-head head-facturation">Facturation</div>
+    <div class="block-body">${blockRows}
+      <div class="frow"><div class="flabel">E-mail réception factures</div><div class="fvalue">${v.reception}</div></div>
+    </div>
+  </div>
 </div>
 
 <div class="conditions">
@@ -160,17 +194,16 @@ function generateContractHTML(data: PbisContractData): string {
 <div class="signature-block">
   <h3>Pour l'Abonné (signataire habilité à ratifier le Contrat d'Abonnement)</h3>
   <div class="sig-grid">
-    <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName || "—"}</div></div>
-    <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName || "—"}</div></div>
-    <div class="sig-field"><span class="label">Fonction</span><div class="value">${acceptance.signatoryFunction || "—"}</div></div>
-    <div class="sig-field"><span class="label">E-mail</span><div class="value">${acceptance.signatoryEmail || "—"}</div></div>
+    <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName || "-"}</div></div>
+    <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName || "-"}</div></div>
+    <div class="sig-field"><span class="label">Fonction</span><div class="value">${acceptance.signatoryFunction || "-"}</div></div>
+    <div class="sig-field"><span class="label">E-mail</span><div class="value">${acceptance.signatoryEmail || "-"}</div></div>
   </div>
   <div class="sig-area">Signature électronique via Yousign</div>
 </div>
 
 <div class="footer">
-  <span>Pitney Bowes SAS - RCS Bobigny 562 046 235 - ${CONTRACT_VERSION}</span>
-  <span>Page 1/1</span>
+  Pitney Bowes SAS - RCS Bobigny 562 046 235 - ${CONTRACT_VERSION}
 </div>
 
 </body>
