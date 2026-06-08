@@ -1,7 +1,7 @@
 import type { Route } from "./+types/pbis.start.informations";
-import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Briefcase, Info, Check, type LucideIcon } from "lucide-react";
+import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Briefcase, Info, Check, ArrowLeft, type LucideIcon } from "lucide-react";
 import { Fragment } from "react";
-import { Form, redirect, useRouteLoaderData } from "react-router";
+import { Form, redirect, useRouteLoaderData, Link } from "react-router";
 import { randomUUID } from "node:crypto";
 import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
@@ -282,7 +282,11 @@ export default function PbisStartInformations() {
         </div>
 
         {/* CTA */}
-        <div className="pt-4">
+        <div className="pt-4 flex items-center gap-3">
+          <Link to="/pbis/offres/start" className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 text-neutral-700 px-6 py-3 font-medium text-base leading-6 hover:bg-neutral-50 transition-colors">
+            <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+            Retour
+          </Link>
           <button type="submit" className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
             Continuer vers le récapitulatif
           </button>
