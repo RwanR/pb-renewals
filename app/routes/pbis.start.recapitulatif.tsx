@@ -1,7 +1,7 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
-import { Check, CircleUser, Smartphone, Mail, Briefcase, Info, Loader2 } from "lucide-react";
+import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft } from "lucide-react";
 import { Fragment, useState } from "react";
-import { Form, redirect, useNavigation } from "react-router";
+import { Form, redirect, useNavigation, Link } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
@@ -270,7 +270,6 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">Contact principal</p>
-              <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
             </div>
             <RecapRow label="Nom" value={contactFullName} />
             <RecapRow label="E-mail" value={recap.contactEmail} />
@@ -280,7 +279,6 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">E-mail de réception des factures fournisseurs</p>
-              <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
             </div>
             <RecapRow label="E-mail" value={recap.receptionEmail} />
           </div>
@@ -368,24 +366,33 @@ export default function PbisStartRecapitulatif({ loaderData }: Route.ComponentPr
           </div>
 
           <p className="text-xs leading-4 text-[#404040]">
-            En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<span className="underline">pb.com/fr/servicessolutions</span>) et les accepter, y compris la clause attributive de juridiction.
+            En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<a href="https://www.pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer" className="underline">pb.com/fr/servicessolutions</a>) et les accepter, y compris la clause attributive de juridiction.
           </p>
 
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-80" 
-            style={{ backgroundColor: startColor }}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2.5} />
-                Préparation de votre contrat...
-              </>
-            ) : (
-              "Signer le contrat"
-            )}
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-80"
+              style={{ backgroundColor: startColor }}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2.5} />
+                  Préparation de votre contrat...
+                </>
+              ) : (
+                "Signer le contrat"
+              )}
+            </button>
+            <Link
+              to="/pbis/start/informations"
+              className={`inline-flex items-center justify-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors ${isSubmitting ? "pointer-events-none opacity-50" : ""}`}
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+              Retour
+            </Link>
+          </div>
         </div>
       </div>
     </Form>
