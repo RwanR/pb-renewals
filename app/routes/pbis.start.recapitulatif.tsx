@@ -83,21 +83,14 @@ export async function action({ request }: Route.ActionArgs) {
     return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
   };
 
-  const signatoryName = f("signatoryName");
+  const signatoryFirstName = f("signatoryFirstName");
+  const signatoryLastName = f("signatoryLastName");
   const signatoryFunction = f("signatoryFunction");
   const signatoryPhone = f("signatoryPhone");
   const signatoryEmail = f("signatoryEmail");
   const orderReference = f("orderReference");
   const cgvAccepted = formData.get("cgvAccepted") === "on";
   const privacyAccepted = formData.get("privacyAccepted") === "on";
-
-  let signatoryFirstName: string | null = null;
-  let signatoryLastName: string | null = null;
-  if (signatoryName) {
-    const parts = signatoryName.split(/\s+/);
-    signatoryFirstName = parts.shift() ?? null;
-    signatoryLastName = parts.length > 0 ? parts.join(" ") : null;
-  }
 
   const now = new Date();
 
@@ -234,7 +227,8 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
 
   // Persistance par onglet des champs signataire, scopée sur le client.
   const [sig, setSig] = useSessionState(`pbis-start-sig-${shipTo}`, {
-    signatoryName: "",
+    signatoryFirstName: "",
+    signatoryLastName: "",
     signatoryFunction: "",
     signatoryPhone: "",
     signatoryEmail: "",
@@ -323,24 +317,31 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
 
             <div className="flex gap-3">
               <SignField
-                label="Nom et prénom *"
-                name="signatoryName"
+                label="Prénom *"
+                name="signatoryFirstName"
                 icon={CircleUser}
                 required
-                pattern="\S+\s+\S+(\s+\S+)*"
-                title="Veuillez saisir votre prénom et votre nom (deux mots minimum)"
-                value={sig.signatoryName}
-                onChange={setSigField("signatoryName")}
+                value={sig.signatoryFirstName}
+                onChange={setSigField("signatoryFirstName")}
               />
+              <SignField
+                label="Nom *"
+                name="signatoryLastName"
+                icon={CircleUser}
+                required
+                value={sig.signatoryLastName}
+                onChange={setSigField("signatoryLastName")}
+              />
+            </div>
+            <div className="flex gap-3">
               <SignField
                 label="Fonction *"
                 name="signatoryFunction"
+                icon={Briefcase}
                 required
                 value={sig.signatoryFunction}
                 onChange={setSigField("signatoryFunction")}
               />
-            </div>
-            <div className="flex gap-3">
               <SignField
                 label="Téléphone *"
                 name="signatoryPhone"
@@ -352,6 +353,8 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 value={sig.signatoryPhone}
                 onChange={setSigField("signatoryPhone")}
               />
+            </div>
+            <div className="flex gap-3">
               <SignField
                 label="E-mail *"
                 name="signatoryEmail"
@@ -361,13 +364,13 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 value={sig.signatoryEmail}
                 onChange={setSigField("signatoryEmail")}
               />
+              <SignField
+                label="Référence de commande"
+                name="orderReference"
+                value={sig.orderReference}
+                onChange={setSigField("orderReference")}
+              />
             </div>
-            <SignField
-              label="Référence de commande"
-              name="orderReference"
-              value={sig.orderReference}
-              onChange={setSigField("orderReference")}
-            />
 
             <p className="text-xs leading-4 text-[#737373]">* champs obligatoires</p>
           </div>
