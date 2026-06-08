@@ -9,9 +9,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const features = [
-  { Icon: AtSign, title: "Inscription à l'Annuaire", description: "Inscrire votre adresse e-mail dans l'Annuaire de l'Administration fiscale pour recevoir vos factures et éviter les sanctions de non-inscription." },
+  { Icon: AtSign, title: "Inscription à l'Annuaire", description: "Inscrire votre société dans l'Annuaire de l'Administration fiscale pour recevoir vos factures et éviter les sanctions de non-inscription." },
   { Icon: Inbox, title: "Récupérer vos factures", description: "Récupérer les factures reçues, non seulement sur le portail PBIS mais également sur la boite e-mail de votre choix" },
-  { Icon: FileText, title: "Visualiser en PDF", description: "Visualiser une version lisible (PDF) pour toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi." },
+  { Icon: FileText, title: "Visualiser en PDF", description: "Visualiser une version lisible (PDF) de toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi." },
   { Icon: Archive, title: "Archivage légal 10 ans", description: "Archiver légalement pendant 10 ans les factures et pièces jointes reçues" },
   { Icon: ListChecks, title: "Gestion des statuts", description: "Gérer la mise à jour des statuts de facture exigés par la réforme" },
 ];
@@ -60,7 +60,7 @@ export default function PbisOffresStart() {
       <div className="flex gap-6 items-start px-[72px] pb-16 pt-10 max-w-7xl mx-auto">
         <div className="flex-1 min-w-0 flex flex-col gap-6">
           <h2 className="font-precision text-3xl leading-9 tracking-[-0.5px] text-neutral-950">
-            Continuez de recevoir vos factures fournisseurs par e-mail après le 1er Septembre
+            Recevez vos factures fournisseurs par e-mail après le 1er Septembre
           </h2>
 
           <p className="text-lg leading-[27px] text-neutral-950">
