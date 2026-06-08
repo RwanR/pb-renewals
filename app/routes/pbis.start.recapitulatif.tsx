@@ -1,10 +1,11 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
 import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, type ChangeEvent } from "react";
 import { Form, redirect, useNavigation, Link } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
+import { useSessionState } from "~/lib/use-session-state";
 
 function normalizePhoneFR(phone: string | null | undefined): string | undefined {
   if (!phone) return undefined;
@@ -67,7 +68,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     receptionEmail: acceptance.receptionEmail ?? "",
   };
 
-  return { recap };
+  return { recap, shipTo };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -209,27 +210,37 @@ function RecapRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SignField({ label, name, icon: Icon, type = "text", defaultValue, required, pattern, title }: { label: string; name: string; icon?: typeof CircleUser; type?: string; defaultValue?: string; required?: boolean; pattern?: string; title?: string }) {
+function SignField({ label, name, icon: Icon, type = "text", value, onChange, defaultValue, required, pattern, title }: { label: string; name: string; icon?: typeof CircleUser; type?: string; value?: string; onChange?: (e: ChangeEvent<HTMLInputElement>) => void; defaultValue?: string; required?: boolean; pattern?: string; title?: string }) {
+  const controlled = onChange !== undefined;
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
         {Icon && <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />}
-        <input name={name} type={type} defaultValue={defaultValue} required={required} pattern={pattern} title={title} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+        <input name={name} type={type} {...(controlled ? { value: value ?? "", onChange } : { defaultValue })} required={required} pattern={pattern} title={title} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
       </div>
     </div>
   );
 }
 
 export default function PbisStartRecapitulatif({ loaderData, actionData }: Route.ComponentProps) {
-  const { recap } = loaderData;
-  const [contactIsSignatory, setContactIsSignatory] = useState(false);
+  const { recap, shipTo } = loaderData;
   const startColor = PBIS_OFFER_COLORS.start;
 
   const navigation = useNavigation();
   const isSubmitting = navigation.state !== "idle";
 
   const contactFullName = `${recap.contactFirstName} ${recap.contactLastName}`.trim();
+
+  // Persistance par onglet des champs signataire, scopée sur le client.
+  const [sig, setSig] = useSessionState(`pbis-start-sig-${shipTo}`, {
+    signatoryName: "",
+    signatoryFunction: "",
+    signatoryPhone: "",
+    signatoryEmail: "",
+    orderReference: "",
+  });
+  const setSigField = (key: string) => (e: ChangeEvent<HTMLInputElement>) => setSig({ ...sig, [key]: e.target.value });
 
   return (
     <Form method="post" className="font-inter pb-16">
@@ -318,10 +329,16 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 required
                 pattern="\S+\s+\S+(\s+\S+)*"
                 title="Veuillez saisir votre prénom et votre nom (deux mots minimum)"
-                defaultValue={contactIsSignatory ? contactFullName : undefined}
-                key={`name-${contactIsSignatory}`}
+                value={sig.signatoryName}
+                onChange={setSigField("signatoryName")}
               />
-              <SignField label="Fonction *" name="signatoryFunction" required key={`fn-${contactIsSignatory}`} />
+              <SignField
+                label="Fonction *"
+                name="signatoryFunction"
+                required
+                value={sig.signatoryFunction}
+                onChange={setSigField("signatoryFunction")}
+              />
             </div>
             <div className="flex gap-3">
               <SignField
@@ -332,8 +349,8 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 required
                 pattern="(\+33|0)\s?[1-9](\s?\d{2}){4}"
                 title="Format attendu : 0612345678 ou +33 6 12 34 56 78"
-                defaultValue={contactIsSignatory ? recap.contactPhone : undefined}
-                key={`ph-${contactIsSignatory}`}
+                value={sig.signatoryPhone}
+                onChange={setSigField("signatoryPhone")}
               />
               <SignField
                 label="E-mail *"
@@ -341,11 +358,16 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 icon={Mail}
                 type="email"
                 required
-                defaultValue={contactIsSignatory ? recap.contactEmail : undefined}
-                key={`em-${contactIsSignatory}`}
+                value={sig.signatoryEmail}
+                onChange={setSigField("signatoryEmail")}
               />
             </div>
-            <SignField label="Référence de commande" name="orderReference" />
+            <SignField
+              label="Référence de commande"
+              name="orderReference"
+              value={sig.orderReference}
+              onChange={setSigField("orderReference")}
+            />
 
             <p className="text-xs leading-4 text-[#737373]">* champs obligatoires</p>
           </div>
