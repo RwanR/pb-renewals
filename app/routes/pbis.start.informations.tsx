@@ -1,11 +1,12 @@
 import type { Route } from "./+types/pbis.start.informations";
 import { Building2, Hash, MapPinned, Mailbox, CircleUser, Mail, Smartphone, Briefcase, Info, Check, ArrowLeft, type LucideIcon } from "lucide-react";
-import { Fragment } from "react";
+import { Fragment, type ChangeEvent } from "react";
 import { Form, redirect, useRouteLoaderData, Link } from "react-router";
 import { randomUUID } from "node:crypto";
 import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
+import { useSessionState } from "~/lib/use-session-state";
 import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
@@ -14,18 +15,18 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const shipTo = await getSessionShipTo(request);
-  
+
   if (shipTo) {
     const acceptance = await pbisDb.pbisAcceptance.findUnique({
       where: { clientId: shipTo },
       select: { signedAt: true },
     });
-    
+
     if (acceptance?.signedAt) {
       return redirect("/pbis/start/confirmation");
     }
   }
-  
+
   return null;
 }
 
@@ -142,20 +143,29 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
   );
 }
 
-function Field({ label, icon: Icon, name, value, placeholder, disabled, required, type = "text", autoComplete }: { label: string; icon: LucideIcon; name: string; value?: string; placeholder?: string; disabled?: boolean; required?: boolean; type?: string; autoComplete?: string }) {
+function Field({ label, icon: Icon, name, value, onChange, placeholder, disabled, required, type = "text" }: { label: string; icon: LucideIcon; name: string; value?: string; onChange?: (e: ChangeEvent<HTMLInputElement>) => void; placeholder?: string; disabled?: boolean; required?: boolean; type?: string }) {
   const bg = disabled ? "bg-neutral-100" : "bg-white";
+  const controlled = onChange !== undefined;
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <label className="text-sm font-medium leading-5 text-neutral-950">{label}</label>
       <div className={`flex items-center gap-2 ${bg} border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]`}>
         <Icon className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-        <input name={name} type={type} defaultValue={value} placeholder={placeholder} disabled={disabled} required={required && !disabled} autoComplete={autoComplete} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed" />
+        <input
+          name={name}
+          type={type}
+          {...(controlled ? { value: value ?? "", onChange } : { defaultValue: value })}
+          placeholder={placeholder}
+          disabled={disabled}
+          required={required && !disabled}
+          className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5 disabled:cursor-not-allowed"
+        />
       </div>
     </div>
   );
 }
 
-function FunctionSelect({ value }: { value?: string }) {
+function FunctionSelect({ value, onChange }: { value: string; onChange: (e: ChangeEvent<HTMLSelectElement>) => void }) {
   return (
     <div className="flex flex-col gap-1 w-full">
       <label className="text-sm font-medium leading-5 text-neutral-950">Fonction</label>
@@ -163,7 +173,8 @@ function FunctionSelect({ value }: { value?: string }) {
         <Briefcase className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
         <select
           name="contactFunction"
-          defaultValue={value ?? ""}
+          value={value}
+          onChange={onChange}
           className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5 cursor-pointer"
         >
           <option value="" disabled>Sélectionner une fonction</option>
@@ -184,6 +195,22 @@ export default function PbisStartInformations() {
   // Parcours authentifié : champs entreprise verrouillés (données PB vérifiées).
   // Parcours anonyme : champs entreprise éditables (le prospect saisit tout).
   const isAuthenticated = client !== null;
+
+  // Persistance par onglet des champs éditables, scopée sur le client.
+  // Les champs verrouillés (raison sociale, n° client, SIRET, TVA) ne sont pas
+  // persistés : ils ne changent pas et se re-pré-remplissent depuis le loader.
+  const [form, setForm] = useSessionState(`pbis-start-infos-${client?.compteClientBillTo ?? "anon"}`, {
+    billingStreet: client?.street ?? "",
+    billingPostcode: client?.postcode ?? "",
+    billingCity: client?.city ?? "",
+    contactFirstName: client?.contactFirstName ?? "",
+    contactLastName: client?.contactLastName ?? "",
+    contactEmail: client?.contactEmail ?? "",
+    contactPhone: client?.contactPhone ?? "",
+    contactFunction: "",
+    receptionEmail: client?.contactEmail ?? "",
+  });
+  const set = (key: string) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [key]: e.target.value });
 
   return (
     <Form method="post" className="font-inter pb-16">
@@ -236,14 +263,14 @@ export default function PbisStartInformations() {
             label="Adresse de facturation"
             icon={MapPinned}
             name="billingStreet"
-            value={client?.street}
+            value={form.billingStreet}
+            onChange={set("billingStreet")}
             placeholder="Numéro et rue"
-            autoComplete="street-address"
             required
           />
           <div className="flex gap-3">
-            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={client?.postcode} placeholder="Code postal" autoComplete="postal-code" required />
-            <Field label="Ville" icon={Building2} name="billingCity" value={client?.city} placeholder="Ville" autoComplete="address-level2" required />
+            <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={form.billingPostcode} onChange={set("billingPostcode")} placeholder="Code postal" required />
+            <Field label="Ville" icon={Building2} name="billingCity" value={form.billingCity} onChange={set("billingCity")} placeholder="Ville" required />
           </div>
         </div>
 
@@ -251,17 +278,16 @@ export default function PbisStartInformations() {
         <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
           <div className="flex gap-3 items-center">
             <p className="font-semibold text-xs leading-4 text-neutral-950">CONTACT PRINCIPAL</p>
-            <Info className="w-4 h-4" style={{ color: startColor }} strokeWidth={1.5} />
           </div>
           <div className="flex gap-3">
-            <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={client?.contactFirstName ?? undefined} placeholder="Prénom" required />
-            <Field label="Nom" icon={CircleUser} name="contactLastName" value={client?.contactLastName ?? undefined} placeholder="Nom" required />
+            <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={form.contactFirstName} onChange={set("contactFirstName")} placeholder="Prénom" required />
+            <Field label="Nom" icon={CircleUser} name="contactLastName" value={form.contactLastName} onChange={set("contactLastName")} placeholder="Nom" required />
           </div>
           <div className="flex gap-3">
-            <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={client?.contactEmail ?? undefined} placeholder="email@entreprise.fr" type="email" required />
-            <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={client?.contactPhone ?? undefined} placeholder="Téléphone" type="tel" />
+            <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={form.contactEmail} onChange={set("contactEmail")} placeholder="email@entreprise.fr" type="email" required />
+            <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={form.contactPhone} onChange={set("contactPhone")} placeholder="Téléphone" type="tel" />
           </div>
-          <FunctionSelect />
+          <FunctionSelect value={form.contactFunction} onChange={set("contactFunction")} />
         </div>
 
         {/* E-mail de réception */}
@@ -277,7 +303,7 @@ export default function PbisStartInformations() {
           </div>
           <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
             <Mail className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
-            <input name="receptionEmail" type="email" required placeholder="comptafournisseur@entreprise.com" defaultValue={client?.contactEmail ?? undefined} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
+            <input name="receptionEmail" type="email" required placeholder="comptafournisseur@entreprise.com" value={form.receptionEmail} onChange={set("receptionEmail")} className="flex-1 text-sm leading-5 text-neutral-950 placeholder:text-neutral-500 outline-none bg-transparent py-1.5" />
           </div>
         </div>
 
