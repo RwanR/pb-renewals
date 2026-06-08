@@ -152,7 +152,7 @@ export default function PbisOffres() {
 
       <div className="text-center pb-10 px-4">
         <p className="text-sm leading-5 text-[#737373]">
-          Choisissez votre abonnement parmi nos 3 offres PBIS
+          Choisissez votre abonnement parmi nos 3 offres Pitney Bowes Invoice Services (PBIS)
         </p>
       </div>
 
