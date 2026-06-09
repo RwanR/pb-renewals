@@ -168,6 +168,19 @@ export function getYesterdayWindow(): {
   return { refDate: yesterdayMidnight, signedFrom: yesterdayMidnight, signedTo: todayMidnight };
 }
 
+/** Fenêtre 7 derniers jours : J-7 00:00 → aujourd'hui 00:00 (heure locale). */
+export function getLastWeekWindow(): {
+  refDate: Date;
+  signedFrom: Date;
+  signedTo: Date;
+} {
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const weekAgoMidnight = new Date(todayMidnight);
+  weekAgoMidnight.setDate(weekAgoMidnight.getDate() - 7);
+  return { refDate: weekAgoMidnight, signedFrom: weekAgoMidnight, signedTo: todayMidnight };
+}
+
 /** Fenêtre pour une date donnée (00:00 → +24h). */
 export function getDateWindow(dateStr: string): {
   refDate: Date;

@@ -18,7 +18,7 @@
  *   - TZ=Europe/Paris (forcé sur le service Railway cron)
  */
 
-import { runC4CExport, getYesterdayWindow } from "../app/lib/c4c-runner.server";
+import { runC4CExport, getLastWeekWindow } from "../app/lib/c4c-runner.server";
 import prisma from "../app/db.server";
 
 /** Force le process à se terminer même si Prisma/Resend laissent des sockets ouverts */
@@ -32,7 +32,7 @@ async function main() {
   const startedAt = new Date();
   console.log(`[CRON C4C] Started at ${startedAt.toISOString()}`);
 
-  const window = getYesterdayWindow();
+  const window = getLastWeekWindow();
   const dateStr = window.refDate.toISOString().split("T")[0];
 
   console.log(
