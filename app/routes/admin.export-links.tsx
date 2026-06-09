@@ -17,7 +17,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       bestEmail: true,
       installEmail: true,
       billingEmail: true,
-      accessToken: { select: { token: true } },
+      accessToken: { select: { token: true, createdAt: true } },
+      acceptance: { select: { adobeSignStatus: true } },
+      refusal: { select: { id: true } },
     },
     orderBy: { accountNumber: "asc" },
   });
@@ -31,16 +33,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     { header: "N° Compte", key: "account", width: 16 },
     { header: "Raison sociale", key: "name", width: 40 },
     { header: "Email", key: "email", width: 35 },
+    { header: "Statut", key: "status", width: 14 },
+    { header: "Date du lien", key: "linkDate", width: 14 },
     { header: "Lien personnalisé", key: "link", width: 60 },
   ];
 
-  // Force text format on account number column
+  // Force text format on account number column, date format on link date
   sheet.getColumn("account").numFmt = "@";
+  sheet.getColumn("linkDate").numFmt = "dd/mm/yyyy";
 
   for (const c of clients) {
     const email = c.bestEmail || c.installEmail || c.billingEmail || "";
     const link = `${appUrl}/offre?token=${c.accessToken?.token}`;
-    sheet.addRow({ account: c.accountNumber, name: c.customerName, email, link });
+    const status =
+      c.acceptance?.adobeSignStatus === "signed"
+        ? "Signé"
+        : c.refusal
+        ? "Refusé"
+        : "En attente";
+    const linkDate = c.accessToken?.createdAt ?? null;
+    sheet.addRow({ account: c.accountNumber, name: c.customerName, email, status, linkDate, link });
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
