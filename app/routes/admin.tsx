@@ -26,6 +26,7 @@ export default function AdminLayout() {
           <span className="admin-logo">PB Renewals — Admin</span>
           <nav className="admin-nav">
             <Link to="/admin" className="admin-nav-link">Dashboard</Link>
+            <Link to="/admin/reporting" className="admin-nav-link">Reporting</Link>
             <Link to="/admin/import" className="admin-nav-link">Import</Link>
             <a href="/admin/export-links" className="admin-nav-link">Export liens</a>
             <Link to="/admin/exports-c4c" className="admin-nav-link">Exports C4C</Link>

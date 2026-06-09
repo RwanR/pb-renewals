@@ -307,6 +307,9 @@ export default function AdminDashboard() {
         <div style={{ background: "white", borderRadius: "8px", border: "1px solid #E5E7EB", padding: "20px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>Actions rapides</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <Link to="/admin/reporting" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
+              📈 Reporting (filtres + export)
+            </Link>
             <Link to="/admin/import" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
               📥 Importer un fichier Excel
             </Link>
