@@ -524,11 +524,16 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
 
     // --- Replace offers for all clients in the file ---
     updateJob(jobId, { message: "Mise à jour des offres..." });
-    const accountNumbers = clients.map((c) => c.accountNumber);
-    await prisma.offer.deleteMany({
-      where: { clientAccountNumber: { in: accountNumbers } },
-    });
-    console.log(`[IMPORT] Deleted offers for ${accountNumbers.length} clients`);
+    // On ne supprime les offres QUE pour les clients qui en ont au moins une dans
+    // ce nouvel import. Un client présent dans le fichier mais sans offre (OFFER1CODE
+    // /OFFER2CODE vides) conserve ses offres précédentes -> il peut toujours signer.
+    const accountsWithNewOffers = [...new Set(offers.map((o) => o.clientAccountNumber))];
+    if (accountsWithNewOffers.length > 0) {
+      await prisma.offer.deleteMany({
+        where: { clientAccountNumber: { in: accountsWithNewOffers } },
+      });
+    }
+    console.log(`[IMPORT] Replaced offers for ${accountsWithNewOffers.length} clients (offres conservées pour les clients sans nouvelle offre du fichier)`);
 
     for (let i = 0; i < offers.length; i += CHUNK) {
       const chunk = offers.slice(i, i + CHUNK);
@@ -546,8 +551,16 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     updateJob(jobId, { message: "Génération des liens d'accès..." });
 
     const DEFAULT_EXPIRY_DAYS = 90;
-    const defaultExpiry = new Date();
+    const now = new Date();
+    const defaultExpiry = new Date(now);
     defaultExpiry.setDate(defaultExpiry.getDate() + DEFAULT_EXPIRY_DAYS);
+
+    // Cible d'expiration : date Excel si dans le futur, sinon défaut +90j.
+    // Garantit qu'un token n'est jamais créé déjà expiré.
+    const targetExpiry = (accountNumber: string): Date => {
+      const d = clientExpirationMap.get(accountNumber);
+      return d && d.getTime() > now.getTime() ? d : defaultExpiry;
+    };
 
     const clientsNeedingTokens = clients.filter((c) => c.bestEmail);
     const existingTokens = await prisma.accessToken.findMany({
@@ -556,12 +569,12 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
     });
     const hasToken = new Set(existingTokens.map((t) => t.clientAccountNumber));
 
-    // Création des nouveaux tokens (expiration = OFFEREXPIRATIONDATE Excel sinon +90j)
+    // Tokens existants jamais régénérés : la valeur du lien reste stable.
     const newTokenData = clientsNeedingTokens
       .filter((c) => !hasToken.has(c.accountNumber))
       .map((c) => ({
         clientAccountNumber: c.accountNumber,
-        expiresAt: clientExpirationMap.get(c.accountNumber) ?? defaultExpiry,
+        expiresAt: targetExpiry(c.accountNumber),
       }));
 
     if (newTokenData.length > 0) {
@@ -572,28 +585,33 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
       console.log(`[IMPORT] Generated ${newTokenData.length} new access tokens`);
     }
 
-    // Update expiresAt sur TOUS les tokens du fichier (Excel = source de vérité)
-    // Groupé par date pour minimiser les requêtes (en général: 1 seul groupe)
+    // Extension SEULEMENT : on n'applique que les dates Excel futures, et uniquement
+    // si elles prolongent la validité courante (ou si le token n'avait pas d'expiration).
+    // Jamais de raccourcissement, jamais de date passée.
     const expirationGroups = new Map<number, string[]>();
     for (const c of clients) {
       const d = clientExpirationMap.get(c.accountNumber);
-      if (d) {
+      if (d && d.getTime() > now.getTime()) {
         const key = d.getTime();
         if (!expirationGroups.has(key)) expirationGroups.set(key, []);
         expirationGroups.get(key)!.push(c.accountNumber);
       }
     }
 
-    let updatedTokens = 0;
+    let extendedTokens = 0;
     for (const [time, accounts] of expirationGroups) {
+      const newExpiry = new Date(time);
       const result = await prisma.accessToken.updateMany({
-        where: { clientAccountNumber: { in: accounts } },
-        data: { expiresAt: new Date(time) },
+        where: {
+          clientAccountNumber: { in: accounts },
+          OR: [{ expiresAt: null }, { expiresAt: { lt: newExpiry } }],
+        },
+        data: { expiresAt: newExpiry },
       });
-      updatedTokens += result.count;
+      extendedTokens += result.count;
     }
-    if (updatedTokens > 0) {
-      console.log(`[IMPORT] Aligned expiresAt on ${updatedTokens} tokens from OFFEREXPIRATIONDATE`);
+    if (extendedTokens > 0) {
+      console.log(`[IMPORT] Extended expiresAt on ${extendedTokens} tokens (jamais raccourci)`);
     }
   } catch (err) {
     console.error(`[IMPORT] Import failed:`, err);
