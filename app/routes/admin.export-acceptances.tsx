@@ -5,7 +5,18 @@ import prisma from "~/db.server";
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
 
+  const url = new URL(request.url);
+  const status = url.searchParams.get("status"); // "signed" | "pending" | null = tous
+
+  const where =
+    status === "signed"
+      ? { adobeSignStatus: "signed" }
+      : status === "pending"
+      ? { OR: [{ adobeSignStatus: "sent" }, { adobeSignStatus: null }] }
+      : undefined;
+
   const acceptances = await prisma.acceptance.findMany({
+    where,
     orderBy: { acceptedAt: "desc" },
     include: {
       client: {
@@ -127,7 +138,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="acceptances-pb-renewals-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Disposition": `attachment; filename="acceptances-pb-renewals-${status ? status + "-" : ""}${new Date().toISOString().slice(0, 10)}.csv"`,
     },
   });
 }
