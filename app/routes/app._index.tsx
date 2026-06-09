@@ -32,7 +32,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   });
 
-  const appUrl = process.env.SHOPIFY_APP_URL || process.env.APP_URL || "";
+  const appUrl = process.env.APP_URL || process.env.SHOPIFY_APP_URL || "";
 
   return {
     clientCount,
