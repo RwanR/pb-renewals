@@ -2,6 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useActionData, useNavigation, Form, Link } from "react-router";
 import { requireClientAccess } from "~/lib/client-auth.server";
 import prisma from "~/db.server";
+import { withEmailOverride } from "~/lib/email-override.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const accountNumber = params.account!;
@@ -57,7 +58,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
       await resend.emails.send({
         from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
-        to: "emmanuel.mur@pb.com",
+        to: withEmailOverride(client.ownerEmail),
         subject: `[PB Renewals] Refus – ${client.customerName} (${accountNumber})`,
         html: `
           <h2>Refus de renouvellement</h2>

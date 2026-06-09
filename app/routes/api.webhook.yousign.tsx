@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import prisma from "~/db.server";
 import { parseWebhookEvent, downloadSignedDocuments } from "~/lib/yousign.server";
+import { withEmailOverride } from "~/lib/email-override.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== "POST") {
@@ -83,7 +84,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
-            to: "emmanuel.mur@pb.com", // TODO: remettre client.ownerEmail après recette
+            to: withEmailOverride(client.ownerEmail),
             subject: `[PB Renewals] Contrat signé - ${client.customerName} (${accountNumber})`,
             html: `
               <h2>Contrat signé</h2>
@@ -124,7 +125,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PB Renewals <onboarding@resend.dev>",
-            to: acceptance.signatoryEmail,
+            to: withEmailOverride(acceptance.signatoryEmail),
             subject: `Votre contrat Pitney Bowes a été signé - ${client.customerName}`,
             html: `
             <!DOCTYPE html>
