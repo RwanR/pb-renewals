@@ -152,12 +152,12 @@ export default function OffreInformations() {
           <span style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)", whiteSpace: "nowrap" }}>{offer.modelName}</span>
           <span className="pb-info-header-spacer" style={{ flex: 1 }} />
           <span style={{ fontSize: "18px", fontWeight: 600, color: "var(--pb-text)", textAlign: "right", whiteSpace: "nowrap" }}>
-            {formatCurrency(billing)} € HT par an sur {term}
+            {formatCurrency(billing)} € HT par mois sur {term}
           </span>
         </div>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "10px 32px", borderTop: "1px solid var(--pb-border)" }}>
           <p className="pb-discount-line" style={{ textAlign: "right" }}>
-            {discount} de réduction la première année
+            {discount} de réduction les 12 premiers mois
           </p>
         </div>
       </div>
