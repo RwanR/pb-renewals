@@ -206,7 +206,7 @@ export default function OffreConfirmer() {
   );
   const [signatoryEmail, setSignatoryEmail] = useSessionState<string>(
     `${scope}-signatoryEmail`,
-    (actionData?.values?.signatoryEmail as string) || ""
+    (actionData?.values?.signatoryEmail as string) || client.bestEmail || client.installEmail || client.billingEmail || ""
   );
   const [orderRef, setOrderRef] = useSessionState<string>(
     `${scope}-orderRef`,
