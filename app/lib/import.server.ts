@@ -203,7 +203,20 @@ async function runImport(buffer: ArrayBuffer, filename: string, jobId: string) {
   function get(row: ExcelJS.Row, col: string): unknown {
     const idx = headers[col];
     if (!idx) return null;
-    return row.getCell(idx).value;
+    const v = row.getCell(idx).value;
+    if (v === null || v === undefined) return null;
+    if (v instanceof Date) return v;
+    if (typeof v === "object") {
+      const o = v as any;
+      // Lien hypertexte : { text, hyperlink } (email tapé à la main -> mailto auto)
+      if (typeof o.text === "string") return o.text;
+      // Texte enrichi : { richText: [{ text }, ...] }
+      if (Array.isArray(o.richText)) return o.richText.map((r: any) => (r && r.text) || "").join("");
+      // Formule : { formula, result }
+      if ("result" in o) return o.result instanceof Date ? o.result : (typeof o.result === "object" ? null : (o.result ?? null));
+      return null; // objet inconnu : ne jamais renvoyer [object Object]
+    }
+    return v;
   }
 
   const clients: any[] = [];
