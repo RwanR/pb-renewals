@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Form, redirect, useActionData } from "react-router";
-import { sessionStorage } from "~/lib/admin-auth.server";
+import { sessionStorage, verifyPassword } from "~/lib/admin-auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -17,7 +17,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const password = formData.get("password") as string;
 
-  if (password !== (process.env.ADMIN_PASSWORD || "admin")) {
+  if (!password || !verifyPassword(password, process.env.ADMIN_PASSWORD_HASH)) {
     return { error: "Mot de passe incorrect" };
   }
 

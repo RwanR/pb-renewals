@@ -1,4 +1,19 @@
 import { createCookieSessionStorage, redirect } from "react-router";
+import { scryptSync, timingSafeEqual } from "node:crypto";
+
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret && process.env.NODE_ENV === "production") {
+  throw new Error("SESSION_SECRET manquant en production");
+}
+
+export function verifyPassword(password: string, stored: string | undefined): boolean {
+  if (!stored) return false;
+  const [saltHex, hashHex] = stored.split(":");
+  if (!saltHex || !hashHex) return false;
+  const expected = Buffer.from(hashHex, "hex");
+  const actual = scryptSync(password, Buffer.from(saltHex, "hex"), 64);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
 
 export const sessionStorage = createCookieSessionStorage({
   cookie: {
@@ -6,9 +21,9 @@ export const sessionStorage = createCookieSessionStorage({
     httpOnly: true,
     path: "/",
     sameSite: "lax",
-    secrets: [process.env.SESSION_SECRET || "dev-secret-change-me"],
+    secrets: [sessionSecret || "dev-secret-change-me"],
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7, // 7 jours
+    maxAge: 60 * 60 * 24 * 7,
   },
 });
 
