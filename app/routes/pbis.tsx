@@ -36,7 +36,7 @@ const footerLinks = [
   { href: "https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html", label: "Protection des données" },
   { href: "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-9001-certificate-europe-en.pdf", label: "ISO9001" },
   { href: "https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-27001-certificate-france.pdf", label: "ISO27001" },
-  { href: "#", label: "Cookies" },
+  { href: "https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles/cookie-policy.html", label: "Cookies" },
 ];
 
 export default function PbisLayout() {
