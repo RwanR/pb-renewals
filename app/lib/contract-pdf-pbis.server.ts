@@ -1,7 +1,11 @@
 import type { PbisClient, PbisAcceptance } from "@prisma-pbis/client";
 import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos.server";
 
-const CONTRACT_VERSION = "FR - PBIS 05 2026";
+const CONTRACT_VERSION = "PBIS START 2026-1";
+
+// Date de mise à disposition fixée au 01/09/2026 (entrée en vigueur de l'obligation
+// de réception). À confirmer avec PB si elle doit rester fixe ou être ajustable.
+const MISE_A_DISPO = "01/09/2026";
 
 interface PbisContractData {
   client: PbisClient;
@@ -17,11 +21,6 @@ function formatDate(date: Date | string | null): string {
 function generateContractHTML(data: PbisContractData): string {
   const { client, acceptance } = data;
   const today = formatDate(new Date());
-
-  // Date de mise à disposition : aujourd'hui + 30 jours (proposition standard).
-  // PB pourra ajuster si besoin une fois le wording stabilisé.
-  const miseADispo = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  const miseADispoStr = formatDate(miseADispo);
 
   // Données partagées par les trois blocs (Abonné = Utilisation = Facturation
   // pour un abonnement PBIS Start mono-entité, comme sur les contrats de location PB).
@@ -95,6 +94,7 @@ function generateContractHTML(data: PbisContractData): string {
 
   .legal { margin-top: 6px; font-size: 6pt; color: #555; line-height: 1.25; }
   .legal p { margin-bottom: 3px; }
+  .legal .sub { font-weight: 700; color: #1a1a1a; font-size: 6.5pt; margin-top: 4px; }
   .legal a { color: #1D2C6B; }
 
   .signature-block { margin-top: 6px; border: 1px solid #cfcfcf; border-radius: 2px; padding: 6px 8px; }
@@ -117,7 +117,7 @@ function generateContractHTML(data: PbisContractData): string {
   </div>
   <div class="header-right">
     <div>
-      <div class="version">${CONTRACT_VERSION}</div>
+      <div class="version">Version ${CONTRACT_VERSION}</div>
       Date : ${today}
     </div>
     <img src="${PLATEFORME_AGREEE}" alt="Plateforme Agréée" style="height:44px; width:auto;" />
@@ -157,11 +157,11 @@ function generateContractHTML(data: PbisContractData): string {
     </div>
     <div class="condition-item">
       <div class="label">Date de mise à disposition</div>
-      <div class="value">${miseADispoStr}</div>
+      <div class="value">${MISE_A_DISPO}</div>
     </div>
     <div class="condition-item">
       <div class="label">Mode de paiement</div>
-      <div class="value" style="font-size:8pt">Virement à la commande</div>
+      <div class="value" style="font-size:7.5pt">Prélèvement à l'activation du service</div>
     </div>
   </div>
 
@@ -186,13 +186,21 @@ function generateContractHTML(data: PbisContractData): string {
 </div>
 
 <div class="legal">
-  <p>Tous les montants s'entendent hors TVA légale. En signant ce contrat d'Abonnement, l'Abonné reconnait avoir pris connaissance de l'article 5 alinéa C des conditions générales. L'Abonné s'engage à régler selon les modalités de paiement convenues : 100% à la signature de ce contrat d'Abonnement.</p>
-  <p>Le présent contrat d'Abonnement prend effet à compter de la date de signature des présentes par l'Abonné dans les conditions stipulées à l'article 9 alinéas C et D. L'Abonné est présumé avoir accepté l'émission et la transmission des factures à venir de Pitney Bowes par mise à disposition sur son espace client (pitneybowes.fr/espace-client).</p>
-  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance des Conditions Générales (version ${CONTRACT_VERSION}) consultables à l'adresse <a href="https://pb.com/fr/servicessolutions">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
+  <p>Le présent contrat est conclu pour une durée de 12 mois.</p>
+  <p>Cette date de mise à disposition convenue avec l'Abonné est conditionnée à la bonne réception par Pitney Bowes de l'ensemble des documents contractuels et du N° de référence interne Abonné éventuellement exigé par celui-ci, signés et datés par l'Abonné dans un délai de 5 jours ouvrés à compter de la réception de l'offre commerciale correspondante. Passé ce délai, Pitney Bowes se réserve le droit de réajuster la date de mise à disposition de la (des) prestation(s) convenue(s).</p>
+  <p>L'Abonné s'engage à régler selon les modalités de paiement convenues : 100% à l'activation du service.</p>
+  <p class="sub">Retour du contrat et conditions de mise en production</p>
+  <p>L'Abonné s'engage à retourner le présent Contrat dûment signé et complété de l'ensemble des documents et informations requis, notamment son n° de référence interne de commande le cas échéant, dans un délai maximum de 5 jours calendaires à compter de la date de signature du Contrat, et en tout état de cause au moins 14 jours calendaires avant la date de mise en production convenue entre les parties. À défaut de réception par Pitney Bowes du Contrat signé et des informations requises dans ces délais, Pitney Bowes se réserve le droit d'ajuster la date de mise en production en conséquence. Cet ajustement sera sans incidence sur la date de prise d'effet du Contrat et sur les conditions de facturation convenues, qui demeureront inchangées. Les prestations et abonnements sont facturés aux dates et conditions prévues au Contrat, y compris en cas de retard de mise en production imputable au non-respect par l'Abonné des délais ci-dessus. L'Abonné reconnaît avoir validé l'ensemble des prérequis techniques, fonctionnels et organisationnels nécessaires à la bonne exécution des prestations et s'engage à en assurer le maintien pendant toute la durée du Contrat. Pitney Bowes ne saurait être tenu responsable des conséquences directes ou indirectes d'un manquement de l'Abonné à ces obligations.</p>
+</div>
+
+<div class="legal">
+  <p>** Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
+  <p>L'Abonné accepte tacitement que le mandat SEPA récurrent actuellement utilisé dans le cadre des règlements des factures liées à(aux) ancien(s) contrat(s) identifié(s) ci-dessus sera utilisé pour le bon règlement des factures liées à ce nouveau contrat d'Abonnement. Dans le cas changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client (www.pitneybowes.fr/espace-client).</p>
+  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
 
 <div class="signature-block">
-  <h3>Pour l'Abonné (signataire habilité à ratifier le Contrat d'Abonnement)</h3>
+  <h3>Pour l'Abonné (signataire habilité à ratifier le Contrat d'Abonnement au nom et pour le compte de l'Abonné)</h3>
   <div class="sig-grid">
     <div class="sig-field"><span class="label">Prénom</span><div class="value">${acceptance.signatoryFirstName || "-"}</div></div>
     <div class="sig-field"><span class="label">Nom</span><div class="value">${acceptance.signatoryLastName || "-"}</div></div>
@@ -203,7 +211,7 @@ function generateContractHTML(data: PbisContractData): string {
 </div>
 
 <div class="footer">
-  Pitney Bowes SAS - RCS Bobigny 562 046 235 - ${CONTRACT_VERSION}
+  Pitney Bowes SAS - RCS Bobigny 562 046 235 - Version ${CONTRACT_VERSION}
 </div>
 
 </body>
