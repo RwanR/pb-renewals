@@ -81,7 +81,7 @@ export default function OffreLayout() {
               {"  "}
               <a href="https://www.pitneybowes.com/content/dam/pitneybowes/fr/fr/homepage/iso-27001-certificate-france.pdf" target="_blank" rel="noopener">ISO27001</a>
               {"  "}
-              <a href="#" onClick={function(e) { e.preventDefault(); }}>Cookies</a>
+              <a href="https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles/cookie-policy.html" target="_blank" rel="noopener">Cookies</a>
             </p>
           </div>
         </footer>
