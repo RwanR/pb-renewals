@@ -53,7 +53,7 @@ const offers: Offer[] = [
     ],
     price: "à partir de 40,00",
     priceSuffix: "€ HT / mois",
-    ctaLabel: "Nous contacter",
+    ctaLabel: "En savoir plus",
   },
   {
     badge: "Sur mesure",
@@ -70,7 +70,7 @@ const offers: Offer[] = [
     ],
     price: "Sur devis",
     priceSuffix: "",
-    ctaLabel: "Nous contacter",
+    ctaLabel: "En savoir plus",
   },
 ];
 
@@ -96,7 +96,7 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 function OfferCard({ offer }: { offer: Offer }) {
   const color = PBIS_OFFER_COLORS[offer.slug];
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": color } as React.CSSProperties}>
+    <div className="relative flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": color } as React.CSSProperties}>
       <div>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: color }}>
           {offer.badge}
@@ -132,7 +132,7 @@ function OfferCard({ offer }: { offer: Offer }) {
             <span className="text-sm leading-5 text-[#737373]">{offer.priceSuffix}</span>
           )}
         </div>
-        <Link to={`/pbis/offres/${offer.slug}`} className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: color }}>
+        <Link to={`/pbis/offres/${offer.slug}`} className="w-full inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-white font-medium text-base leading-6 hover:opacity-90 transition-opacity before:content-[''] before:absolute before:inset-0" style={{ backgroundColor: color }}>
           {offer.ctaLabel}
         </Link>
       </div>

@@ -138,13 +138,13 @@ function generateContractHTML(data: PbisContractData): string {
   </div>
   <div class="block">
     <div class="block-head head-utilisation">Utilisation</div>
-    <div class="block-body">${blockRows}</div>
-  </div>
-  <div class="block">
-    <div class="block-head head-facturation">Facturation</div>
     <div class="block-body">${blockRows}
       <div class="frow"><div class="flabel">E-mail réception factures</div><div class="fvalue">${v.reception}</div></div>
     </div>
+  </div>
+  <div class="block">
+    <div class="block-head head-facturation">Facturation</div>
+    <div class="block-body">${blockRows}</div>
   </div>
 </div>
 

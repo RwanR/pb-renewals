@@ -173,7 +173,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
+function StepperWithCompleted({ currentStep, totalSteps, routes = [] }: { currentStep: number; totalSteps: number; routes?: (string | null | undefined)[] }) {
   return (
     <div className="flex gap-1 items-center justify-center">
       {Array.from({ length: totalSteps }).map((_, i) => {
@@ -181,12 +181,18 @@ function StepperWithCompleted({ currentStep, totalSteps }: { currentStep: number
         const isCompleted = step < currentStep;
         const isActive = step === currentStep;
         const separatorBg = step <= currentStep ? "#00b44a" : "#d4d4d4";
+        const cls = isCompleted ? "bg-[#00b44a] text-white" : isActive ? "bg-[#171717] text-white" : "bg-[#d4d4d4] text-[#737373]";
+        const base = "w-5 h-5 rounded-full flex items-center justify-center text-xs";
+        const inner = isCompleted ? <Check className="w-3 h-3" strokeWidth={3} /> : step;
+        const to = isCompleted ? routes[i] : null;
         return (
           <Fragment key={step}>
             {i > 0 && <div className="w-2.5 h-px" style={{ background: separatorBg }} />}
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isCompleted ? "bg-[#00b44a] text-white" : isActive ? "bg-[#171717] text-white" : "bg-[#d4d4d4] text-[#737373]"}`}>
-              {isCompleted ? <Check className="w-3 h-3" strokeWidth={3} /> : step}
-            </div>
+            {to ? (
+              <Link to={to} className={`${base} ${cls} no-underline`} aria-label={`Étape ${step}`}>{inner}</Link>
+            ) : (
+              <div className={`${base} ${cls}`}>{inner}</div>
+            )}
           </Fragment>
         );
       })}
@@ -323,7 +329,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
               className="w-4 h-4"
               style={{ accentColor: startColor }}
             />
-            <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est le signataire</span>
+            <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est également le signataire</span>
           </label>
 
             <div className="h-px bg-neutral-200" />
