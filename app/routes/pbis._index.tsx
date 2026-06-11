@@ -1,5 +1,5 @@
 import type { Route } from "./+types/pbis._index";
-import { FileText, ShieldCheck, Zap, BarChart3, Calendar, Minus, Plus } from "lucide-react";
+import { FileText, ShieldCheck, Zap, BarChart3, Minus, Plus } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Link, redirect } from "react-router";
 import pbisDb from "~/db.pbis.server";
@@ -96,9 +96,15 @@ export default function PbisIndex() {
         </div>
 
         <div id="offres" className="flex flex-col items-center gap-8 pt-44 pb-12 px-4 font-inter">
-          <div className="w-full max-w-[600px] aspect-[600/337] rounded-md bg-[#6297d9] flex flex-col items-center justify-center gap-6 text-white">
-            <Calendar className="w-16 h-16" strokeWidth={1.5} />
-            <p className="text-lg">Facturation électronique</p>
+          <div className="w-full max-w-[600px] aspect-[600/337] rounded-md overflow-hidden bg-black">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/ZxKKoByNQIE"
+              title="Pitney Bowes Invoice Services"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
           </div>
 
           <div className="w-full max-w-[600px] border border-neutral-300 rounded-lg px-5 py-6 flex flex-col items-center gap-3">
