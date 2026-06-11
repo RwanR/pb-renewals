@@ -276,8 +276,14 @@ export default function PbisStartInformations() {
 
         {/* Contact principal */}
         <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-1 items-center">
             <p className="font-semibold text-xs leading-4 text-neutral-950">CONTACT PRINCIPAL</p>
+            <div className="relative group">
+              <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
+              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[280px] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
+                Indiquez les coordonnées de l'utilisateur principal envisagé ou de l'administrateur de la solution. C'est l'email de ce contact qui sera utilisé pour la création de votre accès sur PBIS.
+              </div>
+            </div>
           </div>
           <div className="flex gap-3">
             <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={form.contactFirstName} onChange={set("contactFirstName")} placeholder="Prénom" required />

@@ -1,5 +1,5 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
-import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft } from "lucide-react";
+import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft, Info } from "lucide-react";
 import { Fragment, type ChangeEvent } from "react";
 import { Form, redirect, useNavigation, Link } from "react-router";
 import pbisDb from "~/db.pbis.server";
@@ -203,6 +203,17 @@ function RecapRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function InfoTip({ text, color, width = "w-[280px]" }: { text: string; color: string; width?: string }) {
+  return (
+    <div className="relative group">
+      <Info className="w-4 h-4 cursor-help" style={{ color }} strokeWidth={1.5} />
+      <div className={`invisible group-hover:visible absolute left-6 top-0 z-10 ${width} bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg`}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
 function SignField({ label, name, icon: Icon, type = "text", value, onChange, defaultValue, required, pattern, title }: { label: string; name: string; icon?: typeof CircleUser; type?: string; value?: string; onChange?: (e: ChangeEvent<HTMLInputElement>) => void; defaultValue?: string; required?: boolean; pattern?: string; title?: string }) {
   const controlled = onChange !== undefined;
   return (
@@ -282,6 +293,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">Contact principal</p>
+              <InfoTip color={startColor} text="Indiquez les coordonnées de l'utilisateur principal envisagé ou de l'administrateur de la solution. C'est l'email de ce contact qui sera utilisé pour la création de votre accès sur PBIS." />
             </div>
             <RecapRow label="Nom" value={contactFullName} />
             <RecapRow label="E-mail" value={recap.contactEmail} />
@@ -291,6 +303,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">E-mail de réception des factures fournisseurs</p>
+              <InfoTip color={startColor} width="w-[240px]" text="Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS" />
             </div>
             <RecapRow label="E-mail" value={recap.receptionEmail} />
           </div>
@@ -386,13 +399,13 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <label className="flex gap-4 items-center py-1 cursor-pointer">
               <input type="checkbox" name="cgvAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="text-xs leading-4 text-neutral-950">
-                J'accepte les <span className="font-semibold underline">CGV et Conditions Particulières</span> du contrat PBIS Start.
+                J'accepte les <a href="https://www.pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold underline">CGV et Conditions Particulières</a> du contrat PBIS Start.
               </span>
             </label>
             <label className="flex gap-4 items-center py-1 cursor-pointer">
               <input type="checkbox" name="privacyAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="text-xs leading-4 text-neutral-950">
-                J'accepte le traitement de mes données (<span className="font-semibold underline">Politique de confidentialité</span>).
+                J'accepte le traitement de mes données (<a href="https://www.pitneybowes.com/fr/mentionslegales/donneespersonnelles.html" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold underline">Politique de confidentialité</a>).
               </span>
             </label>
           </div>
