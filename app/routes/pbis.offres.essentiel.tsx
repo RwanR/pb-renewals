@@ -72,7 +72,7 @@ export default function PbisOffresEssentiel({ actionData }: Route.ComponentProps
   return (
     <div className="font-inter">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
-        <StepperWithCompleted currentStep={2} totalSteps={4} />
+       <StepperWithCompleted currentStep={2} totalSteps={4} routes={["/pbis/offres"]} />
         <h1 className="font-precision text-xl leading-6 tracking-[-0.3px] text-center text-neutral-950">
           Détail de l'offre
         </h1>

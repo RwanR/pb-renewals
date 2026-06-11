@@ -221,7 +221,7 @@ export default function PbisStartInformations() {
   return (
     <Form method="post" className="font-inter pb-16">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
-        <StepperWithCompleted currentStep={3} totalSteps={4} />
+        <StepperWithCompleted currentStep={3} totalSteps={4} routes={["/pbis/offres", "/pbis/offres/start"]} />
         <h1 className="font-precision text-xl leading-6 tracking-[-0.3px] text-center text-neutral-950">
           Vos informations
         </h1>

@@ -1,5 +1,3 @@
-import { resolveEmailTo } from "./email-override.server";
-
 const LEAD_INBOX = "pitneybowes@pb.com";
 
 export type LeadInput = {
