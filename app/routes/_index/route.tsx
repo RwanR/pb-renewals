@@ -9,6 +9,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  // Tout le reste : page de saisie n° de compte
-  return redirect("/offre");
+  // Entrée racine selon l'app servie (résolue par APP_NAME côté Railway).
+  // url.search conservé pour ne pas perdre un éventuel ?token=... sur la racine.
+  const entry = process.env.APP_NAME === "pbis" ? "/pbis" : "/offre";
+  return redirect(entry + url.search);
 };
