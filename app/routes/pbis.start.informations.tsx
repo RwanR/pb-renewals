@@ -309,7 +309,7 @@ export default function PbisStartInformations() {
             <div className="relative group">
               <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
               <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[200px] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
-                Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS
+                Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS.
               </div>
             </div>
           </div>

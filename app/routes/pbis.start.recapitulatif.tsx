@@ -309,7 +309,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
               <p className="font-semibold text-xs leading-4 text-neutral-950">E-mail de réception des factures fournisseurs</p>
-              <InfoTip color={startColor} width="w-[240px]" text="Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS" />
+              <InfoTip color={startColor} width="w-[240px]" text="Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS." />
             </div>
             <RecapRow label="E-mail" value={recap.receptionEmail} />
           </div>

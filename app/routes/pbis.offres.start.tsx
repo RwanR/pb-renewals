@@ -10,10 +10,10 @@ export function meta({}: Route.MetaArgs) {
 
 const features = [
   { Icon: AtSign, title: "Inscription à l'Annuaire", description: "Inscrire votre société dans l'Annuaire de l'Administration fiscale pour recevoir vos factures et éviter les sanctions de non-inscription." },
-  { Icon: Inbox, title: "Récupérer vos factures", description: "Récupérer les factures reçues, non seulement sur le portail PBIS mais également sur la boite e-mail de votre choix" },
+  { Icon: Inbox, title: "Récupérer vos factures", description: "Récupérer les factures reçues, non seulement sur le portail PBIS mais également sur la boite e-mail de votre choix." },
   { Icon: FileText, title: "Visualiser en PDF", description: "Visualiser une version lisible (PDF) de toutes les factures, en plus du format dans lequel elles arrivent initialement. Aucune disruption de vos processus : vous continuez à recevoir vos factures dans un format lisible sur votre e-mail habituel, tout en vous mettant en conformité avec la nouvelle loi." },
-  { Icon: Archive, title: "Archivage légal 10 ans", description: "Archiver légalement pendant 10 ans les factures et pièces jointes reçues" },
-  { Icon: ListChecks, title: "Gestion des statuts", description: "Gérer la mise à jour des statuts de facture exigés par la réforme" },
+  { Icon: Archive, title: "Archivage légal 10 ans", description: "Archiver légalement pendant 10 ans les factures et pièces jointes reçues." },
+  { Icon: ListChecks, title: "Gestion des statuts", description: "Gérer la mise à jour des statuts de facture exigés par la réforme." },
 ];
 
 const includedItems = [

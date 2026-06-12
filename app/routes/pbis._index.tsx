@@ -10,7 +10,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const features = [
-  { Icon: FileText, title: "Plateforme Agréée", sub: "certifiée par la DGFiP, dans le cadre de la réglementation sur la facturation électronique" },
+  { Icon: FileText, title: "Plateforme Agréée", sub: "certifiée par la DGFiP, pour la facturation électronique" },
   { Icon: ShieldCheck, title: "Archivage probant", sub: "pendant 10 ans, conforme à la réglementation" },
   { Icon: Zap, title: "Économies", sub: "Jusqu'à 50% d'économie sur le traitement de vos factures" },
   { Icon: BarChart3, title: "Conformité", sub: "sans disruption de vos process" },

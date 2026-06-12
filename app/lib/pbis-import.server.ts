@@ -1,6 +1,12 @@
 import ExcelJS from "exceljs";
 import pbisDb from "../db.pbis.server";
 
+// Contact pré-rempli depuis la base. Pas de "contact principal" : 4 rôles existent
+// (ACCOUNT_PAYABLE, DECISION_MAKER, END_USER, OTHER). On prend le premier rôle de cette
+// liste ayant un email ; END_USER est le plus rempli, ACCOUNT_PAYABLE (compta) sert de
+// repli. Réordonner ou compléter cette liste pour changer la priorité.
+const CONTACT_ROLES = ["END_USER", "ACCOUNT_PAYABLE"] as const;
+
 export type ImportResult = {
   status: "success" | "partial" | "error";
   rowsProcessed: number;
@@ -39,12 +45,6 @@ function cellNumber(cell: AnyCell): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function cellBool(cell: AnyCell): boolean {
-  const v = cellText(cell);
-  if (!v) return false;
-  return ["oui", "yes", "true", "1", "x", "o"].includes(v.toLowerCase());
-}
-
 export async function importPbisExcel(data: ArrayBuffer, filename: string): Promise<ImportResult> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(data);
@@ -58,7 +58,7 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
     if (v) headers[v] = colNumber;
   });
 
-  const required = ["SHIP_TO", "RAISON_SOCIALE_SOLDTO", "SIRET_SHIPTO"];
+  const required = ["SHIP_TO", "SOLD_TO", "CUSTOMER_NAME_SOLDTO", "SIRET_SHIPTO"];
   const missing = required.filter((h) => !headers[h]);
 
   const importRun = await pbisDb.pbisImportRun.create({
@@ -84,6 +84,21 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
   const getCell = (row: ExcelJS.Row, header: string): AnyCell =>
     row.getCell(headers[header]) as unknown as AnyCell;
 
+  // Choisit le bloc contact du premier rôle (ordre CONTACT_ROLES) ayant un email ;
+  // à défaut, retombe sur le premier rôle (valeurs éventuellement nulles).
+  const pickContact = (row: ExcelJS.Row) => {
+    const block = (role: string) => ({
+      contactFirstName: cellText(getCell(row, `FIRSTNAME_${role}`)),
+      contactLastName: cellText(getCell(row, `LASTNAME_${role}`)),
+      contactEmail: cellText(getCell(row, `EMAIL_${role}`)),
+      contactPhone: cellText(getCell(row, `PHONE_${role}`)),
+    });
+    for (const role of CONTACT_ROLES) {
+      if (cellText(getCell(row, `EMAIL_${role}`))) return block(role);
+    }
+    return block(CONTACT_ROLES[0]);
+  };
+
   const clientsMap = new Map<string, Record<string, unknown>>();
   let rowsProcessed = 0;
   const parseErrors: string[] = [];
@@ -103,11 +118,17 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
       c.contractsCount = (c.contractsCount as number) + 1;
       c.totalLoyerAnnual = ((c.totalLoyerAnnual as number) ?? 0) + loyer;
     } else {
+      // Données issues de SOLD_TO (entité contractante). Exceptions :
+      // - SIRET : pas de SIRET_SOLDTO dans la base, on garde SIRET_SHIPTO.
+      // - Contacts : par rôle prioritaire (cf. pickContact), pas de variante soldto.
+      // - flagPaperless : la base donne FLAG_INVOICE_PAPER (Y = papier) → on inverse.
+      //   Cellule vide = considérée comme non-papier (électronique).
+      const contact = pickContact(row);
       clientsMap.set(shipTo, {
         shipTo,
-        compteClientBillTo: cellText(getCell(row, "COMPTE_CLIENT_BILL_TO")) ?? "",
+        compteClientBillTo: cellText(getCell(row, "BILL_TO")) ?? "",
         soldTo: cellText(getCell(row, "SOLD_TO")) ?? "",
-        companyName: cellText(getCell(row, "RAISON_SOCIALE_SOLDTO")) ?? "",
+        companyName: cellText(getCell(row, "CUSTOMER_NAME_SOLDTO")) ?? "",
         customerNameShipTo: cellText(getCell(row, "CUSTOMER_NAME_SHIPTO")),
         street: cellText(getCell(row, "STREET_NAME_SOLDTO")) ?? "",
         postcode: cellText(getCell(row, "POSTCODE_SOLDTO")) ?? "",
@@ -115,21 +136,18 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
         streetShipTo: cellText(getCell(row, "STREET_NAME_SHIPTO")),
         postcodeShipTo: cellText(getCell(row, "POSTCODE_SHIPTO")),
         cityShipTo: cellText(getCell(row, "CITY_SHIPTO")),
-        siren: cellText(getCell(row, "SIREN_SHIPTO")) ?? "",
+        siren: cellText(getCell(row, "SIREN_SOLDTO")) ?? "",
         siret: cellText(getCell(row, "SIRET_SHIPTO")) ?? "",
-        vatNumber: cellText(getCell(row, "VAT_NUMBER")),
-        contactFirstName: cellText(getCell(row, "FIRSTNAME_CONTACT_PRINCIPAL")),
-        contactLastName: cellText(getCell(row, "LASTNAME_CONTACT_PRINCIPAL")),
-        contactEmail: cellText(getCell(row, "EMAIL_CONTACT_PRINCIPAL")),
-        contactPhone: cellText(getCell(row, "PHONE_CONTACT_PRINCIPAL")),
-        vendeur: cellText(getCell(row, "VENDEUR")),
+        vatNumber: cellText(getCell(row, "VAT_REGISTRATION_SOLDTO")),
+        ...contact,
+        vendeur: cellText(getCell(row, "OWNER")),
         employees: cellNumber(getCell(row, "EMPLOYEES")),
         codeNaf: cellText(getCell(row, "CODE_NAF")),
         nafDescription: cellText(getCell(row, "NAF Desc")),
         sectionDescription: cellText(getCell(row, "Section Desc")),
         plis2024: cellNumber(getCell(row, "PLIS_2024")),
         plis2025: cellNumber(getCell(row, "PLIS_2025")),
-        flagPaperless: cellBool(getCell(row, "FLAG_PAPERLESS")),
+        flagPaperless: (cellText(getCell(row, "FLAG_INVOICE_PAPER")) ?? "").toUpperCase() !== "Y",
         contractsCount: 1,
         totalLoyerAnnual: loyer,
         importRunId: importRun.id,
