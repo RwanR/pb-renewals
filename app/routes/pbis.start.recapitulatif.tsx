@@ -44,6 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     select: {
       companyName: true,
       siret: true,
+      vatNumber: true,
       street: true,
       postcode: true,
       city: true,
@@ -57,6 +58,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const recap = {
     companyName: acceptance.companyName ?? client?.companyName ?? "",
     siret: acceptance.siret ?? client?.siret ?? "",
+    vatNumber: acceptance.vatNumber ?? client?.vatNumber ?? "",
     billingStreet: acceptance.billingStreet ?? client?.street ?? "",
     billingPostcode: acceptance.billingPostcode ?? client?.postcode ?? "",
     billingCity: acceptance.billingCity ?? client?.city ?? "",
@@ -294,6 +296,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <p className="font-semibold text-xs leading-4 text-neutral-950 py-1">Entreprise</p>
             <RecapRow label="Raison sociale" value={recap.companyName} />
             <RecapRow label="SIRET" value={recap.siret} />
+            <RecapRow label="N° TVA" value={recap.vatNumber} />
             <RecapRow label="Adresse" value={[recap.billingStreet, `${recap.billingPostcode} ${recap.billingCity}`.trim()].filter(Boolean).join(", ")} />
 
             <div className="h-2" />
