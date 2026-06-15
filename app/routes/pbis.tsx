@@ -1,4 +1,5 @@
 import { Outlet } from "react-router";
+import { SnapEngage } from "~/components/snap-engage";
 import type { Route } from "./+types/pbis";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import pbisDb from "~/db.pbis.server";
@@ -58,6 +59,7 @@ export default function PbisLayout() {
           ))}
         </div>
       </footer>
+      <SnapEngage visibleOn={["/pbis/offres/start"]} />
     </div>
   );
 }
