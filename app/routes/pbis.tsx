@@ -59,7 +59,7 @@ export default function PbisLayout() {
           ))}
         </div>
       </footer>
-      <SnapEngage visibleOn={["/pbis/offres/start"]} />
+      <SnapEngage visibleOn={["/pbis/offres/start", "/pbis/offres/essentiel", "/pbis/offres/flex"]} />
     </div>
   );
 }

@@ -147,7 +147,13 @@ export default function PbisOffresStart() {
                 Souscrire en ligne
             </Link>
 
-            <div className="bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex gap-3 items-center">
+            <div
+                role="button"
+                tabIndex={0}
+                onClick={() => window.SnapEngage?.startLink()}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.SnapEngage?.startLink(); } }}
+                className="bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex gap-3 items-center cursor-pointer hover:border-neutral-300 transition-colors"
+            >
                 <FileQuestion className="w-5 h-5 shrink-0" style={{ color: startColor }} strokeWidth={1.5} />
                 <div className="flex-1 flex flex-col gap-0.5">
                 <p className="text-sm font-medium leading-5 text-neutral-950">Besoin d'aide ?</p>
