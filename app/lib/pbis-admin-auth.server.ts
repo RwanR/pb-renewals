@@ -1,4 +1,5 @@
 import { createCookieSessionStorage, redirect } from "react-router";
+import { timingSafeEqual } from "node:crypto";
 
 const PBIS_ADMIN_PASSWORD = process.env.PBIS_ADMIN_PASSWORD || "";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
@@ -17,7 +18,11 @@ export const sessionStorage = createCookieSessionStorage({
 });
 
 export function verifyPassword(password: string): boolean {
-  return PBIS_ADMIN_PASSWORD.length > 0 && password === PBIS_ADMIN_PASSWORD;
+  if (!PBIS_ADMIN_PASSWORD) return false;
+  const a = Buffer.from(password);
+  const b = Buffer.from(PBIS_ADMIN_PASSWORD);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 export async function requireAdmin(request: Request) {
