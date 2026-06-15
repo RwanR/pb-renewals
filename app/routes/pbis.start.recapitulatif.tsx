@@ -6,6 +6,7 @@ import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 import { useSessionState } from "~/lib/use-session-state";
+import { trackStep } from "~/lib/pbis-funnel.server";
 
 function normalizePhoneFR(phone: string | null | undefined): string | undefined {
   if (!phone) return undefined;
@@ -70,6 +71,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     receptionEmail: acceptance.receptionEmail ?? "",
   };
 
+  await trackStep(shipTo, "recapitulatif");
   return { recap, shipTo };
 }
 
@@ -160,6 +162,7 @@ export async function action({ request }: Route.ActionArgs) {
       },
     });
 
+    await trackStep(shipTo, "signer");
     console.log(`[PBIS SIGN] Yousign procedure created: ${signatureRequestId}`);
     return redirect("/pbis/start/signer");
   } catch (err) {

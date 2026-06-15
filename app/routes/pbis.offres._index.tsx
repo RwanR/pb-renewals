@@ -2,10 +2,18 @@ import type { Route } from "./+types/pbis.offres._index";
 import { Check, X } from "lucide-react";
 import { Fragment } from "react";
 import { Link } from "react-router";
+import { getSessionShipTo } from "~/lib/pbis-session.server";
+import { trackStep } from "~/lib/pbis-funnel.server";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Nos offres — PBIS" }];
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const shipTo = await getSessionShipTo(request);
+  if (shipTo) await trackStep(shipTo, "offres");
+  return null;
 }
 
 type OfferSlug = keyof typeof PBIS_OFFER_COLORS;

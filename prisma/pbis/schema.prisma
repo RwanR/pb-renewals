@@ -71,6 +71,8 @@ model PbisClient {
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+
+  funnel                PbisFunnelProgress?
 }
 
 model PbisAcceptance {
@@ -168,6 +170,20 @@ model PbisAccessToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime   @default(now())
+}
+
+model PbisFunnelProgress {
+  id           String     @id @default(cuid())
+  clientId     String     @unique
+  client       PbisClient @relation(fields: [clientId], references: [shipTo], onDelete: Cascade)
+ 
+  lastStep     Int        @default(0)            // ordinal de la dernière étape atteinte
+  lastStepName String?                            // libellé lisible (export)
+  status       String     @default("in_progress") // in_progress | signed
+ 
+  firstSeenAt  DateTime   @default(now())
+  lastSeenAt   DateTime   @default(now())
+  signedAt     DateTime?
 }
 
 model Session {

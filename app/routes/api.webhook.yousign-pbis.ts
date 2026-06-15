@@ -1,6 +1,7 @@
 import type { Route } from "./+types/api.webhook.yousign-pbis";
 import pbisDb from "~/db.pbis.server";
 import { parseWebhookEvent, downloadSignedDocuments } from "~/lib/yousign.server";
+import { markSigned } from "~/lib/pbis-funnel.server";
 
 export async function action({ request }: Route.ActionArgs) {
   if (request.method !== "POST") {
@@ -41,6 +42,9 @@ export async function action({ request }: Route.ActionArgs) {
       });
 
       console.log(`[PBIS YOUSIGN WEBHOOK] Acceptance ${acceptance.id} marked as signed`);
+
+      // Tracking funnel : étape finale atteinte
+      await markSigned(acceptance.clientId);
 
       // Download signed PDF
       let signedPdfBuffer: Buffer | null = null;

@@ -7,6 +7,7 @@ import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
 import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
 import { useSessionState } from "~/lib/use-session-state";
+import { trackStep } from "~/lib/pbis-funnel.server";
 import type { loader as pbisLayoutLoader } from "./pbis";
 
 export function meta({}: Route.MetaArgs) {
@@ -25,6 +26,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     if (acceptance?.signedAt) {
       return redirect("/pbis/start/confirmation");
     }
+
+    await trackStep(shipTo, "informations");
   }
 
   return null;

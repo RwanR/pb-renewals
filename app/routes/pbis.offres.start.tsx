@@ -3,9 +3,17 @@ import { AtSign, Inbox, FileText, Archive, ListChecks, ClipboardCheck, FileQuest
 import { Fragment } from "react";
 import { Link } from "react-router";
 import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
+import { getSessionShipTo } from "~/lib/pbis-session.server";
+import { trackStep } from "~/lib/pbis-funnel.server";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS Start - Détail de l'offre" }];
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const shipTo = await getSessionShipTo(request);
+  if (shipTo) await trackStep(shipTo, "detail");
+  return null;
 }
 
 const features = [
