@@ -5,8 +5,7 @@ const WIDGET_ID = "ce362c6d-08c9-4abc-87cf-6380725e1e10";
 const STYLE_ID = "snapengage-hide-style";
 
 // Conteneur racine du widget SnapEngage à masquer hors whitelist.
-// À CONFIRMER en inspectant la fenêtre de chat ouverte (id du conteneur racine).
-const SE_CONTAINER = '[id^="SnapABug"]';
+const SE_CONTAINER = '[id^="designstudio"]';
 
 function loadScript() {
   if (document.getElementById("snapengage-script")) return;
