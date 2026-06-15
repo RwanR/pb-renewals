@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { SnapEngage } from "~/components/snap-engage";
 import type { Route } from "./+types/pbis";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
@@ -41,6 +41,13 @@ const footerLinks = [
 ];
 
 export default function PbisLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/pbis/admin");
+
+  if (isAdmin) {
+    return <Outlet />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white font-inter">
       <header className="border-b border-neutral-200 h-20 flex items-center justify-center bg-white">
