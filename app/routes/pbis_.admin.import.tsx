@@ -1,4 +1,4 @@
-import type { Route } from "./+types/pbis.admin.import";
+import type { Route } from "./+types/pbis_.admin.import";
 import { Form, useNavigation } from "react-router";
 import { importPbisExcel } from "../lib/pbis-import.server";
 
@@ -23,47 +23,48 @@ export default function PbisAdminImport({ actionData }: Route.ComponentProps) {
   const isSubmitting = nav.state === "submitting";
 
   return (
-    <div className="max-w-2xl mx-auto p-8 font-inter">
-      <h1 className="font-precision text-3xl mb-6">Import PBIS</h1>
+    <div>
+      <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "24px" }}>Import PBIS</h1>
 
-      <Form method="post" encType="multipart/form-data" className="flex flex-col gap-4">
-        <input
-          type="file"
-          name="file"
-          accept=".xlsx,.xlsm"
-          required
-          className="block w-full text-sm border border-neutral-200 rounded-lg p-3"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="self-start px-6 py-3 rounded-full bg-[#d7008f] text-white font-medium disabled:opacity-50"
-        >
-          {isSubmitting ? "Import en cours..." : "Lancer l'import"}
-        </button>
-      </Form>
+      <div className="admin-card" style={{ maxWidth: "640px" }}>
+        <Form method="post" encType="multipart/form-data" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <label className="admin-label">Fichier Excel (.xlsx, .xlsm)</label>
+            <input
+              type="file"
+              name="file"
+              accept=".xlsx,.xlsm"
+              required
+              className="admin-input"
+            />
+          </div>
+          <button type="submit" disabled={isSubmitting} className="admin-btn" style={{ alignSelf: "flex-start" }}>
+            {isSubmitting ? "Import en cours..." : "Lancer l'import"}
+          </button>
+        </Form>
+      </div>
 
       {actionData && "error" in actionData && actionData.error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded text-red-900 text-sm">
+        <div style={{ maxWidth: "640px", marginTop: "20px", padding: "16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", color: "#991b1b", fontSize: "14px" }}>
           {actionData.error}
         </div>
       )}
 
       {actionData && "result" in actionData && actionData.result && (
-        <div className="mt-6 p-4 bg-neutral-50 border border-neutral-200 rounded">
-          <h2 className="font-medium mb-3">Résultat</h2>
-          <ul className="text-sm space-y-1">
+        <div className="admin-card" style={{ maxWidth: "640px", marginTop: "20px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "12px" }}>Résultat</h2>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, fontSize: "14px", display: "flex", flexDirection: "column", gap: "4px" }}>
             <li>Statut : <strong>{actionData.result.status}</strong></li>
             <li>Lignes traitées : {actionData.result.rowsProcessed}</li>
             <li>Clients uniques (déduplication SHIP_TO) : {actionData.result.uniqueClients}</li>
             <li>Upserted en base : {actionData.result.upserted}</li>
             <li>Tokens d'accès créés : {actionData.result.tokensCreated}</li>
-            <li className="text-xs text-neutral-500 mt-2">Run ID : {actionData.result.importRunId}</li>
+            <li style={{ fontSize: "12px", color: "#6b7280", marginTop: "8px" }}>Run ID : {actionData.result.importRunId}</li>
           </ul>
           {actionData.result.errors.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-red-900">Erreurs ({actionData.result.errors.length})</h3>
-              <ul className="text-xs text-red-900 mt-2 space-y-1 max-h-60 overflow-auto">
+            <div style={{ marginTop: "16px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 500, color: "#991b1b" }}>Erreurs ({actionData.result.errors.length})</h3>
+              <ul style={{ fontSize: "12px", color: "#991b1b", marginTop: "8px", paddingLeft: "16px", maxHeight: "240px", overflow: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
                 {actionData.result.errors.map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
