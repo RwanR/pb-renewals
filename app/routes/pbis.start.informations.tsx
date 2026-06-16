@@ -5,10 +5,12 @@ import { Form, redirect, useRouteLoaderData, Link } from "react-router";
 import { randomUUID } from "node:crypto";
 import pbisDb from "~/db.pbis.server";
 import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
-import { PBIS_OFFER_COLORS, CONTACT_FUNCTIONS } from "~/lib/pbis-brand";
+import { PBIS_OFFER_COLORS } from "~/lib/pbis-brand";
 import { useSessionState } from "~/lib/use-session-state";
 import { trackStep } from "~/lib/pbis-funnel.server";
 import type { loader as pbisLayoutLoader } from "./pbis";
+
+const CONTACT_ROLES = ["Acheteur", "Contact de facturation", "Décideur", "Utilisateur final"];
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Vos informations - PBIS Start" }];
@@ -51,6 +53,7 @@ export async function action({ request }: Route.ActionArgs) {
   const contactEmail = f("contactEmail");
   const contactPhone = f("contactPhone");
   const contactFunction = f("contactFunction");
+  const contactRole = f("contactRole");
   const receptionEmail = f("receptionEmail");
 
   // Résolution du client : session existante ou création à la volée (prospect anonyme)
@@ -97,6 +100,7 @@ export async function action({ request }: Route.ActionArgs) {
       contactEmail,
       contactPhone,
       contactFunction,
+      contactRole,
       receptionEmail,
     },
     update: {
@@ -112,6 +116,7 @@ export async function action({ request }: Route.ActionArgs) {
       contactEmail,
       contactPhone,
       contactFunction,
+      contactRole,
       receptionEmail,
     },
   });
@@ -174,20 +179,21 @@ function Field({ label, icon: Icon, name, value, onChange, placeholder, disabled
   );
 }
 
-function FunctionSelect({ value, onChange }: { value: string; onChange: (e: ChangeEvent<HTMLSelectElement>) => void }) {
+function RoleSelect({ value, onChange }: { value: string; onChange: (e: ChangeEvent<HTMLSelectElement>) => void }) {
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label className="text-sm font-medium leading-5 text-neutral-950">Fonction</label>
+      <label className="text-sm font-medium leading-5 text-neutral-950">Rôle</label>
       <div className="flex items-center gap-2 bg-white border border-neutral-200 rounded-lg px-3 min-h-9 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
         <Briefcase className="w-4 h-4 shrink-0 text-neutral-500" strokeWidth={1.5} />
         <select
-          name="contactFunction"
+          name="contactRole"
           value={value}
           onChange={onChange}
+          required
           className="flex-1 text-sm leading-5 text-neutral-950 outline-none bg-transparent py-1.5 cursor-pointer"
         >
-          <option value="" disabled>Sélectionner une fonction</option>
-          {CONTACT_FUNCTIONS.map((label) => (
+          <option value="" disabled>Sélectionner un rôle</option>
+          {CONTACT_ROLES.map((label) => (
             <option key={label} value={label}>{label}</option>
           ))}
         </select>
@@ -217,6 +223,7 @@ export default function PbisStartInformations() {
     contactEmail: client?.contactEmail ?? "",
     contactPhone: client?.contactPhone ?? "",
     contactFunction: "",
+    contactRole: "",
     receptionEmail: client?.contactEmail ?? "",
   });
   const set = (key: string) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [key]: e.target.value });
@@ -302,7 +309,8 @@ export default function PbisStartInformations() {
             <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={form.contactEmail} onChange={set("contactEmail")} placeholder="email@entreprise.fr" type="email" required />
             <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={form.contactPhone} onChange={set("contactPhone")} placeholder="Téléphone" type="tel" />
           </div>
-          <FunctionSelect value={form.contactFunction} onChange={set("contactFunction")} />
+          <Field label="Fonction" icon={Briefcase} name="contactFunction" value={form.contactFunction} onChange={set("contactFunction")} placeholder="Votre fonction (facultatif)" />
+          <RoleSelect value={form.contactRole} onChange={set("contactRole")} />
         </div>
 
         {/* E-mail de réception */}
