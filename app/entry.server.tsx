@@ -6,6 +6,8 @@ import { type EntryContext } from "react-router";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
 
+console.log("NODE_ENV =", process.env.NODE_ENV);
+
 export const streamTimeout = 5000;
 
 export function handleError(error: unknown, { request }: { request: Request }) {
