@@ -100,6 +100,9 @@ export default function PbisAdminDashboard() {
             <a href="/pbis/admin/export-links" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
               Exporter les liens d'accès
             </a>
+            <a href="/pbis/admin/export-souscriptions" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
+              Exporter les souscriptions signées
+            </a>
             <a href="/pbis/admin/export-abandons" className="admin-btn admin-btn-outline" style={{ textAlign: "center" }}>
               Exporter les abandons
             </a>

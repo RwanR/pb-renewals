@@ -28,6 +28,7 @@ export default function PbisAdminLayout() {
             <Link to="/pbis/admin" className="admin-nav-link">Dashboard</Link>
             <Link to="/pbis/admin/import" className="admin-nav-link">Import</Link>
             <a href="/pbis/admin/export-links" className="admin-nav-link">Export liens</a>
+            <a href="/pbis/admin/export-souscriptions" className="admin-nav-link">Export souscriptions</a>
             <a href="/pbis/admin/export-abandons" className="admin-nav-link">Export abandons</a>
             <a href="/pbis/admin/login?logout=1" className="admin-nav-link admin-logout">Déconnexion</a>
           </nav>

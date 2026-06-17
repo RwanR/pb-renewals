@@ -40,12 +40,14 @@ export async function submitPbisLead(input: LeadInput): Promise<LeadResult> {
     return { ok: false, error: "L'adresse e-mail saisie n'est pas valide." };
   }
 
+  const receivedAt = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris" });
   const rows: [string, string][] = [
     ["Offre", `PBIS ${offer}`],
     ["Nom complet", fullName],
     ["E-mail", email],
     ["Téléphone", phone],
     ["Message", message || "-"],
+    ["Reçu le", receivedAt],
   ];
 
   try {
@@ -56,7 +58,7 @@ export async function submitPbisLead(input: LeadInput): Promise<LeadResult> {
       from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
       to: process.env.EMAIL_OVERRIDE || LEAD_INBOX,
       replyTo: safeHeader(email),
-      subject: safeHeader(`Nouvelle demande de contact - PBIS ${offer}`),
+      subject: safeHeader(`Nouvelle demande de contact - PBIS ${offer} - ${fullName}`),
       html: `<!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"></head>

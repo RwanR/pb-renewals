@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { requireAdmin } from "~/lib/pbis-admin-auth.server";
 import pbisDb from "~/db.pbis.server";
 import ExcelJS from "exceljs";
 
@@ -16,7 +17,7 @@ function fmt(d: Date | null | undefined): string {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  void request;
+  await requireAdmin(request);
 
   // Abandons = clients entrés dans le parcours Start mais non signés.
   const rows = await pbisDb.pbisFunnelProgress.findMany({

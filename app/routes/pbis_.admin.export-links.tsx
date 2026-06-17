@@ -1,9 +1,10 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { requireAdmin } from "~/lib/pbis-admin-auth.server";
 import pbisDb from "~/db.pbis.server";
 import ExcelJS from "exceljs";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  void request;
+  await requireAdmin(request);
 
   const clients = await pbisDb.pbisClient.findMany({
     where: {
