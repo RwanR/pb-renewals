@@ -66,9 +66,16 @@ export async function action({ request }: Route.ActionArgs) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           const logoUrl = `${process.env.APP_URL || "https://pbis-production.up.railway.app"}/images/pb-logo.png`;
 
+          const override = process.env.EMAIL_OVERRIDE;
+          const cc =
+            !override && acceptance.contactEmail && acceptance.contactEmail !== acceptance.signatoryEmail
+              ? acceptance.contactEmail
+              : undefined;
+
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
-            to: process.env.EMAIL_OVERRIDE || acceptance.signatoryEmail,
+            to: override || acceptance.signatoryEmail,
+            cc,
             subject: `Votre contrat Pitney Bowes Invoice Services Start a été signé`,
             html: `
 <!DOCTYPE html>
