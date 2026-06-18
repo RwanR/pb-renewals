@@ -85,7 +85,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       a.orderReference ?? "",
       fmtDate(a.signedAt),
       a.yousignProcedureId ?? "",
-      a.signedPdfUrl ?? "",
     ]);
   }
 
