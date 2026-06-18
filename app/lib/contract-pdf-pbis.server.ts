@@ -191,18 +191,6 @@ function generateContractHTML(data: PbisContractData): string {
   </table>
 </div>
 
-<div class="conditions">
-  <h3>Mise en service / Prestations incluses</h3>
-  <ul class="incl">
-    <li>Inscription de votre entreprise sur l'Annuaire de l'État</li>
-    <li>Mise en place d'un portail collaboratif en ligne</li>
-    <li>Réception de vos factures fournisseurs lisibles sur la boîte e-mail de votre choix</li>
-    <li>Mise en place de l'archivage à valeur probante 10 ans</li>
-    <li>Gestion des statuts obligatoires</li>
-  </ul>
-  <p class="incl-total">Total paramétrages : Inclus</p>
-</div>
-
 <div class="legal">
   <p>Le présent contrat est conclu pour une durée de 12 mois.</p>
   <p>Cette date de mise à disposition convenue avec l'Abonné est conditionnée à la bonne réception par Pitney Bowes de l'ensemble des documents contractuels et du N° de référence interne Abonné éventuellement exigé par celui-ci, signés et datés par l'Abonné dans un délai de 5 jours ouvrés à compter de la réception de l'offre commerciale correspondante. Passé ce délai, Pitney Bowes se réserve le droit de réajuster la date de mise à disposition de la (des) prestation(s) convenue(s).</p>
@@ -214,8 +202,8 @@ function generateContractHTML(data: PbisContractData): string {
 <div class="legal">
   <p>* Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
   <p>** Tout dépassement fera l'objet d'une facturation unique et séparée de l'abonnement, en fin de période.</p>
-  <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client (www.pitneybowes.fr/espace-client).</p>
-  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
+  <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client.</p>
+  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
 
 <div class="signature-block">
