@@ -68,6 +68,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     contactEmail: acceptance.contactEmail ?? client?.contactEmail ?? "",
     contactPhone: acceptance.contactPhone ?? client?.contactPhone ?? "",
     contactFunction: acceptance.contactFunction ?? "",
+    contactRole: acceptance.contactRole ?? "",
     receptionEmail: acceptance.receptionEmail ?? "",
   };
 
@@ -311,6 +312,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <RecapRow label="E-mail" value={recap.contactEmail} />
             <RecapRow label="Téléphone" value={recap.contactPhone} />
             <RecapRow label="Fonction" value={recap.contactFunction} />
+            <RecapRow label="Rôle" value={recap.contactRole} />
 
             <div className="h-2" />
             <div className="flex gap-1 items-center py-1">
