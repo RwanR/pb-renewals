@@ -4,7 +4,7 @@ import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos.server";
 const CONTRACT_VERSION = "PBIS START 2026-1";
 
 // Date de mise à disposition fixée au 01/09/2026 (entrée en vigueur de l'obligation
-// de réception). À confirmer avec PB si elle doit rester fixe ou être ajustable.
+// de réception). Confirmée fixe par PB.
 const MISE_A_DISPO = "01/09/2026";
 
 interface PbisContractData {
@@ -64,7 +64,8 @@ function generateContractHTML(data: PbisContractData): string {
   .header-right { display: flex; align-items: flex-start; gap: 8px; text-align: right; font-size: 7pt; color: #666; }
   .header-right .version { font-weight: 600; color: #1D2C6B; font-size: 7.5pt; }
 
-  h1 { font-size: 13pt; font-weight: 700; color: #1a1a1a; text-align: center; margin: 8px 0 4px; }
+  h1 { font-size: 13pt; font-weight: 700; color: #1a1a1a; text-align: center; margin: 8px 0 2px; }
+  .tagline { text-align: center; font-size: 7.5pt; color: #1D2C6B; font-weight: 600; margin-bottom: 3px; }
   .subtitle { text-align: center; font-size: 6.5pt; color: #666; margin-bottom: 8px; }
 
   .blocks { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
@@ -84,6 +85,9 @@ function generateContractHTML(data: PbisContractData): string {
   .conditions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
   .condition-item .label { font-size: 6.5pt; color: #555; }
   .condition-item .value { font-size: 9pt; font-weight: 700; }
+  .incl { margin: 0; padding-left: 14px; font-size: 7.5pt; line-height: 1.5; }
+  .incl li { margin-bottom: 1px; }
+  .incl-total { margin-top: 4px; font-size: 7.5pt; font-weight: 700; }
 
   table { width: 100%; border-collapse: collapse; margin-top: 4px; }
   table th { background: #1D2C6B; color: white; font-size: 6.5pt; padding: 3px 5px; text-align: left; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -126,6 +130,8 @@ function generateContractHTML(data: PbisContractData): string {
 </div>
 
 <h1>Contrat d'Abonnement Pitney Bowes Invoice Services Start</h1>
+
+<div class="tagline">Solution de mise en conformité de vos factures fournisseurs dans le cadre de la Loi de finances</div>
 
 <div class="subtitle">
   Entre Pitney Bowes, SAS au capital de 11 789 424,25 €, RCS Bobigny 562 046 235, NAF 7733Z, TVA FR36562046235
@@ -185,6 +191,18 @@ function generateContractHTML(data: PbisContractData): string {
   </table>
 </div>
 
+<div class="conditions">
+  <h3>Mise en service / Prestations incluses</h3>
+  <ul class="incl">
+    <li>Inscription de votre entreprise sur l'Annuaire de l'État</li>
+    <li>Mise en place d'un portail collaboratif en ligne</li>
+    <li>Réception de vos factures fournisseurs lisibles sur la boîte e-mail de votre choix</li>
+    <li>Mise en place de l'archivage à valeur probante 10 ans</li>
+    <li>Gestion des statuts obligatoires</li>
+  </ul>
+  <p class="incl-total">Total paramétrages : Inclus</p>
+</div>
+
 <div class="legal">
   <p>Le présent contrat est conclu pour une durée de 12 mois.</p>
   <p>Cette date de mise à disposition convenue avec l'Abonné est conditionnée à la bonne réception par Pitney Bowes de l'ensemble des documents contractuels et du N° de référence interne Abonné éventuellement exigé par celui-ci, signés et datés par l'Abonné dans un délai de 5 jours ouvrés à compter de la réception de l'offre commerciale correspondante. Passé ce délai, Pitney Bowes se réserve le droit de réajuster la date de mise à disposition de la (des) prestation(s) convenue(s).</p>
@@ -195,7 +213,7 @@ function generateContractHTML(data: PbisContractData): string {
 
 <div class="legal">
   <p>** Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
-  <p>L'Abonné accepte tacitement que le mandat SEPA récurrent actuellement utilisé dans le cadre des règlements des factures liées à(aux) ancien(s) contrat(s) identifié(s) ci-dessus sera utilisé pour le bon règlement des factures liées à ce nouveau contrat d'Abonnement. Dans le cas changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client (www.pitneybowes.fr/espace-client).</p>
+  <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client (www.pitneybowes.fr/espace-client).</p>
   <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
 
