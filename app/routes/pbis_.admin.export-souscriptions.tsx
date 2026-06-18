@@ -34,7 +34,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const rows = await pbisDb.pbisAcceptance.findMany({
     where: { signedAt: { not: null } },
     orderBy: { signedAt: "desc" },
-    include: { client: { select: { compteClientBillTo: true } } },
+    include: {
+      client: {
+        select: {
+          compteClientBillTo: true,
+          companyName: true,
+          siret: true,
+          vatNumber: true,
+          street: true,
+          postcode: true,
+          city: true,
+          contactFirstName: true,
+          contactLastName: true,
+          contactEmail: true,
+          contactPhone: true,
+        },
+      },
+    },
   });
 
   const wb = new ExcelJS.Workbook();
@@ -48,16 +64,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   for (const a of rows) {
     ws.addRow([
-      a.companyName ?? "",
+      a.companyName ?? a.client?.companyName ?? "",
       a.client?.compteClientBillTo ?? "",
-      a.siret ?? "",
-      a.vatNumber ?? "",
-      a.billingStreet ?? "",
-      a.billingPostcode ?? "",
-      a.billingCity ?? "",
-      a.contactFirstName ?? "",
-      a.contactLastName ?? "",
-      a.contactEmail ?? "",
+      a.siret ?? a.client?.siret ?? "",
+      a.vatNumber ?? a.client?.vatNumber ?? "",
+      a.billingStreet ?? a.client?.street ?? "",
+      a.billingPostcode ?? a.client?.postcode ?? "",
+      a.billingCity ?? a.client?.city ?? "",
+      a.contactFirstName ?? a.client?.contactFirstName ?? "",
+      a.contactLastName ?? a.client?.contactLastName ?? "",
+      a.contactEmail ?? a.client?.contactEmail ?? "",
       a.contactFunction ?? "",
       a.contactRole ?? "",
       a.receptionEmail ?? "",
