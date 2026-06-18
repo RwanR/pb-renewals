@@ -176,13 +176,13 @@ function generateContractHTML(data: PbisContractData): string {
       <tr>
         <th>Code</th>
         <th>Désignation</th>
-        <th>Loyer annuel HT</th>
+        <th>Loyer annuel HT *</th>
       </tr>
     </thead>
     <tbody>
       <tr><td>ABON_SOLUTIONS</td><td>Abonnement solution</td><td></td></tr>
       <tr><td>PBIS_START</td><td>Abonnement licence PBIS Start</td><td>180,00 €</td></tr>
-      <tr><td>OD_DOC</td><td>Facturation à l'usage, coût unitaire par facture : 0,50 €HT</td><td></td></tr>
+      <tr><td>OD_DOC</td><td>Facturation à l'usage, coût unitaire par facture : 0,50 €HT (au-delà de 1000 factures par an) **</td><td></td></tr>
       <tr class="total-row">
         <td colspan="2" style="text-align:right">Total annuel HT</td>
         <td>180,00 €</td>
@@ -212,7 +212,8 @@ function generateContractHTML(data: PbisContractData): string {
 </div>
 
 <div class="legal">
-  <p>** Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
+  <p>* Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
+  <p>** Tout dépassement fera l'objet d'une facturation unique et séparée de l'abonnement, en fin de période.</p>
   <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client (www.pitneybowes.fr/espace-client).</p>
   <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
