@@ -76,8 +76,25 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/merci` } });
   }
 
-  // If an active signature request already exists, just redirect
+  // If an active signature request already exists, cancel it in Yousign before
+  // deleting, so a concurrent signer can't complete an orphaned request.
   if (client.acceptance?.adobeSignStatus === "sent") {
+    const prevSrId = client.acceptance.adobeSignAgreementId;
+    if (prevSrId) {
+      try {
+        const yousign = await import("~/lib/yousign.server");
+        await yousign.cancelSignatureRequest(prevSrId, "contractualization_aborted", "Remplacée par une nouvelle soumission");
+        console.log(`[SIGN] Cancelled previous Yousign SR ${prevSrId} for ${accountNumber}`);
+      } catch (err) {
+        console.error(`[SIGN] Failed to cancel previous SR ${prevSrId}:`, err);
+      }
+    }
+    // Re-vérifie après annulation : si l'autre signataire vient de finaliser, ne pas écraser.
+    const fresh = await prisma.acceptance.findUnique({ where: { clientAccountNumber: accountNumber } });
+    if (fresh?.adobeSignStatus === "signed") {
+      console.log(`[SIGN] Acceptance signed concurrently for ${accountNumber}, redirecting to merci`);
+      return new Response(null, { status: 302, headers: { Location: `/offre/${accountNumber}/merci` } });
+    }
     console.log(`[SIGN] Deleting previous unsigned acceptance for ${accountNumber}`);
     await prisma.acceptance.delete({ where: { clientAccountNumber: accountNumber } });
   }

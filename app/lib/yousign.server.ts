@@ -192,6 +192,20 @@ export async function getSignatureRequestStatus(signatureRequestId: string): Pro
 }
 
 /**
+ * Annule une demande de signature en cours (rend le lien de signature mort).
+ */
+export async function cancelSignatureRequest(
+  signatureRequestId: string,
+  reason: "contractualization_aborted" | "errors_in_document" | "other" = "contractualization_aborted",
+  customNote?: string
+): Promise<void> {
+  await yousignFetch(`/signature_requests/${signatureRequestId}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({ reason, ...(customNote ? { custom_note: customNote } : {}) }),
+  });
+}
+
+/**
  * Download the signed PDF document
  */
 export async function downloadSignedDocument(
