@@ -28,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       lastSeenAt: true,
       client: {
         select: {
-          shipTo: true,
+          compteClientBillTo: true,
           companyName: true,
           contactEmail: true,
           contactPhone: true,
@@ -42,7 +42,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const sheet = workbook.addWorksheet("Abandons");
 
   sheet.columns = [
-    { header: "N° Client (SHIP_TO)", key: "shipTo", width: 18 },
+    { header: "N° Client", key: "compteClient", width: 18 },
     { header: "Raison sociale", key: "name", width: 40 },
     { header: "Email contact", key: "email", width: 35 },
     { header: "Téléphone", key: "phone", width: 18 },
@@ -51,12 +51,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     { header: "Dernière activité", key: "last", width: 20 },
   ];
 
-  sheet.getColumn("shipTo").numFmt = "@";
+  sheet.getColumn("compteClient").numFmt = "@";
   sheet.getColumn("phone").numFmt = "@";
 
   for (const r of rows) {
     sheet.addRow({
-      shipTo: r.client.shipTo,
+      compteClient: r.client.compteClientBillTo,
       name: r.client.companyName,
       email: r.client.contactEmail || "",
       phone: r.client.contactPhone || "",

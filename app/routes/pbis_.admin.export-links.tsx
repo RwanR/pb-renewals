@@ -12,6 +12,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
     select: {
       shipTo: true,
+      compteClientBillTo: true,
       companyName: true,
       siret: true,
       contactEmail: true,
@@ -26,20 +27,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const sheet = workbook.addWorksheet("Liens");
 
   sheet.columns = [
-    { header: "N° Client (SHIP_TO)", key: "shipTo", width: 18 },
+    { header: "N° Client", key: "compteClient", width: 18 },
     { header: "Raison sociale", key: "name", width: 40 },
     { header: "SIRET", key: "siret", width: 20 },
     { header: "Email contact", key: "email", width: 35 },
     { header: "Lien personnalisé", key: "link", width: 70 },
   ];
 
-  sheet.getColumn("shipTo").numFmt = "@";
+  sheet.getColumn("compteClient").numFmt = "@";
   sheet.getColumn("siret").numFmt = "@";
 
   for (const c of clients) {
     const link = `${appUrl}/pbis?token=${c.accessToken?.token}`;
     sheet.addRow({
-      shipTo: c.shipTo,
+      compteClient: c.compteClientBillTo,
       name: c.companyName,
       siret: c.siret,
       email: c.contactEmail || "",
