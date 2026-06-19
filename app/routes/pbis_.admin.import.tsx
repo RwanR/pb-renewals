@@ -56,7 +56,7 @@ export default function PbisAdminImport({ actionData }: Route.ComponentProps) {
           <ul style={{ listStyle: "none", margin: 0, padding: 0, fontSize: "14px", display: "flex", flexDirection: "column", gap: "4px" }}>
             <li>Statut : <strong>{actionData.result.status}</strong></li>
             <li>Lignes traitées : {actionData.result.rowsProcessed}</li>
-            <li>Clients uniques (déduplication SHIP_TO) : {actionData.result.uniqueClients}</li>
+            <li>Clients uniques (un par compte client) : {actionData.result.uniqueClients}</li>
             <li>Upserted en base : {actionData.result.upserted}</li>
             <li>Tokens d'accès créés : {actionData.result.tokensCreated}</li>
             <li style={{ fontSize: "12px", color: "#6b7280", marginTop: "8px" }}>Run ID : {actionData.result.importRunId}</li>
