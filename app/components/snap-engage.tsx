@@ -48,7 +48,15 @@ export function SnapEngage({ visibleOn }: { visibleOn?: string[] }) {
   useEffect(() => {
     const show = !visibleOn || visibleOn.includes(pathname);
     setHidden(!show);
-    whenReady((se) => (show ? se.showButton() : se.hideButton()));
+    whenReady((se) => {
+      const api = se as typeof se & {
+        allowProactiveChat?: (v: boolean) => void;
+        allowChatSound?: (v: boolean) => void;
+      };
+      api.allowProactiveChat?.(show);
+      api.allowChatSound?.(show);
+      show ? api.showButton() : api.hideButton();
+    });
   }, [pathname, visibleOn]);
 
   return null;
