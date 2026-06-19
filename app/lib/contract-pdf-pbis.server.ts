@@ -127,8 +127,6 @@ function generateContractHTML(data: PbisContractData): string {
 
 <h1>Abonnement Solution Pitney Bowes Invoice Services Start</h1>
 
-<div class="tagline">Solution de mise en conformité de vos factures fournisseurs dans le cadre de la Loi de finances</div>
-
 <div class="subtitle">
   Entre Pitney Bowes, SAS au capital de 11 789 424,25 €, RCS Bobigny 562 046 235, NAF 7733Z, TVA FR36562046235
 </div>
