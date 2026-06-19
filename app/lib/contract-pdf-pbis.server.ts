@@ -24,30 +24,29 @@ function generateContractHTML(data: PbisContractData): string {
 
   // Données partagées par les trois blocs (Abonné = Utilisation = Facturation
   // pour un abonnement PBIS Start mono-entité, comme sur les contrats de location PB).
+// Trois blocs distincts du contrat PBIS : Vos informations, Contact principal,
+  // Signataire autorisé. Fallback acceptance -> client pour les champs verrouillés.
   const v = {
-    compte: client.compteClientBillTo || "-",
     raison: acceptance.companyName || client.companyName || "-",
-    adresse: acceptance.billingStreet || client.street || "-",
-    cpVille: `${acceptance.billingPostcode || client.postcode || ""} ${acceptance.billingCity || client.city || ""}`.trim() || "-",
+    compte: client.compteClientBillTo || "-",
     siret: acceptance.siret || client.siret || "-",
     tva: acceptance.vatNumber || client.vatNumber || "-",
-    contact: [acceptance.contactFirstName, acceptance.contactLastName].filter(Boolean).join(" ") || "-",
-    tel: acceptance.contactPhone || client.contactPhone || "-",
-    email: acceptance.contactEmail || client.contactEmail || "-",
+    adresse: [
+      acceptance.billingStreet || client.street || "",
+      `${acceptance.billingPostcode || client.postcode || ""} ${acceptance.billingCity || client.city || ""}`.trim(),
+    ].filter(Boolean).join(", ") || "-",
+    contactPrenom: acceptance.contactFirstName || client.contactFirstName || "-",
+    contactNom: acceptance.contactLastName || client.contactLastName || "-",
+    contactEmail: acceptance.contactEmail || client.contactEmail || "-",
+    contactTel: acceptance.contactPhone || client.contactPhone || "-",
     reception: acceptance.receptionEmail || "-",
+    sigNomPrenom: [acceptance.signatoryFirstName, acceptance.signatoryLastName].filter(Boolean).join(" ") || "-",
+    sigFonction: acceptance.signatoryFunction || "-",
+    sigEmail: acceptance.signatoryEmail || "-",
+    sigTel: acceptance.signatoryPhone || "-",
+    sigRef: acceptance.orderReference || "-",
+    modePaiement: "Prélèvement à l'activation du service",
   };
-
-  const blockRows = `
-    <div class="frow"><div class="flabel">Compte Client</div><div class="fvalue">${v.compte}</div></div>
-    <div class="frow"><div class="flabel">Raison Sociale</div><div class="fvalue">${v.raison}</div></div>
-    <div class="frow"><div class="flabel">Adresse Postale</div><div class="fvalue">${v.adresse}</div></div>
-    <div class="frow"><div class="flabel">Code Postal / Ville</div><div class="fvalue">${v.cpVille}</div></div>
-    <div class="frow"><div class="flabel">SIRET</div><div class="fvalue">${v.siret}</div></div>
-    <div class="frow"><div class="flabel">N° TVA</div><div class="fvalue">${v.tva}</div></div>
-    <div class="frow"><div class="flabel">Contact</div><div class="fvalue">${v.contact}</div></div>
-    <div class="frow"><div class="flabel">Téléphone</div><div class="fvalue">${v.tel}</div></div>
-    <div class="frow"><div class="flabel">E-mail</div><div class="fvalue">${v.email}</div></div>
-  `;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -70,10 +69,7 @@ function generateContractHTML(data: PbisContractData): string {
 
   .blocks { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
   .block { border: 1px solid #cfcfcf; border-radius: 2px; overflow: hidden; }
-  .block-head { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 3px 6px; text-align: center; }
-  .head-abonne { background: #dbe9ff; color: #1D2C6B; }
-  .head-utilisation { background: #d9f2e3; color: #1a7a44; }
-  .head-facturation { background: #ffe8d1; color: #b05a00; }
+  .block-head { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 3px 6px; text-align: center; background: #dbe9ff; color: #1D2C6B; }
   .block-body { padding: 4px 6px; }
   .frow { display: flex; flex-direction: column; padding: 2px 0; border-bottom: 1px solid #eee; }
   .frow:last-child { border-bottom: none; }
@@ -129,7 +125,7 @@ function generateContractHTML(data: PbisContractData): string {
   </div>
 </div>
 
-<h1>Contrat d'Abonnement Pitney Bowes Invoice Services Start</h1>
+<h1>Abonnement Solution Pitney Bowes Invoice Services Start</h1>
 
 <div class="tagline">Solution de mise en conformité de vos factures fournisseurs dans le cadre de la Loi de finances</div>
 
@@ -139,18 +135,35 @@ function generateContractHTML(data: PbisContractData): string {
 
 <div class="blocks">
   <div class="block">
-    <div class="block-head head-abonne">L'Abonné</div>
-    <div class="block-body">${blockRows}</div>
-  </div>
-  <div class="block">
-    <div class="block-head head-utilisation">Utilisation</div>
-    <div class="block-body">${blockRows}
-      <div class="frow"><div class="flabel">E-mail réception factures</div><div class="fvalue">${v.reception}</div></div>
+    <div class="block-head">Vos informations</div>
+    <div class="block-body">
+      <div class="frow"><div class="flabel">Raison sociale</div><div class="fvalue">${v.raison}</div></div>
+      <div class="frow"><div class="flabel">Numéro client</div><div class="fvalue">${v.compte}</div></div>
+      <div class="frow"><div class="flabel">SIRET</div><div class="fvalue">${v.siret}</div></div>
+      <div class="frow"><div class="flabel">N° de TVA</div><div class="fvalue">${v.tva}</div></div>
+      <div class="frow"><div class="flabel">Adresse de facturation</div><div class="fvalue">${v.adresse}</div></div>
     </div>
   </div>
   <div class="block">
-    <div class="block-head head-facturation">Facturation</div>
-    <div class="block-body">${blockRows}</div>
+    <div class="block-head">Contact principal</div>
+    <div class="block-body">
+      <div class="frow"><div class="flabel">Prénom</div><div class="fvalue">${v.contactPrenom}</div></div>
+      <div class="frow"><div class="flabel">Nom</div><div class="fvalue">${v.contactNom}</div></div>
+      <div class="frow"><div class="flabel">Adresse email</div><div class="fvalue">${v.contactEmail}</div></div>
+      <div class="frow"><div class="flabel">Téléphone</div><div class="fvalue">${v.contactTel}</div></div>
+      <div class="frow"><div class="flabel">Email de réception des factures fournisseurs</div><div class="fvalue">${v.reception}</div></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-head">Signataire autorisé</div>
+    <div class="block-body">
+      <div class="frow"><div class="flabel">Nom et prénom</div><div class="fvalue">${v.sigNomPrenom}</div></div>
+      <div class="frow"><div class="flabel">Fonction</div><div class="fvalue">${v.sigFonction}</div></div>
+      <div class="frow"><div class="flabel">Adresse email</div><div class="fvalue">${v.sigEmail}</div></div>
+      <div class="frow"><div class="flabel">Téléphone</div><div class="fvalue">${v.sigTel}</div></div>
+      <div class="frow"><div class="flabel">Votre référence</div><div class="fvalue">${v.sigRef}</div></div>
+      <div class="frow"><div class="flabel">Mode de paiement</div><div class="fvalue">${v.modePaiement}</div></div>
+    </div>
   </div>
 </div>
 
@@ -203,7 +216,7 @@ function generateContractHTML(data: PbisContractData): string {
   <p>* Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
   <p>** Tout dépassement fera l'objet d'une facturation unique et séparée de l'abonnement, en fin de période.</p>
   <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client.</p>
-  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer">pb.com/fr/servicessolutions</a> et les accepter, y compris la clause attributive de juridiction.</p>
+  <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html" target="_blank" rel="noopener noreferrer">www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
 
 <div class="signature-block">
