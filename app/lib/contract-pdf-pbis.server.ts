@@ -81,7 +81,7 @@ function generateContractHTML(data: PbisContractData): string {
   .conditions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
   .condition-item .label { font-size: 6.5pt; color: #555; }
   .condition-item .value { font-size: 9pt; font-weight: 700; }
-  .incl { margin: 0; padding-left: 14px; font-size: 7.5pt; line-height: 1.5; }
+  .incl { margin: 0; padding-left: 14px; font-size: 7.5pt; line-height: 1.3; }
   .incl li { margin-bottom: 1px; }
   .incl-total { margin-top: 4px; font-size: 7.5pt; font-weight: 700; }
 
@@ -202,6 +202,16 @@ function generateContractHTML(data: PbisContractData): string {
       </tr>
     </tbody>
   </table>
+
+  <h3 style="margin-top:6px;">Mise en service / Prestations incluses</h3>
+  <ul class="incl" style="list-style:none; padding-left:0;">
+    <li>&gt; Inscription de votre entreprise sur l'Annuaire de l'État</li>
+    <li>&gt; Mise en place d'un portail collaboratif en ligne</li>
+    <li>&gt; Réception de vos factures fournisseurs lisibles sur la boîte email de votre choix</li>
+    <li>&gt; Mise en place de l'archivage à valeur probante 10 ans</li>
+    <li>&gt; Gestion des statuts obligatoires</li>
+  </ul>
+  <div class="incl-total">Total paramétrages : Inclus</div>
 </div>
 
 <div class="legal">
