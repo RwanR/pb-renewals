@@ -66,11 +66,22 @@ export async function action({ request }: Route.ActionArgs) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           const logoUrl = `${process.env.APP_URL || "https://pbis-production.up.railway.app"}/images/pb-logo.png`;
 
+          // Copie : contact principal (si différent du signataire) + commercial PB.
+          // Gardé par EMAIL_OVERRIDE : en recette, aucune copie ne part à de vrais contacts.
           const override = process.env.EMAIL_OVERRIDE;
-          const cc =
-            !override && acceptance.contactEmail && acceptance.contactEmail !== acceptance.signatoryEmail
-              ? acceptance.contactEmail
-              : undefined;
+          const ccList = override
+            ? []
+            : Array.from(
+                new Set(
+                  [
+                    acceptance.contactEmail && acceptance.contactEmail !== acceptance.signatoryEmail
+                      ? acceptance.contactEmail
+                      : null,
+                    acceptance.client?.vendeurEmail || null,
+                  ].filter((e): e is string => !!e)
+                )
+              );
+          const cc = ccList.length > 0 ? ccList : undefined;
 
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
@@ -90,29 +101,31 @@ export async function action({ request }: Route.ActionArgs) {
           <img src="${logoUrl}" alt="Pitney Bowes" width="160" style="display:block;" />
         </td></tr>
         <tr><td align="center" style="padding: 16px 24px;">
-          <h1 style="margin:0; font-size:24px; font-weight:500; color:#1a1a1a;">Confirmation</h1>
+          <h1 style="margin:0; font-size:24px; font-weight:500; color:#1a1a1a;">Confirmation de souscription PBIS</h1>
           <p style="margin:8px 0 0; font-size:14px; color:#6b7280;">Votre contrat PBIS Start a été signé avec succès</p>
         </td></tr>
         <tr><td style="padding: 16px 24px;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb; border-radius:12px; padding:16px;">
-            <tr><td style="padding:8px;">
-              <p style="margin:0 0 12px; font-size:18px; font-weight:600; color:#1a1a1a;">PBIS Start</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb; border-radius:12px;">
+            <tr><td style="padding:16px;">
               <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
-                <tr><td style="color:#6b7280; padding:2px 0;">Durée</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:2px 0;">12 mois</td></tr>
-                <tr><td style="color:#6b7280; padding:2px 0;">Abonnement annuel HT</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:2px 0;">180,00 €</td></tr>
-                <tr><td style="color:#6b7280; padding:2px 0;">Coût par facture supplémentaire</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:2px 0;">0,50 € HT</td></tr>
-                <tr><td style="color:#6b7280; padding:2px 0;">Factures incluses</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:2px 0;">1000 / an</td></tr>
+                <tr><td style="color:#6b7280; padding:3px 0;">Offre</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:3px 0;">PBIS Start</td></tr>
+                <tr><td style="color:#6b7280; padding:3px 0;">Durée</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:3px 0;">12 mois</td></tr>
+                <tr><td style="color:#6b7280; padding:3px 0;">Abonnement annuel</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:3px 0;">180,00 € HT</td></tr>
+                <tr><td style="color:#6b7280; padding:3px 0;">Factures incluses</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:3px 0;">1000 / an</td></tr>
+                <tr><td style="color:#6b7280; padding:3px 0;">Coût par facture supplémentaire</td><td align="right" style="font-weight:600; color:#1a1a1a; padding:3px 0;">0,50 € HT</td></tr>
               </table>
             </td></tr>
           </table>
         </td></tr>
-        <tr><td align="center" style="padding: 16px 24px;">
-          <p style="margin:0 0 8px; font-size:13px; color:#6b7280;">Votre contrat signé est joint à cet email.</p>
-        </td></tr>
         <tr><td style="padding: 8px 24px 16px;">
-          <p style="margin:0 0 8px; font-size:16px; font-weight:600; color:#1a1a1a;">Prochaines étapes</p>
-          <p style="margin:0; font-size:14px; color:#1a1a1a; line-height:1.5;">
-            L'équipe Pitney Bowes vous contactera prochainement pour finaliser l'accord formel auprès de la DGFiP et l'inscription à l'Annuaire de l'État.
+          <p style="margin:0 0 12px; font-size:14px; color:#1a1a1a; line-height:1.5;">Votre contrat signé est joint à cet email.</p>
+          <p style="margin:0 0 16px; font-size:14px; color:#1a1a1a; line-height:1.6;">
+            Une dernière étape de vérification de votre identité et d'inscription de votre entreprise dans l'Annuaire de l'État pour la réception de vos factures électroniques est nécessaire à l'activation du service. Vos accès à l'application PBIS pour procéder à cette inscription et commencer à utiliser le service vous seront communiqués dans les prochains jours.
+          </p>
+          <p style="margin:0 0 4px; font-size:14px; color:#1a1a1a; line-height:1.5;">Nous vous remercions de votre confiance.</p>
+          <p style="margin:0 0 16px; font-size:14px; font-weight:600; color:#1a1a1a;">L'équipe Pitney Bowes.</p>
+          <p style="margin:0; font-size:13px;">
+            <a href="https://www.pitneybowes.com/fr/transformation-digitale/facturation-electronique.html" style="color:#009DBF;">En savoir plus sur la facturation électronique</a>
           </p>
         </td></tr>
         <tr><td style="padding: 16px 24px; background:#f8f9fa; border-top:1px solid #e5e7eb;">

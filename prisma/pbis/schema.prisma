@@ -49,7 +49,8 @@ model PbisClient {
   contactPhone          String?                     // PHONE_CONTACT_PRINCIPAL
 
   // Données business
-  vendeur               String?                     // VENDEUR
+  vendeur               String?                     // SALES_PERSON
+  vendeurEmail          String?                     // SALES_PERSON_EMAIL
   employees             Int?                        // EMPLOYEES
   codeNaf               String?                     // CODE_NAF
   nafDescription        String?                     // NAF Desc
@@ -177,11 +178,11 @@ model PbisFunnelProgress {
   id           String     @id @default(cuid())
   clientId     String     @unique
   client       PbisClient @relation(fields: [clientId], references: [shipTo], onDelete: Cascade)
- 
+
   lastStep     Int        @default(0)            // ordinal de la dernière étape atteinte
   lastStepName String?                            // libellé lisible (export)
   status       String     @default("in_progress") // in_progress | signed
- 
+
   firstSeenAt  DateTime   @default(now())
   lastSeenAt   DateTime   @default(now())
   signedAt     DateTime?
