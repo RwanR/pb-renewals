@@ -25,7 +25,6 @@ const HEADERS = [
   "Référence de commande",
   "Date de signature",
   "Référence Yousign",
-  "Lien PDF signé",
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
