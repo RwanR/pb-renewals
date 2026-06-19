@@ -213,16 +213,13 @@ function generateContractHTML(data: PbisContractData): string {
 </div>
 
 <div class="legal">
+  <p>* Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
+  <p>** Tout dépassement fera l'objet d'une facturation unique et séparée de l'abonnement, en fin de période.</p>
   <p>Le présent contrat est conclu pour une durée de 12 mois.</p>
   <p>Cette date de mise à disposition convenue avec l'Abonné est conditionnée à la bonne réception par Pitney Bowes de l'ensemble des documents contractuels et du N° de référence interne Abonné éventuellement exigé par celui-ci, signés et datés par l'Abonné dans un délai de 5 jours ouvrés à compter de la réception de l'offre commerciale correspondante. Passé ce délai, Pitney Bowes se réserve le droit de réajuster la date de mise à disposition de la (des) prestation(s) convenue(s).</p>
   <p>L'Abonné s'engage à régler selon les modalités de paiement convenues : 100% à l'activation du service.</p>
   <p class="sub">Retour du contrat et conditions de mise en production</p>
   <p>L'Abonné s'engage à retourner le présent Contrat dûment signé et complété de l'ensemble des documents et informations requis, notamment son n° de référence interne de commande le cas échéant, dans un délai maximum de 5 jours calendaires à compter de la date de signature du Contrat, et en tout état de cause au moins 14 jours calendaires avant la date de mise en production convenue entre les parties. À défaut de réception par Pitney Bowes du Contrat signé et des informations requises dans ces délais, Pitney Bowes se réserve le droit d'ajuster la date de mise en production en conséquence. Cet ajustement sera sans incidence sur la date de prise d'effet du Contrat et sur les conditions de facturation convenues, qui demeureront inchangées. Les prestations et abonnements sont facturés aux dates et conditions prévues au Contrat, y compris en cas de retard de mise en production imputable au non-respect par l'Abonné des délais ci-dessus. L'Abonné reconnaît avoir validé l'ensemble des prérequis techniques, fonctionnels et organisationnels nécessaires à la bonne exécution des prestations et s'engage à en assurer le maintien pendant toute la durée du Contrat. Pitney Bowes ne saurait être tenu responsable des conséquences directes ou indirectes d'un manquement de l'Abonné à ces obligations.</p>
-</div>
-
-<div class="legal">
-  <p>* Tous les montants indiqués sur ce document s'entendent hors TVA légale.</p>
-  <p>** Tout dépassement fera l'objet d'une facturation unique et séparée de l'abonnement, en fin de période.</p>
   <p>L'Abonné accepte que le mandat SEPA récurrent actuellement utilisé dans le cadre de ses règlements Pitney Bowes soit utilisé pour le bon règlement des factures liées au présent Contrat d'Abonnement. En cas de changement de coordonnées bancaires, l'Abonné s'engage à compléter et signer un nouveau mandat SEPA, disponible sur son espace client.</p>
   <p>En signant le présent Contrat d'Abonnement, l'Abonné manifeste avoir pris connaissance de l'ensemble des conditions particulières indiquées ci-dessus et des Conditions Générales en vigueur le jour de la signature de ce Contrat d'Abonnement, disponibles à l'adresse <a href="https://www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html" target="_blank" rel="noopener noreferrer">www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html</a> et les accepter, y compris la clause attributive de juridiction.</p>
 </div>
