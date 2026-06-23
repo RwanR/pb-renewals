@@ -82,14 +82,14 @@ export default function PbisOffresFlex({ actionData }: Route.ComponentProps) {
         </h1>
       </div>
 
-      <div className="max-w-7xl mx-auto px-[72px] pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-[72px] pt-6">
         <Link to="/pbis/offres" className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors">
           <ArrowLeft className="w-4 h-4" strokeWidth={2} />
           Retour aux offres
         </Link>
       </div>
 
-      <div className="flex gap-6 items-start px-[72px] pb-16 pt-10 max-w-7xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-6 lg:items-start px-4 sm:px-8 lg:px-[72px] pb-16 pt-10 max-w-7xl mx-auto">
         <div className="flex-1 min-w-0 flex flex-col gap-6">
           <h2 className="font-precision text-3xl leading-9 tracking-[-0.5px] text-neutral-950">
             PBIS Flex permet d'adresser vos besoins métier et de conformité de manière personnalisée pour les factures clients et fournisseurs :
@@ -117,8 +117,8 @@ export default function PbisOffresFlex({ actionData }: Route.ComponentProps) {
           </div>
         </div>
 
-        <div className="flex-1 min-w-0 flex justify-end">
-          <div className="w-[363px] flex flex-col gap-8 sticky top-4">
+        <div className="flex-1 min-w-0 flex justify-center lg:justify-end">
+          <div className="w-full max-w-[363px] flex flex-col gap-8 lg:sticky lg:top-4">
             <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3" style={{ borderColor: flexColor }}>
               <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
               <p className="font-precision text-2xl leading-[28.8px] tracking-[-0.3px] text-neutral-950">PBIS Flex</p>
