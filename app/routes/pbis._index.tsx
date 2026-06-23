@@ -59,12 +59,12 @@ export default function PbisIndex() {
         <section className="relative bg-[#6297d9] h-[600px] overflow-hidden font-inter">
           <img src="/images/pbis-hero.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/55" />
-          <div className="relative h-full flex flex-col items-center justify-center gap-4 px-8 text-center">
+          <div className="relative h-full flex flex-col items-center justify-center gap-4 px-4 sm:px-8 text-center">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#d7008f] text-white text-xs font-semibold">
               Loi de finances
             </span>
 
-            <h1 className="font-precision text-[40px] leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
+            <h1 className="font-precision text-3xl leading-tight sm:text-[40px] sm:leading-[46px] tracking-[-0.5px] text-white max-w-[640px]">
               La facture électronique simplement.<br />Sans attendre.
             </h1>
 
@@ -79,14 +79,14 @@ export default function PbisIndex() {
           </div>
         </section>
 
-        {/* Bandeau features : centré sur la frontière hero/contenu, hauteur indifférente */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[600px] -translate-y-1/2 z-10 w-[calc(100%-2rem)] max-w-5xl rounded-md p-6 flex items-start justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
+        {/* Bandeau features : absolute à cheval sur desktop, en flux empilé sur mobile/tablette */}
+        <div className="relative lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:top-[600px] lg:-translate-y-1/2 z-10 -mt-16 lg:mt-0 mx-4 lg:mx-0 lg:w-[calc(100%-2rem)] max-w-5xl rounded-md p-6 flex flex-col lg:flex-row items-start lg:justify-center gap-6 text-white font-inter" style={{ backgroundImage: "linear-gradient(96.74deg, rgb(108, 39, 139) 0%, rgb(169, 2, 107) 50%, rgb(163, 89, 11) 100%)" }}>
           {features.map(({ Icon, title, sub }, i) => (
             <Fragment key={title}>
-              {i > 0 && <div className="w-px h-[71px] bg-white/20 shrink-0" />}
+              {i > 0 && <div className="hidden lg:block w-px h-[71px] bg-white/20 shrink-0" />}
               <div className="flex gap-4 items-start">
                 <Icon className="w-8 h-8 shrink-0" strokeWidth={1.5} />
-                <div className="flex flex-col gap-2 max-w-[160px]">
+                <div className="flex flex-col gap-2 lg:max-w-[160px]">
                   <p className="text-sm font-medium leading-5">{title}</p>
                   <p className="text-xs leading-4">{sub}</p>
                 </div>
@@ -95,7 +95,7 @@ export default function PbisIndex() {
           ))}
         </div>
 
-        <div id="offres" className="flex flex-col items-center gap-8 pt-44 pb-12 px-4 font-inter">
+        <div id="offres" className="flex flex-col items-center gap-8 pt-8 lg:pt-44 pb-12 px-4 font-inter">
           <div className="w-full max-w-[600px] aspect-[600/337] rounded-md overflow-hidden bg-black">
             <iframe
               src="https://www.youtube-nocookie.com/embed/ZxKKoByNQIE"
