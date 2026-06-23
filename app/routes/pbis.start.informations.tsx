@@ -237,9 +237,9 @@ export default function PbisStartInformations() {
         </h1>
       </div>
 
-      <div className="flex flex-col gap-6 items-center pt-10 px-8">
+      <div className="flex flex-col gap-6 items-center pt-10 px-4 sm:px-8">
         {/* Entreprise */}
-        <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-4">
+        <div className="w-full max-w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-4">
           <p className="font-semibold text-xs leading-4 text-neutral-950">ENTREPRISE</p>
           <Field
             label="Raison sociale"
@@ -284,28 +284,28 @@ export default function PbisStartInformations() {
             placeholder="Numéro et rue"
             required
           />
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Field label="Code postal" icon={Mailbox} name="billingPostcode" value={form.billingPostcode} onChange={set("billingPostcode")} placeholder="Code postal" required />
             <Field label="Ville" icon={Building2} name="billingCity" value={form.billingCity} onChange={set("billingCity")} placeholder="Ville" required />
           </div>
         </div>
 
         {/* Contact principal */}
-        <div className="w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
+        <div className="w-full max-w-[596px] bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
           <div className="flex gap-1 items-center">
             <p className="font-semibold text-xs leading-4 text-neutral-950">CONTACT PRINCIPAL</p>
             <div className="relative group">
               <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
-              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[280px] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
+              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[280px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
                 Indiquez les coordonnées de l'utilisateur principal envisagé ou de l'administrateur de la solution. C'est l'email de ce contact qui sera utilisé pour la création de votre accès sur PBIS.
               </div>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Field label="Prénom" icon={CircleUser} name="contactFirstName" value={form.contactFirstName} onChange={set("contactFirstName")} placeholder="Prénom" required />
             <Field label="Nom" icon={CircleUser} name="contactLastName" value={form.contactLastName} onChange={set("contactLastName")} placeholder="Nom" required />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Field label="E-mail de contact" icon={Mail} name="contactEmail" value={form.contactEmail} onChange={set("contactEmail")} placeholder="email@entreprise.fr" type="email" required />
             <Field label="Téléphone" icon={Smartphone} name="contactPhone" value={form.contactPhone} onChange={set("contactPhone")} placeholder="Téléphone" type="tel" />
           </div>
@@ -314,12 +314,12 @@ export default function PbisStartInformations() {
         </div>
 
         {/* E-mail de réception */}
-        <div className="w-[596px] bg-white border-2 rounded-2xl p-5 flex flex-col gap-3" style={{ borderColor: startColor }}>
+        <div className="w-full max-w-[596px] bg-white border-2 rounded-2xl p-5 flex flex-col gap-3" style={{ borderColor: startColor }}>
           <div className="flex gap-1 items-center">
             <p className="text-sm font-medium leading-5 text-neutral-950">E-mail de réception de vos factures fournisseurs</p>
             <div className="relative group">
               <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
-              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[200px] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
+              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[200px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
                 Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS.
               </div>
             </div>
@@ -331,12 +331,12 @@ export default function PbisStartInformations() {
         </div>
 
         {/* CTA */}
-        <div className="pt-4 flex items-center gap-3">
-          <Link to="/pbis/offres/start" className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 text-neutral-700 px-6 py-3 font-medium text-base leading-6 hover:bg-neutral-50 transition-colors">
+        <div className="pt-4 w-full max-w-[596px] flex flex-col sm:flex-row items-center gap-3">
+          <Link to="/pbis/offres/start" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 text-neutral-700 px-6 py-3 font-medium text-base leading-6 hover:bg-neutral-50 transition-colors">
             <ArrowLeft className="w-4 h-4" strokeWidth={2} />
             Retour
           </Link>
-          <button type="submit" className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
+          <button type="submit" className="w-full sm:w-auto cursor-pointer inline-flex items-center justify-center gap-2 rounded-full text-white px-8 py-3 font-medium text-base leading-6 hover:opacity-90 transition-opacity" style={{ backgroundColor: startColor }}>
             Continuer vers le récapitulatif
           </button>
         </div>
