@@ -224,7 +224,7 @@ export default function PbisStartInformations() {
     contactPhone: client?.contactPhone ?? "",
     contactFunction: "",
     contactRole: "",
-    receptionEmail: client?.contactEmail ?? "",
+    receptionEmail: "",
   });
   const set = (key: string) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [key]: e.target.value });
 
