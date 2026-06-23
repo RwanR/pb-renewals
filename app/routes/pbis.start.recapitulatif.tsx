@@ -219,7 +219,7 @@ function InfoTip({ text, color, width = "w-[280px]" }: { text: string; color: st
   return (
     <div className="relative group">
       <Info className="w-4 h-4 cursor-help" style={{ color }} strokeWidth={1.5} />
-      <div className={`invisible group-hover:visible absolute left-6 top-0 z-10 ${width} bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg`}>
+      <div className={`invisible group-hover:visible absolute left-6 top-0 z-10 ${width} max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg`}>
         {text}
       </div>
     </div>
@@ -268,9 +268,9 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
         </h1>
       </div>
 
-      <div className="flex gap-6 items-start px-8 pt-10 max-w-5xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-6 lg:items-start px-4 sm:px-8 pt-10 max-w-5xl mx-auto">
         {/* Colonne gauche : offre + récap */}
-        <div className="flex-1 min-w-0 flex flex-col gap-4">
+        <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-4">
           {/* Carte offre */}
           <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3" style={{ borderColor: startColor }}>
             <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
@@ -324,7 +324,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
         </div>
 
         {/* Colonne droite : signataire + CGV + CTA */}
-        <div className="flex-1 min-w-0 flex flex-col gap-4">
+        <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-4">
           {/* Signataire autorisé */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
             <p className="font-semibold text-xs leading-4 text-neutral-950 pb-2">SIGNATAIRE AUTORISÉ</p>
@@ -342,7 +342,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
 
             <div className="h-px bg-neutral-200" />
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <SignField
                 label="Prénom *"
                 name="signatoryFirstName"
@@ -360,7 +360,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 onChange={setSigField("signatoryLastName")}
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <SignField
                 label="Fonction *"
                 name="signatoryFunction"
@@ -381,7 +381,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
                 onChange={setSigField("signatoryPhone")}
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <SignField
                 label="E-mail *"
                 name="signatoryEmail"
