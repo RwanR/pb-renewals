@@ -33,7 +33,7 @@ export default function PbisStartConfirmation({ loaderData }: Route.ComponentPro
   const startColor = PBIS_OFFER_COLORS.start;
 
   return (
-    <div className="font-inter pb-16 flex flex-col items-center gap-6 pt-12 px-8">
+    <div className="font-inter pb-16 flex flex-col items-center gap-6 pt-12 px-4 sm:px-8">
       <CircleCheckBig className="w-8 h-8" style={{ color: "#009DBF" }} strokeWidth={1.5} />
 
       <h1 className="font-precision text-2xl leading-[28.8px] font-semibold text-center text-neutral-950">
@@ -45,7 +45,7 @@ export default function PbisStartConfirmation({ loaderData }: Route.ComponentPro
       </p>
 
       {/* Carte récap offre */}
-      <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3 w-[596px]" style={{ borderColor: startColor }}>
+      <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3 w-full max-w-[596px]" style={{ borderColor: startColor }}>
         <div className="flex items-start gap-3 w-full">
           <img src="/images/pbis-cta-laptop.jpg" alt="" className="w-[162px] h-[90px] object-cover mix-blend-multiply" />
           <div className="flex-1" />
