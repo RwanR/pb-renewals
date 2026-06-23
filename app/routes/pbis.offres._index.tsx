@@ -104,7 +104,7 @@ function Stepper({ activeStep, totalSteps }: { activeStep: number; totalSteps: n
 function OfferCard({ offer }: { offer: Offer }) {
   const color = PBIS_OFFER_COLORS[offer.slug];
   return (
-    <div className="relative flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": color } as React.CSSProperties}>
+    <div className="relative flex-1 flex flex-col bg-white rounded-2xl p-6 gap-4 md:h-[453px] border border-[#d4d4d4] transition-all duration-200 cursor-pointer hover:border-[var(--accent)] hover:shadow-[inset_0_0_0_1px_var(--accent)]" style={{ "--accent": color } as React.CSSProperties}>
       <div>
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-white text-xs font-semibold" style={{ backgroundColor: color }}>
           {offer.badge}
@@ -164,7 +164,7 @@ export default function PbisOffres() {
         </p>
       </div>
 
-      <div className="flex gap-6 items-start px-8 pb-16 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row gap-6 md:items-start px-4 sm:px-8 pb-16 max-w-7xl mx-auto">
         {offers.map((offer) => (
           <OfferCard key={offer.title} offer={offer} />
         ))}
