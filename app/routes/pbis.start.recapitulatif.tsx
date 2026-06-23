@@ -219,7 +219,7 @@ function InfoTip({ text, color, width = "w-[280px]" }: { text: string; color: st
   return (
     <div className="relative group">
       <Info className="w-4 h-4 cursor-help" style={{ color }} strokeWidth={1.5} />
-      <div className={`invisible group-hover:visible absolute left-6 top-0 z-10 ${width} max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg`}>
+      <div className={`hidden group-hover:block absolute left-6 top-0 z-10 ${width} max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg`}>
         {text}
       </div>
     </div>

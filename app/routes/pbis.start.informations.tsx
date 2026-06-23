@@ -296,7 +296,7 @@ export default function PbisStartInformations() {
             <p className="font-semibold text-xs leading-4 text-neutral-950">CONTACT PRINCIPAL</p>
             <div className="relative group">
               <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
-              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[280px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
+              <div className="hidden group-hover:block absolute left-6 top-0 z-10 w-[280px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
                 Indiquez les coordonnées de l'utilisateur principal envisagé ou de l'administrateur de la solution. C'est l'email de ce contact qui sera utilisé pour la création de votre accès sur PBIS.
               </div>
             </div>
@@ -319,7 +319,7 @@ export default function PbisStartInformations() {
             <p className="text-sm font-medium leading-5 text-neutral-950">E-mail de réception de vos factures fournisseurs</p>
             <div className="relative group">
               <Info className="w-4 h-4 cursor-help" style={{ color: startColor }} strokeWidth={1.5} />
-              <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-[200px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
+              <div className="hidden group-hover:block absolute left-6 top-0 z-10 w-[200px] max-w-[calc(100vw-2rem)] bg-neutral-50 border border-neutral-200 rounded p-3 text-xs leading-4 text-neutral-950 shadow-lg">
                 Ceci est la boite email à laquelle vous recevrez les factures de vos fournisseurs lors de votre utilisation de PBIS.
               </div>
             </div>
