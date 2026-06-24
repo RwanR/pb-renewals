@@ -433,7 +433,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
             <label className="flex gap-4 items-center py-1 cursor-pointer">
               <input type="checkbox" name="cgvAccepted" required className="w-4 h-4 shrink-0" style={{ accentColor: startColor }} />
               <span className="text-xs leading-4 text-neutral-950">
-                J'accepte les <a href="https://www.pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold underline">CGV et Conditions Particulières</a> du contrat PBIS Start.
+                J'accepte les <a href="https://www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold underline">CGV et Conditions Particulières</a> du contrat PBIS Start.
               </span>
             </label>
             <label className="flex gap-4 items-center py-1 cursor-pointer">
@@ -445,7 +445,7 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
           </div>
 
           <p className="text-xs leading-4 text-[#404040]">
-            En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales (version FR - PBIS 05 2026) disponibles à l'adresse (<a href="https://www.pb.com/fr/servicessolutions" target="_blank" rel="noopener noreferrer" className="underline">pb.com/fr/servicessolutions</a>) et les accepter, y compris la clause attributive de juridiction.
+            En signant le présent contrat, l'Abonné manifeste avoir pris connaissance des conditions du présent contrat d'abonnement et des Conditions Générales en vigueur le jour de la signature de ce contrat, disponibles à l'adresse (<a href="https://www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html" target="_blank" rel="noopener noreferrer" className="underline">www.pitneybowes.com/fr/conditionsgenerales/servicessolutions.html</a>) et les accepter, y compris la clause attributive de juridiction.
           </p>
 
           {actionData?.error && (
