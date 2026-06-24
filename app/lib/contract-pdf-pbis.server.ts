@@ -1,7 +1,7 @@
 import type { PbisClient, PbisAcceptance } from "@prisma-pbis/client";
 import { PB_LOGO, PLATEFORME_AGREEE, ISO_27001 } from "./contract-logos.server";
 
-const CONTRACT_VERSION = "PBIS START 2026-1";
+const CONTRACT_VERSION = process.env.CONTRACT_VERSION || "PBIS START 2026-1";
 
 // Date de mise à disposition fixée au 01/09/2026 (entrée en vigueur de l'obligation
 // de réception). Confirmée fixe par PB.
