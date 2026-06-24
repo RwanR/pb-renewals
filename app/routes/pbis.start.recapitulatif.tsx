@@ -1,6 +1,6 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
 import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft, Info } from "lucide-react";
-import { Fragment, type ChangeEvent } from "react";
+import { Fragment, useState, type ChangeEvent } from "react";
 import { Form, redirect, useNavigation, Link } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
@@ -259,6 +259,23 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
   });
   const setSigField = (key: string) => (e: ChangeEvent<HTMLInputElement>) => setSig({ ...sig, [key]: e.target.value });
 
+  // Case "Le contact principal est également le signataire" : recopie les coordonnées
+  // du contact dans les champs signataire contrôlés au cochage, les revide au décochage.
+  // La référence de commande n'a pas d'équivalent contact, laissée intacte.
+  const [contactIsSignatory, setContactIsSignatory] = useState(false);
+  const handleContactIsSignatory = (e: ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setContactIsSignatory(checked);
+    setSig({
+      ...sig,
+      signatoryFirstName: checked ? recap.contactFirstName : "",
+      signatoryLastName: checked ? recap.contactLastName : "",
+      signatoryFunction: checked ? recap.contactFunction : "",
+      signatoryPhone: checked ? recap.contactPhone : "",
+      signatoryEmail: checked ? recap.contactEmail : "",
+    });
+  };
+
   return (
     <Form method="post" className="font-inter pb-16">
       <div className="flex flex-col gap-5 items-center justify-center pt-10 pb-2">
@@ -329,16 +346,16 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex flex-col gap-3">
             <p className="font-semibold text-xs leading-4 text-neutral-950 pb-2">SIGNATAIRE AUTORISÉ</p>
 
-            <label className="flex gap-4 items-center py-1 cursor-not-allowed opacity-50">
-            <input
-              type="checkbox"
-              checked={false}
-              disabled
-              className="w-4 h-4"
-              style={{ accentColor: startColor }}
-            />
-            <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est également le signataire</span>
-          </label>
+            <label className="flex gap-4 items-center py-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={contactIsSignatory}
+                onChange={handleContactIsSignatory}
+                className="w-4 h-4"
+                style={{ accentColor: startColor }}
+              />
+              <span className="font-semibold text-xs leading-4 text-neutral-950">Le contact principal est également le signataire</span>
+            </label>
 
             <div className="h-px bg-neutral-200" />
 
