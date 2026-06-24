@@ -44,6 +44,10 @@ export default function PbisStartConfirmation({ loaderData }: Route.ComponentPro
         Votre contrat PBIS Start a été signé avec succès
       </p>
 
+      <p className="text-sm leading-5 text-center text-neutral-950 max-w-[596px]">
+        Nous allons maintenant créer votre interface et revenir prochainement vers vous pour vous communiquer vos accès.
+      </p>
+
       {/* Carte récap offre */}
       <div className="bg-neutral-50 border-2 rounded-xl p-4 flex flex-col gap-3 w-full max-w-[596px]" style={{ borderColor: startColor }}>
         <div className="flex items-start gap-3 w-full">
