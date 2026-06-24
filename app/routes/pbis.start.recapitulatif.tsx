@@ -1,6 +1,6 @@
 import type { Route } from "./+types/pbis.start.recapitulatif";
 import { Check, CircleUser, Smartphone, Mail, Briefcase, Loader2, ArrowLeft, Info } from "lucide-react";
-import { Fragment, useState, type ChangeEvent } from "react";
+import { Fragment, type ChangeEvent } from "react";
 import { Form, redirect, useNavigation, Link } from "react-router";
 import pbisDb from "~/db.pbis.server";
 import { getSessionShipTo } from "~/lib/pbis-session.server";
@@ -262,7 +262,10 @@ export default function PbisStartRecapitulatif({ loaderData, actionData }: Route
   // Case "Le contact principal est également le signataire" : recopie les coordonnées
   // du contact dans les champs signataire contrôlés au cochage, les revide au décochage.
   // La référence de commande n'a pas d'équivalent contact, laissée intacte.
-  const [contactIsSignatory, setContactIsSignatory] = useState(false);
+  const [contactIsSignatory, setContactIsSignatory] = useSessionState(
+    `pbis-start-sigcheck-${shipTo}`,
+    false
+  );
   const handleContactIsSignatory = (e: ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setContactIsSignatory(checked);
