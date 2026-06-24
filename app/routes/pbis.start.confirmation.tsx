@@ -41,7 +41,7 @@ export default function PbisStartConfirmation({ loaderData }: Route.ComponentPro
       </h1>
 
       <p className="text-sm leading-5 text-center text-neutral-950">
-        Votre contrat PBIS Start a été signé avec succès
+        Votre contrat PBIS Start a été signé avec succès.
       </p>
 
       <p className="text-sm leading-5 text-center text-neutral-950 max-w-[596px]">
