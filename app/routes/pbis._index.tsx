@@ -1,9 +1,7 @@
 import type { Route } from "./+types/pbis._index";
 import { FileText, ShieldCheck, Zap, BarChart3, Minus, Plus } from "lucide-react";
 import { Fragment, useState } from "react";
-import { Link, redirect } from "react-router";
-import pbisDb from "~/db.pbis.server";
-import { getPbisSession, commitPbisSession } from "~/lib/pbis-session.server";
+import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "PBIS — Pitney Bowes Invoicing Solutions" }];
@@ -23,31 +21,10 @@ const ABOUT_TEXT = [
   "À ce titre, sa solution Pitney Bowes Invoice Services est une Plateforme Agréée de facturation électronique clients et fournisseurs, offrant aux entreprises maîtrise, sécurité et flexibilité pour réussir leur transition à leur propre rythme.",
 ];
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const token = url.searchParams.get("token");
-
-  if (!token) {
-    return null;
-  }
-
-  const accessToken = await pbisDb.pbisAccessToken.findUnique({
-    where: { token },
-    select: { clientId: true, expiresAt: true },
-  });
-
-  if (!accessToken || accessToken.expiresAt < new Date()) {
-    // Token invalide ou expiré : on nettoie l'URL, parcours anonyme
-    return redirect("/pbis");
-  }
-
-  // Token valide : on pose la session et on nettoie l'URL
-  const session = await getPbisSession(request);
-  session.set("shipTo", accessToken.clientId);
-
-  return redirect("/pbis", {
-    headers: { "Set-Cookie": await commitPbisSession(session) },
-  });
+export async function loader() {
+  // La consommation du token (?token=) est gérée au niveau du layout pbis.tsx,
+  // qui pose la session puis nettoie l'URL. Rien à faire ici.
+  return null;
 }
 
 export default function PbisIndex() {

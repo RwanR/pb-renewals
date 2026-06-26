@@ -1,10 +1,38 @@
-import { Outlet, useLocation } from "react-router";
+import { Outlet, useLocation, redirect } from "react-router";
 import { SnapEngage } from "~/components/snap-engage";
 import type { Route } from "./+types/pbis";
-import { getSessionShipTo } from "~/lib/pbis-session.server";
+import { getPbisSession, commitPbisSession, getSessionShipTo } from "~/lib/pbis-session.server";
 import pbisDb from "~/db.pbis.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+
+  // Consommation du token sur n'importe quelle route /pbis/* :
+  // valide, pose la session, puis nettoie l'URL en redirigeant vers le même
+  // chemin sans le paramètre. Permet d'entrer tokenisé sur /pbis comme sur
+  // /pbis/offres/start (ou toute autre sous-route).
+  if (token) {
+    const accessToken = await pbisDb.pbisAccessToken.findUnique({
+      where: { token },
+      select: { clientId: true, expiresAt: true },
+    });
+
+    const cleanUrl = url.pathname; // chemin courant sans query
+
+    if (!accessToken || accessToken.expiresAt < new Date()) {
+      // Token invalide ou expiré : on nettoie l'URL, parcours anonyme sur le chemin courant
+      return redirect(cleanUrl);
+    }
+
+    const session = await getPbisSession(request);
+    session.set("shipTo", accessToken.clientId);
+
+    return redirect(cleanUrl, {
+      headers: { "Set-Cookie": await commitPbisSession(session) },
+    });
+  }
+
   const shipTo = await getSessionShipTo(request);
 
   if (!shipTo) {
