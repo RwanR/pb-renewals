@@ -90,7 +90,8 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
 
     // Clé d'agrégation = SOLD_TO. Plusieurs lignes (contrats / SHIP_TO multiples)
     // d'un même SOLD_TO sont consolidées en un seul client.
-    const soldTo = cellText(getCell(row, "SOLD_TO"));
+    const soldToRaw = cellText(getCell(row, "SOLD_TO"));
+    const soldTo = soldToRaw ? soldToRaw.replace(/^0+/, "") : null;
     if (!soldTo) continue;
 
     rowsProcessed++;
@@ -107,7 +108,7 @@ export async function importPbisExcel(data: ArrayBuffer, filename: string): Prom
       //   Cellule vide = non-papier (électronique).
       clientsMap.set(soldTo, {
         shipTo: soldTo,
-        compteClientBillTo: cellText(getCell(row, "BILL_TO")) ?? "",
+        compteClientBillTo: (cellText(getCell(row, "BILL_TO")) ?? "").replace(/^0+/, ""),
         soldTo,
         companyName: cellText(getCell(row, "CUSTOMER_NAME_SOLDTO")) ?? "",
         street: cellText(getCell(row, "STREET_NAME_SOLDTO")) ?? "",
