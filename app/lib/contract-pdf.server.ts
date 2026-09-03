@@ -9,6 +9,14 @@ interface ContractData {
   acceptance: Acceptance;
 }
 
+const ACTIVATION_OFFSET_DAYS = 10;
+
+function addDays(date: Date | string, days: number): Date {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d;
+}
+
 function formatCurrency(amount: number | null): string {
   if (amount === null || amount === undefined) return "—";
   return amount.toLocaleString("fr-FR", {
@@ -34,6 +42,7 @@ function getEquipmentDescription(code: string | null, fallback: string | null): 
 function generateContractHTML(data: ContractData): string {
   const { client, offer, acceptance } = data;
   const today = formatDate(new Date());
+  const activationDate = addDays(acceptance.acceptedAt, ACTIVATION_OFFSET_DAYS);
 
   const monthlyVal = offer.monthly60 ?? offer.monthly48 ?? offer.monthly36 ?? offer.billing60 ?? offer.billing48 ?? offer.billing36;
   const billingTax = offer.billingTax60 ?? offer.billingTax48 ?? offer.billingTax36;
@@ -218,7 +227,7 @@ function generateContractHTML(data: ContractData): string {
     </div>
     <div class="condition-item">
       <div class="label">Date d'activation</div>
-      <div class="value">${formatDate(client.activationDate)}</div>
+      <div class="value">${formatDate(activationDate)}</div>
     </div>
     <div class="condition-item">
       <div class="label">Fréquence facturation</div>
