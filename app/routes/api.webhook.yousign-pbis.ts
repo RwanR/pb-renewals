@@ -84,7 +84,7 @@ export async function action({ request }: Route.ActionArgs) {
           const cc = ccList.length > 0 ? ccList : undefined;
 
           await resend.emails.send({
-            from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
+            from: process.env.EMAIL_FROM || "PBIS <noreply@mail.pb.com>",
             to: override || acceptance.signatoryEmail,
             cc,
             subject: `Votre contrat Pitney Bowes Invoice Services Start a été signé`,

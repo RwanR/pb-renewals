@@ -55,7 +55,7 @@ export async function submitPbisLead(input: LeadInput): Promise<LeadResult> {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || "PBIS <noreply@nemet.tech>",
+      from: process.env.EMAIL_FROM || "PBIS <noreply@mail.pb.com>",
       to: process.env.EMAIL_OVERRIDE || LEAD_INBOX,
       replyTo: safeHeader(email),
       subject: safeHeader(`Nouvelle demande de contact - PBIS ${offer} - ${fullName}`),
